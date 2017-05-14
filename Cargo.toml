@@ -15,3 +15,7 @@ path = "../gfx"
 
 [dependencies.gfx_window_glutin]
 path = "../gfx/src/window/glutin"
+
+# Note: `incoming` branch must be checked out
+[dependencies.gltf]
+path = "../gltf"

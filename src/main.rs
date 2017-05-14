@@ -2,6 +2,7 @@ extern crate cgmath;
 #[macro_use]
 extern crate gfx;
 extern crate gfx_app;
+extern crate gltf;
 
 use cgmath::{Deg, Matrix4, Point3, Vector3};
 use gfx::{Bundle, texture};
@@ -10,6 +11,8 @@ mod pipeline;
 use pipeline::*;
 
 mod cube;
+mod gltf_loader;
+use gltf_loader::*;
 
 //----------------------------------------
 struct App<R: gfx::Resources>{
@@ -94,6 +97,8 @@ impl<R: gfx::Resources> gfx_app::Application<R> for App<R> {
 }
 
 pub fn main() {
+    load_file("src/data/Box.gltf");
+
     use gfx_app::Application;
     App::launch_simple("Cube example");
 }
