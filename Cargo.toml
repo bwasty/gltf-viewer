@@ -1,6 +1,17 @@
 [package]
+authors = ["Benjamin Wasty <benny.wasty@gmail.com>"]
 name = "gltf-viewer"
 version = "0.1.0"
-authors = ["Benjamin Wasty <benny.wasty@gmail.com>"]
 
 [dependencies]
+cgmath = "0.14.1"
+glutin = "0.8.0"
+
+[dependencies.gfx]
+path = "../gfx/src/render"
+
+[dependencies.gfx_app]
+path = "../gfx"
+
+[dependencies.gfx_window_glutin]
+path = "../gfx/src/window/glutin"
