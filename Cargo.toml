@@ -5,17 +5,7 @@ version = "0.1.0"
 
 [dependencies]
 cgmath = "0.14.1"
+gfx = "0.16.0"
+gfx_window_glutin = "0.16.0"
+gltf = { git = "https://github.com/alteous/gltf.git", branch = "incoming" }
 glutin = "0.8.0"
-
-[dependencies.gfx]
-path = "../gfx/src/render"
-
-[dependencies.gfx_app]
-path = "../gfx"
-
-[dependencies.gfx_window_glutin]
-path = "../gfx/src/window/glutin"
-
-# Note: `incoming` branch must be checked out
-[dependencies.gltf]
-path = "../gltf"
