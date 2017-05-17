@@ -1,5 +1,7 @@
-use gfx_app::{ColorFormat, DepthFormat};
 use gfx;
+
+pub type ColorFormat = gfx::format::Rgba8;
+pub type DepthFormat = gfx::format::DepthStencil;
 
 // Declare the vertex format suitable for drawing,
 // as well as the constants used by the shaders
