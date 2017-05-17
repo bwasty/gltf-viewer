@@ -6,7 +6,7 @@ pub fn load_file(path: &str) {
     match root {
         Ok(root) => {
             println!("glTF version 2.0");
-            println!("{:?}", root);
+            println!("{:#?}", root);
         }
         Err(err) => {
             println!("Error: {:#?}", err);

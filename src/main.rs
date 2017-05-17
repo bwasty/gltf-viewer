@@ -97,7 +97,9 @@ impl<R: gfx::Resources> gfx_app::Application<R> for App<R> {
 }
 
 pub fn main() {
-    load_file("src/data/Box.gltf");
+    // load_file("src/data/Box.gltf");
+    load_file("src/data/minimal.gltf");
+    // load_file("../gltf/glTF-Sample-Models/2.0/BoomBox/glTF/BoomBox.gltf");
 
     use gfx_app::Application;
     App::launch_simple("Cube example");
