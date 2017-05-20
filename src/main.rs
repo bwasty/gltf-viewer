@@ -19,9 +19,11 @@ use gltf_loader::*;
 const CLEAR_COLOR: [f32; 4] = [0., 0., 0., 1.0];
 
 pub fn main() {
-    // load_file("src/data/Box.gltf");
+    load_file("src/data/Box.gltf");
     // load_file("src/data/minimal.gltf");
-    load_file("../gltf/glTF-Sample-Models/2.0/BoomBox/glTF/BoomBox.gltf");
+    // load_file("../gltf/glTF-Sample-Models/2.0/BoomBox/glTF/BoomBox.gltf");
+    return;
+    
 
     ///////////////
     let events_loop = glutin::EventsLoop::new();
