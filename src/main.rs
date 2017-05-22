@@ -18,6 +18,8 @@ use gltf_loader::*;
 
 const CLEAR_COLOR: [f32; 4] = [0., 0., 0., 1.0];
 
+// TODO!: TMP
+#[allow(unreachable_code)]
 pub fn main() {
     load_file("src/data/Box.gltf");
     // load_file("src/data/minimal.gltf");
