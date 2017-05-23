@@ -70,7 +70,7 @@ pub fn load_box_2(root: &Root) {
 
     let mesh = &root.meshes()[0];
     let primitive = &mesh.primitives[0];
-    let position_data = root.get_attribute_data(&buffer_data, &primitive, "POSITION");
+    let position_data = root.get_attribute_data(&buffer_data, primitive, "POSITION");
 }
 
 trait DataAccessor<'a> {

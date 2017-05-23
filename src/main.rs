@@ -76,7 +76,7 @@ pub fn main() {
     let mut running = true;
     while running {
         // fetch events
-        events_loop.poll_events(|glutin::Event::WindowEvent{window_id: _, event}| {
+        events_loop.poll_events(|glutin::Event::WindowEvent{ event, ..}| {
             match event {
                 glutin::WindowEvent::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape), _) |
                 glutin::WindowEvent::Closed => running = false,
