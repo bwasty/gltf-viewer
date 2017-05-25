@@ -4,6 +4,7 @@ version = "0.1.0"
 dependencies = [
  "cgmath 0.14.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "gfx 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gfx_device_gl 0.14.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "gfx_window_glutin 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gltf 0.5.0 (git+https://github.com/alteous/gltf.git?branch=incoming)",
  "glutin 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",

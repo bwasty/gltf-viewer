@@ -4,6 +4,7 @@ extern crate gfx;
 extern crate gltf;
 extern crate glutin;
 extern crate gfx_window_glutin;
+extern crate gfx_device_gl;
 
 use cgmath::{Deg, Matrix4, Point3, Vector3};
 use gfx::{texture, Factory, Device};
@@ -11,6 +12,9 @@ use gfx::traits::FactoryExt;
 
 mod pipeline;
 use pipeline::*;
+
+mod renderer;
+use renderer::*;
 
 mod cube;
 mod gltf_loader;
@@ -24,13 +28,13 @@ pub fn main() {
     load_file("src/data/Box.gltf");
     // load_file("src/data/minimal.gltf");
     // load_file("../gltf/glTF-Sample-Models/2.0/BoomBox/glTF/BoomBox.gltf");
-    return;
+    // return;
     
 
     ///////////////
     let events_loop = glutin::EventsLoop::new();
     let builder = glutin::WindowBuilder::new()
-        .with_title("Triangle example".to_string())
+        .with_title("glTF Viewer".to_string())
         .with_dimensions(1024, 768)
         .with_vsync();
     let (window, mut device, mut factory, main_color_target, main_depth_target) =
@@ -41,6 +45,7 @@ pub fn main() {
 
     let mut encoder: gfx::Encoder<_, _> = factory.create_command_buffer().into();
 
+    ///
     let vertex_data = cube::vertex_data();
     let index_data: &[u16] = &cube::index_data();
 
@@ -59,12 +64,12 @@ pub fn main() {
     let pso = factory.create_pipeline_simple(
         include_bytes!("shader/cube_150.glslv"),
         include_bytes!("shader/cube_150.glslf"),
-        pipe::new()
+        cube::pipe::new()
     ).unwrap();
 
     let proj = cgmath::perspective(Deg(45.0f32), aspect_ratio, 1.0, 10.0);
 
-    let mut data = pipe::Data {
+    let mut data = cube::pipe::Data {
         vbuf: vbuf,
         transform: (proj * default_view()).into(),
         locals: factory.create_constant_buffer(1),
@@ -87,7 +92,7 @@ pub fn main() {
             }
         });
 
-        let locals = Locals { transform: data.transform };
+        let locals = cube::Locals { transform: data.transform };
         encoder.update_constant_buffer(&data.locals, &locals);
         encoder.clear(&data.out_color, CLEAR_COLOR);
         encoder.clear_depth(&data.out_depth, 1.0);

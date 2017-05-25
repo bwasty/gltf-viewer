@@ -5,6 +5,8 @@ use gltf::v2::accessor::{ Accessor, ComponentType };
 use gltf::v2::buffer::{ Target, BufferView};
 use gltf::v2::mesh::{ Mode, Primitive };
 
+use gfx;
+
 pub fn load_file(path: &str) {
     let root = import(path);
     match root {
@@ -105,3 +107,28 @@ impl <'a> DataAccessor<'a> for Root {
     }
     
 }
+
+// type ColorFormat = gfx::format::Rgba8;
+// type DepthFormat = gfx::format::DepthStencil;
+
+// gfx_defines!{
+//     #[derive(Default)]
+//     vertex BoxVertex {
+//         pos: [f32; 4] = "a_Pos",
+//         normal: [f32; 3] = "a_Normal",
+//     }
+
+//     constant BoxLocals {
+//         transform: [[f32; 4]; 4] = "u_Transform",
+//     }
+
+//     pipeline BoxPipe {
+//         vbuf: gfx::VertexBuffer<BoxVertex> = (),
+//         transform: gfx::Global<[[f32; 4]; 4]> = "u_Transform",
+//         locals: gfx::ConstantBuffer<BoxVertex> = "Locals",
+//         // color: gfx::TextureSampler<[f32; 4]> = "t_Color",
+//         out_color: gfx::RenderTarget<ColorFormat> = "Target0",
+//         out_depth: gfx::DepthTarget<DepthFormat> =
+//             gfx::preset::depth::LESS_EQUAL_WRITE,
+//     }
+// }
