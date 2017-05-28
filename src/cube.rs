@@ -1,8 +1,14 @@
 use pipeline::*;
 use gfx;
-use gfx_device_gl::Factory;
+use gfx::{texture, Factory, Device};
+use gfx_device_gl;
+use gfx::traits::FactoryExt;
+use cgmath::{Deg, perspective};
+use glutin;
 
-use renderer::Renderer;
+use renderer::{ Renderer, default_view };
+
+const CLEAR_COLOR: [f32; 4] = [0., 0., 0., 1.0];
 
 pub fn vertex_data() -> [CubeVertex; 24] {
     [
@@ -86,16 +92,65 @@ impl CubeVertex {
 }
 
 struct CubeRenderer {
-    factory: Factory
+    factory: gfx_device_gl::Factory,
+    encoder: gfx::Encoder<gfx_device_gl::Resources, gfx_device_gl::CommandBuffer>,
+    pso: gfx::PipelineState<gfx_device_gl::Resources, pipe::Meta>,
+    slice: gfx::Slice<gfx_device_gl::Resources>,
+    data: pipe::Data<gfx_device_gl::Resources>,
 }
 
 impl Renderer for CubeRenderer {
-    fn new(factory: Factory) -> Self {
-        let this = CubeRenderer { factory };
+    fn new(mut factory: gfx_device_gl::Factory, aspect_ratio: f32, 
+        color_target: gfx::handle::RenderTargetView<gfx_device_gl::Resources, (gfx::format::R8_G8_B8_A8, gfx::format::Unorm)>, 
+        depth_target: gfx::handle::DepthStencilView<gfx_device_gl::Resources, (gfx::format::D24_S8, gfx::format::Unorm)>) -> Self 
+    {
+        let mut encoder: gfx::Encoder<_, _> = factory.create_command_buffer().into();
+
+        let vertex_data = vertex_data();
+        let index_data: &[u16] = &index_data();
+        let (vbuf, slice) = factory.create_vertex_buffer_with_slice(&vertex_data, index_data);
+
+        let texels = [[0x20, 0xA0, 0xC0, 0x00]];
+        let (_, texture_view) = factory.create_texture_immutable::<gfx::format::Rgba8>(
+            texture::Kind::D2(1, 1, texture::AaMode::Single), &[&texels]
+            ).unwrap();
+
+        let sinfo = texture::SamplerInfo::new(
+            texture::FilterMethod::Bilinear,
+            texture::WrapMode::Clamp);
+
+        // TODO!: other shader variants
+        let pso = factory.create_pipeline_simple(
+            include_bytes!("shader/cube_150.glslv"),
+            include_bytes!("shader/cube_150.glslf"),
+            pipe::new()
+        ).unwrap();
+
+        let proj = perspective(Deg(45.0f32), aspect_ratio, 1.0, 10.0);
+
+        let mut data = pipe::Data {
+            vbuf: vbuf,
+            transform: (proj * default_view()).into(),
+            locals: factory.create_constant_buffer(1),
+            color: (texture_view, factory.create_sampler(sinfo)),
+            out_color: color_target,
+            out_depth: depth_target,
+        };
+
+        let this = CubeRenderer { factory, encoder, pso, slice, data };
         this
     }
 
-    fn render() {
-
+    fn render<D, R, C>(&mut self, device: &mut D, window: &glutin::Window)
+        where D: gfx::Device 
+    {
+        let locals = Locals { transform: self.data.transform };
+        self.encoder.update_constant_buffer(&self.data.locals, &locals);
+        self.encoder.clear(&self.data.out_color, CLEAR_COLOR);
+        self.encoder.clear_depth(&self.data.out_depth, 1.0);
+        self.encoder.draw(&self.slice, &self.pso, &self.data);
+        self.encoder.flush(&mut device);
+        window.swap_buffers().unwrap();
+        device.cleanup();
     }
 }

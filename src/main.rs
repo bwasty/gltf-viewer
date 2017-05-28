@@ -23,7 +23,7 @@ use gltf_loader::*;
 const CLEAR_COLOR: [f32; 4] = [0., 0., 0., 1.0];
 
 // TODO!: TMP
-#[allow(unreachable_code)]
+// #[allow(unreachable_code)]
 pub fn main() {
     load_file("src/data/Box.gltf");
     // load_file("src/data/minimal.gltf");
@@ -43,9 +43,9 @@ pub fn main() {
     let (cur_width, cur_height) = window.get_inner_size_points().unwrap();
     let aspect_ratio = cur_width as f32 / cur_height as f32;
 
+    ///
     let mut encoder: gfx::Encoder<_, _> = factory.create_command_buffer().into();
 
-    ///
     let vertex_data = cube::vertex_data();
     let index_data: &[u16] = &cube::index_data();
 
@@ -103,10 +103,4 @@ pub fn main() {
     }
 }
 
-fn default_view() -> Matrix4<f32> {
-    Matrix4::look_at(
-        Point3::new(1.5f32, -5.0, 3.0),
-        Point3::new(0f32, 0.0, 0.0),
-        Vector3::unit_z(),
-    )
-}
+
