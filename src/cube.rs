@@ -1,6 +1,7 @@
 use pipeline::*;
 use gfx;
-use gfx::{texture, Factory, Device};
+use gfx::traits::Device;
+use gfx::{texture, Factory};
 use gfx_device_gl;
 use gfx::traits::FactoryExt;
 use cgmath::{Deg, perspective};
@@ -141,8 +142,8 @@ impl Renderer for CubeRenderer {
         this
     }
 
-    fn render<D, R, C>(&mut self, device: &mut D, window: &glutin::Window)
-        where D: gfx::Device 
+    fn render<D, R: gfx::Resources, C: gfx::CommandBuffer<R>>(&mut self, device: &mut D, window: &glutin::Window)
+        where D: gfx::Device<Resources = R, CommandBuffer = C>
     {
         let locals = Locals { transform: self.data.transform };
         self.encoder.update_constant_buffer(&self.data.locals, &locals);

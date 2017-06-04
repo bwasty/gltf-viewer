@@ -7,7 +7,8 @@ extern crate gfx_window_glutin;
 extern crate gfx_device_gl;
 
 use cgmath::{Deg, Matrix4, Point3, Vector3};
-use gfx::{texture, Factory, Device};
+use gfx::{texture, Factory};
+use gfx::traits::Device;
 use gfx::traits::FactoryExt;
 
 mod pipeline;
