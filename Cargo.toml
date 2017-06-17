@@ -5,11 +5,7 @@ version = "0.1.0"
 
 [dependencies]
 cgmath = "0.14.1"
-gfx = "0.16.0"
-gfx_device_gl = "0.14.1"
-gfx_window_glutin = "0.16.0"
-glutin = "0.8.0"
 
 [dependencies.gltf]
-branch = "incoming"
+branch = "wrapper"
 git = "https://github.com/alteous/gltf.git"
