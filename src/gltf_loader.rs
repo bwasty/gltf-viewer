@@ -5,15 +5,17 @@ use gltf;
 // use gltf::buffer::{ Target };
 use gltf::mesh::{ /*Mode, */Primitive };
 
+use gltf::import::Source;
+
 
 pub fn load_file(path: &str) {
     let mut importer = gltf::Importer::new();
-    let root = importer.import_from_path(path);
-    match root {
-        Ok(root) => {
+    let gltf = importer.import_from_path(path);
+    match gltf {
+        Ok(gltf) => {
             println!("glTF version 2.0");
-            println!("{:#?}", root);
-            // load_box(&root);
+            println!("{:#?}", gltf);
+            load_box(&gltf);
             // load_box_2(&root);
         }
         Err(err) => {
@@ -28,18 +30,15 @@ pub fn load_file(path: &str) {
 //     data: &'a [u8],
 // }
 
-// pub fn load_box(root: &Root) {
-//     let buffer = &root.buffers()[0];
+pub fn load_box(gltf: &Gltf) {
+    // let buffer = &root.buffers()[0];
+    let buffer = &gltf.buffers().nth(0);
 
-//     // TODO!: determine base directory...
-//     let mut file = std::fs::File::open(format!("src/data/{}", buffer.uri)).unwrap();
-//     let mut buffer_contents = Vec::with_capacity(buffer.byte_length as usize);
-//     file.read_to_end(&mut buffer_contents).unwrap();
-//     assert_eq!(buffer_contents.len(), buffer.byte_length as usize);
+    let mut buffer_contents = buffer;
 
-//     let mesh = &root.meshes()[0];
-//     let primitive = &mesh.primitives[0];
-//     assert_eq!(primitive.mode, Mode::Triangles);
+    let mesh = &gltf.meshes().nth(0).unwrap();
+    let primitive = &mesh.primitives().nth(0).unwrap();
+    assert_eq!(primitive.mode(), Mode::Triangles);
 
 //     let pos_accessor_index = primitive.attributes["POSITION"].value() as usize;
 //     let pos_accessor = &root.accessors()[pos_accessor_index];
@@ -65,7 +64,7 @@ pub fn load_file(path: &str) {
 //     println!("pos len: {}", position_data.len());
 //     println!("idx len: {}", index_data.len());
 //     println!("nml len: {}", normal_data.len());
-// }
+}
 
 // pub fn load_box_2(root: &Root) {
 //     let buffer_data = root.load_buffer(0);
