@@ -1,5 +1,6 @@
 # gltf-viewer
-glTF Viewer written in Rust (early WIP)
+glTF Viewer written in Rust (early WIP).
+Current state: copied some code from [learn-opengl-rs](https://github.com/bwasty/learn-opengl-rs/), working on getting gltf data into OpenGL buffers and rendering it.
 
 ### Goals
 * Complete gltF 2.0 support
