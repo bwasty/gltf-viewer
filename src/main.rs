@@ -7,7 +7,6 @@ use self::glfw::{Context, Key, Action};
 extern crate gltf;
 extern crate image;
 
-extern crate tobj; // TODO: TMP
 
 use std::sync::mpsc::Receiver;
 use std::ffi::CStr;
@@ -92,7 +91,7 @@ pub fn main() {
 
         // render
         unsafe {
-            gl::ClearColor(0.1, 0.1, 0.1, 1.0);
+            gl::ClearColor(0.1, 0.2, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             shader.use_program();

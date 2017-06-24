@@ -9,9 +9,6 @@ gl = "0.6.2"
 glfw = "0.15.0"
 image = "0.14.0"
 
-# TODO: TMP
-tobj = "0.1.6"
-
 [dependencies.gltf]
 branch = "wrapper"
 git = "https://github.com/alteous/gltf.git"
