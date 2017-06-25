@@ -22,25 +22,19 @@ pub fn load_file(path: &str) -> RenderMesh {
             return load_box(&gltf)
         }
         Err(err) => {
-            println!("Error: {:#?}", err);
+            println!("Error: {:?}", err);
             panic!();
         }
     }
 }
 
 pub fn load_box(gltf: &Gltf) -> RenderMesh {
-    // let buffer = &gltf.buffers().nth(0);
     let mesh = &gltf.meshes().nth(0).unwrap();
     let primitive = &mesh.primitives().nth(0).unwrap();
 
     let positions = primitive.position().unwrap();
     let normals = primitive.normal().unwrap();
     let indices = primitive.indices().unwrap();
-
-    // TODO: No debug
-    // println!("pos: {:?}", positions);
-    // println!("pos len: {}", positions.count());
-    // println!("nml len: {}", normals.count());
 
     let vertices: Vec<Vertex> = positions.zip(normals)
     .map(|(position, normal)| Vertex {
@@ -49,15 +43,12 @@ pub fn load_box(gltf: &Gltf) -> RenderMesh {
         ..Vertex::default()
     })
     .collect();
-    // println!("{:?}", vertices);
 
     let indices: Vec<u32> = match indices {
         Indices::U8(indices) => indices.map(|i| i as u32).collect(),
         Indices::U16(indices) => indices.map(|i| i as u32).collect(),
         Indices::U32(indices) => indices.map(|i| i as u32).collect(),
     };
-
-    // println!("{:?}", indices);
 
     // TODO: No debug
     // assert_eq!(primitive.mode(), Mode::Triangles);

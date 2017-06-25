@@ -23,6 +23,8 @@ mod mesh;
 mod model;
 // use model::Model;
 
+mod render;
+
 mod gltf_loader;
 use gltf_loader::*;
 
@@ -74,11 +76,10 @@ pub fn main() {
 
         // let model = Model::new("src/data/Box.gltf");
 
-        let mesh = load_file("src/data/Box.gltf");
+        // let mesh = load_file("src/data/Box.gltf");
+        // let mesh = load_file("src/data/minimal.gltf");
+        let mesh = load_file("../gltf/glTF-Sample-Models/2.0/BoomBox/glTF/BoomBox.gltf");
         // println!("{:?}", mesh);
-        // load_file("src/data/minimal.gltf");
-        // load_file("../gltf/glTF-Sample-Models/2.0/BoomBox/glTF/BoomBox.gltf");
-
 
         // draw in wireframe
         // gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
@@ -110,9 +111,9 @@ pub fn main() {
             shader.set_mat4(c_str!("view"), &view);
 
             // render the loaded model
-            // let mut model_matrix = Matrix4::<f32>::from_translation(vec3(0.0, -1.75, 0.0)); // translate it down so it's at the center of the scene
-            // model_matrix = model_matrix * Matrix4::from_scale(0.2);  // it's a bit too big for our scene, so scale it down
-            let model_matrix = Matrix4::<f32>::identity();
+            // let mut model_matrix = Matrix4::<f32>::from_translation(vec3(0.0, -1.75, 0.0));
+            let mut model_matrix = Matrix4::<f32>::identity();
+            model_matrix = model_matrix * Matrix4::from_scale(10.0);
             shader.set_mat4(c_str!("model"), &model_matrix);
             // model.draw(&shader);
             mesh.draw(&shader);
