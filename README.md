@@ -1,4 +1,6 @@
 # gltf-viewer
+[![Build Status](https://travis-ci.org/bwasty/gltf-viewer.svg?branch=master)](https://travis-ci.org/bwasty/gltf-viewer) [![](https://tokei.rs/b1/github/bwasty/gltf-viewer)](https://github.com/Aaronepower/tokei)
+
 glTF Viewer written in Rust (early WIP).
 Current state: copied some code from [learn-opengl-rs](https://github.com/bwasty/learn-opengl-rs/), working on getting gltf data into OpenGL buffers and rendering it.
 
