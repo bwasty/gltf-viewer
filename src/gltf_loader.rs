@@ -1,4 +1,5 @@
 // use std::io::Read;
+use cgmath::Vector3;
 
 use gltf;
 use gltf::Gltf;
@@ -6,6 +7,8 @@ use gltf::Gltf;
 // use gltf::buffer::{ Target };
 // use gltf::mesh::{ Mode, Primitive };
 use gltf::mesh::*;
+
+use mesh::{ Vertex };
 
 // use gltf::import::Source;
 
@@ -24,12 +27,6 @@ pub fn load_file(path: &str) {
     }
 }
 
-// struct PrimitiveData<'a> {
-//     accessor: &'a Accessor<'a>,
-//     buffer_view: &'a BufferView,
-//     data: &'a [u8],
-// }
-
 pub fn load_box(gltf: &Gltf) {
     let buffer = &gltf.buffers().nth(0);
 
@@ -42,13 +39,31 @@ pub fn load_box(gltf: &Gltf) {
 
     // TODO: No debug
     // println!("pos: {:?}", positions);
-    println!("pos len: {}", positions.count());
-    println!("nml len: {}", normals.count());
+    // println!("pos len: {}", positions.count());
+    // println!("nml len: {}", normals.count());
     match indices {
-        Indices::U8(indices) => println!("idx8: {:?}", indices),
-        Indices::U16(indices) => println!("idx16: {:?}", indices),
-        Indices::U32(indices) => println!("idx32: {:?}", indices),
+        Indices::U8(ref indices) => println!("idx8: {:?}", indices),
+        Indices::U16(ref indices) => println!("idx16: {:?}", indices),
+        Indices::U32(ref indices) => println!("idx32: {:?}", indices),
     }
+
+    let vertices: Vec<Vertex> = positions.zip(normals)
+    .map(|(position, normal)| Vertex {
+        position: Vector3::from(position),
+        normal: Vector3::from(normal),
+        ..Vertex::default()
+    })
+    .collect();
+    // println!("{:?}", vertices);
+
+    let indices: Vec<u32> = match indices {
+        Indices::U8(indices) => indices.map(|i| i as u32).collect(),
+        Indices::U16(indices) => indices.map(|i| i as u32).collect(),
+        Indices::U32(indices) => indices.map(|i| i as u32).collect(),
+    };
+
+    // println!("{:?}", indices);
+
     // TODO: No debug
     // assert_eq!(primitive.mode(), Mode::Triangles);
 
