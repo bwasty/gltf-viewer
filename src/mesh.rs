@@ -31,13 +31,14 @@ impl Default for Vertex {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Texture {
     pub id: u32,
     pub type_: String,
     pub path: String,
 }
 
+#[derive(Debug)]
 pub struct Mesh {
     /*  Mesh Data  */
     pub vertices: Vec<Vertex>,

@@ -8,28 +8,28 @@ use gltf::Gltf;
 // use gltf::mesh::{ Mode, Primitive };
 use gltf::mesh::*;
 
-use mesh::{ Vertex };
+use mesh::{ Vertex, Mesh as RenderMesh };
 
 // use gltf::import::Source;
 
 
-pub fn load_file(path: &str) {
+pub fn load_file(path: &str) -> RenderMesh {
     let mut importer = gltf::Importer::new();
     let gltf = importer.import_from_path(path);
     match gltf {
         Ok(gltf) => {
             // println!("{:#?}", gltf);
-            load_box(&gltf);
+            return load_box(&gltf)
         }
         Err(err) => {
             println!("Error: {:#?}", err);
+            panic!();
         }
     }
 }
 
-pub fn load_box(gltf: &Gltf) {
-    let buffer = &gltf.buffers().nth(0);
-
+pub fn load_box(gltf: &Gltf) -> RenderMesh {
+    // let buffer = &gltf.buffers().nth(0);
     let mesh = &gltf.meshes().nth(0).unwrap();
     let primitive = &mesh.primitives().nth(0).unwrap();
 
@@ -41,11 +41,6 @@ pub fn load_box(gltf: &Gltf) {
     // println!("pos: {:?}", positions);
     // println!("pos len: {}", positions.count());
     // println!("nml len: {}", normals.count());
-    match indices {
-        Indices::U8(ref indices) => println!("idx8: {:?}", indices),
-        Indices::U16(ref indices) => println!("idx16: {:?}", indices),
-        Indices::U32(ref indices) => println!("idx32: {:?}", indices),
-    }
 
     let vertices: Vec<Vertex> = positions.zip(normals)
     .map(|(position, normal)| Vertex {
@@ -66,5 +61,6 @@ pub fn load_box(gltf: &Gltf) {
 
     // TODO: No debug
     // assert_eq!(primitive.mode(), Mode::Triangles);
-
+    let textures = Vec::new();
+    RenderMesh::new(vertices, indices, textures)
 }

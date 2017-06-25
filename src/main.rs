@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 extern crate cgmath;
-use cgmath::{Matrix4, vec3, Point3, Deg, perspective};
+use cgmath::{Matrix4, Point3, Deg, perspective};
+use cgmath::prelude::*;
+
 extern crate gl;
 extern crate glfw;
 use self::glfw::{Context, Key, Action};
@@ -19,7 +21,7 @@ use camera::CameraMovement::*;
 mod macros;
 mod mesh;
 mod model;
-use model::Model;
+// use model::Model;
 
 mod gltf_loader;
 use gltf_loader::*;
@@ -29,10 +31,6 @@ const SCR_HEIGHT: u32 = 600;
 
 
 pub fn main() {
-    load_file("src/data/Box.gltf");
-    // load_file("src/data/minimal.gltf");
-    // load_file("../gltf/glTF-Sample-Models/2.0/BoomBox/glTF/BoomBox.gltf");
-
     let mut camera = Camera {
         position: Point3::new(0.0, 0.0, 3.0),
         ..Camera::default()
@@ -48,14 +46,14 @@ pub fn main() {
 
     // glfw: initialize and configure
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
-    glfw.window_hint(glfw::WindowHint::ContextVersion(4, 1));
+    glfw.window_hint(glfw::WindowHint::ContextVersion(4, 1)); // max on macOS
     glfw.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
     #[cfg(target_os = "macos")]
     glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
 
     // glfw window creation
     // TODO: configurable initial dimensions
-    let (mut window, events) = glfw.create_window(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", glfw::WindowMode::Windowed)
+    let (mut window, events) = glfw.create_window(SCR_WIDTH, SCR_HEIGHT, "gltf-viewer", glfw::WindowMode::Windowed)
         .expect("Failed to create GLFW window");
 
     window.make_current();
@@ -63,20 +61,29 @@ pub fn main() {
     window.set_cursor_pos_polling(true);
     window.set_scroll_polling(true);
 
+    // TODO!: capture on click or sth?
+    window.set_cursor_mode(glfw::CursorMode::Disabled);
+
     // gl: load all OpenGL function pointers
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
 
-    let (shader, model) = unsafe {
+    let (shader, mesh) = unsafe {
         gl::Enable(gl::DEPTH_TEST);
 
         let shader = Shader::new("src/shaders/1.model_loading.vs", "src/shaders/1.model_loading.fs");
 
-        let model = Model::new("src/data/Box.gltf");
+        // let model = Model::new("src/data/Box.gltf");
+
+        let mesh = load_file("src/data/Box.gltf");
+        // println!("{:?}", mesh);
+        // load_file("src/data/minimal.gltf");
+        // load_file("../gltf/glTF-Sample-Models/2.0/BoomBox/glTF/BoomBox.gltf");
+
 
         // draw in wireframe
         // gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
 
-        (shader, model)
+        (shader, mesh)
     };
 
     // render loop
@@ -103,10 +110,12 @@ pub fn main() {
             shader.set_mat4(c_str!("view"), &view);
 
             // render the loaded model
-            let mut model_matrix = Matrix4::<f32>::from_translation(vec3(0.0, -1.75, 0.0)); // translate it down so it's at the center of the scene
-            model_matrix = model_matrix * Matrix4::from_scale(0.2);  // it's a bit too big for our scene, so scale it down
+            // let mut model_matrix = Matrix4::<f32>::from_translation(vec3(0.0, -1.75, 0.0)); // translate it down so it's at the center of the scene
+            // model_matrix = model_matrix * Matrix4::from_scale(0.2);  // it's a bit too big for our scene, so scale it down
+            let model_matrix = Matrix4::<f32>::identity();
             shader.set_mat4(c_str!("model"), &model_matrix);
-            model.draw(&shader);
+            // model.draw(&shader);
+            mesh.draw(&shader);
         }
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
