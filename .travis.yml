@@ -16,4 +16,4 @@ addons:
       - libxi-dev
 os:
   - linux
-  - osx
+#  - osx
