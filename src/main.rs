@@ -24,6 +24,7 @@ mod model;
 // use model::Model;
 
 mod render;
+use render::*;
 
 mod gltf_loader;
 use gltf_loader::*;
@@ -69,22 +70,35 @@ pub fn main() {
     // gl: load all OpenGL function pointers
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
 
-    let (shader, mesh) = unsafe {
+    let (shader, mesh, scene) = unsafe {
         gl::Enable(gl::DEPTH_TEST);
 
         let shader = Shader::new("src/shaders/1.model_loading.vs", "src/shaders/1.model_loading.fs");
 
         // let model = Model::new("src/data/Box.gltf");
-
         // let mesh = load_file("src/data/Box.gltf");
         // let mesh = load_file("src/data/minimal.gltf");
         let mesh = load_file("../gltf/glTF-Sample-Models/2.0/BoomBox/glTF/BoomBox.gltf");
         // println!("{:?}", mesh);
 
+        // let path = "src/data/Box.gltf";
+        // let path = "../gltf/glTF-Sample-Models/2.0/BoxAnimated/glTF/BoxAnimated.gltf";
+        let path = "../gltf/glTF-Sample-Models/2.0/BoxInterleaved/glTF/BoxInterleaved.gltf";
+        let mut importer = gltf::Importer::new();
+        let gltf = match importer.import_from_path(path) {
+            Ok(gltf) => gltf,
+            Err(err) => {
+                println!("Error: {:?}", err);
+                panic!();
+            }
+        };
+        // load first scene
+        let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap());
+
         // draw in wireframe
         // gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
 
-        (shader, mesh)
+        (shader, mesh, scene)
     };
 
     // render loop
@@ -113,10 +127,11 @@ pub fn main() {
             // render the loaded model
             // let mut model_matrix = Matrix4::<f32>::from_translation(vec3(0.0, -1.75, 0.0));
             let mut model_matrix = Matrix4::<f32>::identity();
-            model_matrix = model_matrix * Matrix4::from_scale(10.0);
+            model_matrix = model_matrix * Matrix4::from_scale(3.0);
             shader.set_mat4(c_str!("model"), &model_matrix);
             // model.draw(&shader);
-            mesh.draw(&shader);
+            // mesh.draw(&shader);
+            scene.draw(&shader);
         }
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)

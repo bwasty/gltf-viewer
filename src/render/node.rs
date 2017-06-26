@@ -4,11 +4,13 @@ use gltf;
 
 use render::math::*;
 use render::mesh::Mesh;
+use shader::Shader;
 
 pub struct Node {
     // TODO: camera?
     pub children: Vec<Node>,
     pub matrix: Matrix4,
+    // TODO!: actually use the Rc (share meshes)
     pub mesh: Option<Rc<Mesh>>,
     pub rotation: Quaternion,
     pub scale: Vector3,
@@ -30,6 +32,16 @@ impl Node {
             scale: Vector3::from(g_node.scale()),
             translation: Vector3::from(g_node.translation()),
             name: g_node.name().map(|s| s.into()),
+        }
+    }
+
+    pub fn draw(&self, shader: &Shader) {
+        // TODO!!: apply matrix/TRS
+        if let Some(ref mesh) = self.mesh {
+            (*mesh).draw(shader);
+        }
+        for node in &self.children {
+            node.draw(shader);
         }
     }
 }

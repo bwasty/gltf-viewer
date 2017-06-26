@@ -79,10 +79,11 @@ impl Primitive {
         })
         .collect();
 
+        // convert indices to u32 if necessary
         let indices: Vec<u32> = match indices {
             Indices::U8(indices) => indices.map(|i| i as u32).collect(),
             Indices::U16(indices) => indices.map(|i| i as u32).collect(),
-            Indices::U32(indices) => indices.map(|i| i as u32).collect(),
+            Indices::U32(indices) => indices.collect(),
         };
 
         // TODO: No debug
