@@ -9,6 +9,7 @@ use image::GenericImage;
 #[derive(Default)]
 pub struct Material {
     // TODO!!
+    name: Option<String>,
 }
 
 unsafe fn texture_from_file(path: &str, directory: &str) -> u32 {

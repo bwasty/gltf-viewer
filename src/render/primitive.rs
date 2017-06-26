@@ -15,9 +15,13 @@ use shader::Shader;
 pub struct Vertex {
     pub position: Vector3,
     pub normal: Vector3,
-    pub tex_coords: Vector2,
-    pub tangent: Vector3,
-    pub bitangent: Vector3,
+    pub tangent: Vector4,
+    pub tex_coord_0: Vector2,
+    pub tex_coord_1: Vector2,
+    pub color_0: Vector3,
+    // TODO!
+    // pub joints_0: Vector4,
+    // pub weights_0: Vector4,
 }
 
 impl Default for Vertex {
@@ -25,9 +29,10 @@ impl Default for Vertex {
         Vertex {
             position: Vector3::zero(),
             normal: Vector3::zero(),
-            tex_coords: Vector2::zero(),
-            tangent: Vector3::zero(),
-            bitangent: Vector3::zero(),
+            tangent: Vector4::zero(),
+            tex_coord_0: Vector2::zero(),
+            tex_coord_1: Vector2::zero(),
+            color_0: Vector3::zero(),
         }
     }
 }
@@ -67,17 +72,53 @@ impl Primitive {
 
     pub fn from_gltf(g_primitive: gltf::mesh::Primitive) -> Primitive {
         let positions = g_primitive.position().unwrap();
-        let normals = g_primitive.normal().unwrap();
-        let indices = g_primitive.indices().unwrap();
+        let normals = g_primitive.normal()
+            .expect("NotImplementedYet: Normals required! Calculation of flat normals not implemented yet.");
 
-        // TODO!!!: multizip/izip
-        let vertices: Vec<Vertex> = positions.zip(normals)
-        .map(|(position, normal)| Vertex {
-            position: Vector3::from(position),
-            normal: Vector3::from(normal),
-            ..Vertex::default()
-        })
-        .collect();
+        let mut tangents = g_primitive.tangent();
+        // let mut tex_coords_0 = g_primitive.tex_coord(0);
+        // let mut tex_coords_1 = g_primitive.tex_coord(1);
+        // let mut colors_0 = g_primitive.color(0);
+
+        let indices = g_primitive.indices().expect("NotImplementedYet: Indices required at the moment!");
+
+        let vertices: Vec<Vertex> = positions
+            .zip(normals)
+            .map(|(position, normal)| {
+                let tangent = match tangents {
+                    Some(ref mut tangents) => Vector4::from(tangents.next()
+                        .expect("Not enough tangents! Expected 1 per vertex.")),
+                    None => Vector4::zero()
+                };
+                // TODO!!!: tex coord types...8/16/32
+                // let tex_coord_0 = match tex_coords_0 {
+                //     Some(ref mut tex_coord_0) => Vector2::from(tex_coord_0.next()
+                //         .expect("Not enough tex_coords_0! Expected 1 per vertex.")),
+                //     None => Vector2::zero()
+                // };
+                // let tex_coord_1 = match tex_coords_1 {
+                //     Some(ref mut tex_coord_1) => Vector2::from(tex_coord_1.next()
+                //         .expect("Not enough tex_coords_1! Expected 1 per vertex.")),
+                //     None => Vector2::zero()
+                // };
+
+                // TODO!!!: Color Types...
+                // let color_0 = match colors_0 {
+                //     Some(ref mut colors_0) => Vector3::from(colors_0.next()
+                //         .expect("Not enough color_0 entries! Expected 1 per vertex.")),
+                //     None => Vector3::zero()
+                // };
+                Vertex {
+                    position: Vector3::from(position),
+                    normal: Vector3::from(normal),
+                    tangent: tangent,
+                    // tex_coord_0: tex_coord_0,
+                    // tex_coord_1: tex_coord_1,
+                    // color_0: color_0,
+                    ..Vertex::default()
+                }
+            })
+            .collect();
 
         // convert indices to u32 if necessary
         let indices: Vec<u32> = match indices {
@@ -162,6 +203,7 @@ impl Primitive {
         gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, size, data, gl::STATIC_DRAW);
 
         // set the vertex attribute pointers
+        // TODO!!: adapt to new Vertex struct
         let size = size_of::<Vertex>() as i32;
         // vertex positions
         gl::EnableVertexAttribArray(0);
@@ -171,13 +213,13 @@ impl Primitive {
         gl::VertexAttribPointer(1, 3, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, normal) as *const c_void);
         // vertex texture coords
         gl::EnableVertexAttribArray(2);
-        gl::VertexAttribPointer(2, 2, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, tex_coords) as *const c_void);
+        gl::VertexAttribPointer(2, 2, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, tex_coord_0) as *const c_void);
         // vertex tangent
         gl::EnableVertexAttribArray(3);
         gl::VertexAttribPointer(3, 3, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, tangent) as *const c_void);
         // vertex bitangent
-        gl::EnableVertexAttribArray(4);
-        gl::VertexAttribPointer(4, 3, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, bitangent) as *const c_void);
+        // gl::EnableVertexAttribArray(4);
+        // gl::VertexAttribPointer(4, 3, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, bitangent) as *const c_void);
 
         gl::BindVertexArray(0);
     }
