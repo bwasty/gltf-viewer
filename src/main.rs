@@ -9,7 +9,6 @@ use self::glfw::{Context, Key, Action};
 extern crate gltf;
 extern crate image;
 
-
 use std::sync::mpsc::Receiver;
 use std::ffi::CStr;
 
@@ -20,18 +19,12 @@ use camera::Camera;
 use camera::CameraMovement::*;
 mod macros;
 mod mesh;
-mod model;
-// use model::Model;
 
 mod render;
 use render::*;
 
-mod gltf_loader;
-use gltf_loader::*;
-
 const SCR_WIDTH: u32 = 800;
 const SCR_HEIGHT: u32 = 600;
-
 
 pub fn main() {
     let mut camera = Camera {
@@ -70,20 +63,15 @@ pub fn main() {
     // gl: load all OpenGL function pointers
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
 
-    let (shader, mesh, scene) = unsafe {
+    let (shader, scene) = unsafe {
         gl::Enable(gl::DEPTH_TEST);
 
-        let shader = Shader::new("src/shaders/1.model_loading.vs", "src/shaders/1.model_loading.fs");
+        let shader = Shader::new("src/shaders/simple.vs", "src/shaders/simple.fs");
 
-        // let model = Model::new("src/data/Box.gltf");
-        // let mesh = load_file("src/data/Box.gltf");
-        // let mesh = load_file("src/data/minimal.gltf");
-        let mesh = load_file("../gltf/glTF-Sample-Models/2.0/BoomBox/glTF/BoomBox.gltf");
-        // println!("{:?}", mesh);
-
-        // let path = "src/data/Box.gltf";
+        let path = "src/data/Box.gltf";
+        // let path = "src/data/minimal.gltf";
         // let path = "../gltf/glTF-Sample-Models/2.0/BoxAnimated/glTF/BoxAnimated.gltf";
-        let path = "../gltf/glTF-Sample-Models/2.0/BoxInterleaved/glTF/BoxInterleaved.gltf";
+        // let path = "../gltf/glTF-Sample-Models/2.0/BoxInterleaved/glTF/BoxInterleaved.gltf";
         let mut importer = gltf::Importer::new();
         let gltf = match importer.import_from_path(path) {
             Ok(gltf) => gltf,
@@ -98,7 +86,7 @@ pub fn main() {
         // draw in wireframe
         // gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
 
-        (shader, mesh, scene)
+        (shader, scene)
     };
 
     // render loop
@@ -124,13 +112,12 @@ pub fn main() {
             shader.set_mat4(c_str!("projection"), &projection);
             shader.set_mat4(c_str!("view"), &view);
 
-            // render the loaded model
+            // TODO!!: move to primitive setup / draw
             // let mut model_matrix = Matrix4::<f32>::from_translation(vec3(0.0, -1.75, 0.0));
             let mut model_matrix = Matrix4::<f32>::identity();
-            model_matrix = model_matrix * Matrix4::from_scale(3.0);
+            model_matrix = model_matrix * Matrix4::from_scale(1.0);
             shader.set_mat4(c_str!("model"), &model_matrix);
-            // model.draw(&shader);
-            // mesh.draw(&shader);
+
             scene.draw(&shader);
         }
 

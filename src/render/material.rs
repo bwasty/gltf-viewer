@@ -1,36 +1,14 @@
 use std::os::raw::c_void;
 use std::path::Path;
 
-// use cgmath::{vec2, vec3};
 use gl;
 use image;
 use image::DynamicImage::*;
 use image::GenericImage;
 
-use mesh::{ Mesh, Texture, /*Vertex*/ };
-use shader::Shader;
-
 #[derive(Default)]
-pub struct Model {
-    /*  Model Data */
-    pub meshes: Vec<Mesh>,
-    textures_loaded: Vec<Texture>,   // stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
-    directory: String,
-}
-
-impl Model {
-    /// constructor, expects a filepath to a 3D model.
-    pub fn new(_path: &str) -> Model {
-        let model = Model::default();
-        // model.load_model(path);
-        model
-    }
-
-    pub fn draw(&self, shader: &Shader) {
-        for mesh in &self.meshes {
-            unsafe { mesh.draw(shader); }
-        }
-    }
+pub struct Material {
+    // TODO!!
 }
 
 unsafe fn texture_from_file(path: &str, directory: &str) -> u32 {

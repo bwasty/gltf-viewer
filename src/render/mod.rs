@@ -9,3 +9,6 @@ mod mesh;
 pub use self::mesh::*;
 mod primitive;
 pub use self::primitive::*;
+
+mod material;
+pub use self::material::*;
