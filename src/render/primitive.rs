@@ -4,6 +4,8 @@ use std::os::raw::c_void;
 use std::ptr;
 
 use gl;
+use gltf;
+use gltf::mesh::Indices;
 
 use render::math::*;
 use shader::Shader;
@@ -63,6 +65,34 @@ impl Primitive {
         prim
     }
 
+    pub fn from_gltf(g_primitive: gltf::mesh::Primitive) -> Primitive {
+        let positions = g_primitive.position().unwrap();
+        let normals = g_primitive.normal().unwrap();
+        let indices = g_primitive.indices().unwrap();
+
+        // TODO!!!: multizip/izip
+        let vertices: Vec<Vertex> = positions.zip(normals)
+        .map(|(position, normal)| Vertex {
+            position: Vector3::from(position),
+            normal: Vector3::from(normal),
+            ..Vertex::default()
+        })
+        .collect();
+
+        let indices: Vec<u32> = match indices {
+            Indices::U8(indices) => indices.map(|i| i as u32).collect(),
+            Indices::U16(indices) => indices.map(|i| i as u32).collect(),
+            Indices::U32(indices) => indices.map(|i| i as u32).collect(),
+        };
+
+        // TODO: No debug
+        // assert_eq!(primitive.mode(), Mode::Triangles);
+
+        // TODO!!: textures
+        let textures = Vec::new();
+        Primitive::new(vertices, indices, textures)
+    }
+
     /// render the mesh
     pub unsafe fn draw(&self, shader: &Shader) {
         // bind appropriate textures
@@ -100,7 +130,7 @@ impl Primitive {
             gl::BindTexture(gl::TEXTURE_2D, texture.id);
         }
 
-        // d mesh
+        // draw mesh
         gl::BindVertexArray(self.vao);
         gl::DrawElements(gl::TRIANGLES, self.indices.len() as i32, gl::UNSIGNED_INT, ptr::null());
         gl::BindVertexArray(0);
