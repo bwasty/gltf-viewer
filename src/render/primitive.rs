@@ -5,7 +5,7 @@ use std::ptr;
 
 use gl;
 use gltf;
-use gltf::mesh::Indices;
+use gltf::mesh::{ Indices, TexCoord, Color };
 
 use render::math::*;
 use shader::Shader;
@@ -18,7 +18,7 @@ pub struct Vertex {
     pub tangent: Vector4,
     pub tex_coord_0: Vector2,
     pub tex_coord_1: Vector2,
-    pub color_0: Vector3,
+    pub color_0: Vector3, // TODO: vec4 support
     // TODO!
     // pub joints_0: Vector4,
     // pub weights_0: Vector4,
@@ -74,11 +74,43 @@ impl Primitive {
         let positions = g_primitive.position().unwrap();
         let normals = g_primitive.normal()
             .expect("NotImplementedYet: Normals required! Calculation of flat normals not implemented yet.");
-
         let mut tangents = g_primitive.tangent();
-        // let mut tex_coords_0 = g_primitive.tex_coord(0);
-        // let mut tex_coords_1 = g_primitive.tex_coord(1);
-        // let mut colors_0 = g_primitive.color(0);
+
+        // TODO!: support the different texcoord and color formats
+        let mut tex_coords_0 = match g_primitive.tex_coord(0) {
+            Some(tex_coords_0) => {
+                Some(match tex_coords_0 {
+                    TexCoord::F32(tc) => tc,
+                    TexCoord::U8(_) => unimplemented!(),
+                    TexCoord::U16(_) => unimplemented!(),
+                })
+            },
+            None => None
+        };
+        let mut tex_coords_1 = match g_primitive.tex_coord(1) {
+            Some(tex_coords_1) => {
+                Some(match tex_coords_1 {
+                    TexCoord::F32(tc) => tc,
+                    TexCoord::U8(_) => unimplemented!(),
+                    TexCoord::U16(_) => unimplemented!(),
+                })
+            },
+            None => None
+        };
+        let mut colors_0 = match g_primitive.color(0) {
+            Some(colors_0) => {
+                Some(match colors_0 {
+                    // Color::RgbU8(Iter<'a, [u8; 3]>),
+                    // Color::RgbaU8(Iter<'a, [u8; 4]>),
+                    // Color::RgbU16(Iter<'a, [u16; 3]>),
+                    // Color::RgbaU16(Iter<'a, [u16; 4]>),
+                    Color::RgbF32(c) => c,
+                    // Color::RgbaF32(c),
+                    _ => unimplemented!()
+                })
+            }
+            None => None
+        };
 
         let indices = g_primitive.indices().expect("NotImplementedYet: Indices required at the moment!");
 
@@ -90,37 +122,38 @@ impl Primitive {
                         .expect("Not enough tangents! Expected 1 per vertex.")),
                     None => Vector4::zero()
                 };
-                // TODO!!!: tex coord types...8/16/32
-                // let tex_coord_0 = match tex_coords_0 {
-                //     Some(ref mut tex_coord_0) => Vector2::from(tex_coord_0.next()
-                //         .expect("Not enough tex_coords_0! Expected 1 per vertex.")),
-                //     None => Vector2::zero()
-                // };
-                // let tex_coord_1 = match tex_coords_1 {
-                //     Some(ref mut tex_coord_1) => Vector2::from(tex_coord_1.next()
-                //         .expect("Not enough tex_coords_1! Expected 1 per vertex.")),
-                //     None => Vector2::zero()
-                // };
+                let tex_coord_0 = match tex_coords_0 {
+                    Some(ref mut tex_coord_0) => {
+                        Vector2::from(tex_coord_0.next()
+                        .expect("Not enough tex_coords_0! Expected 1 per vertex."))
+                    }
+                    None => Vector2::zero()
+                };
+                let tex_coord_1 = match tex_coords_1 {
+                    Some(ref mut tex_coord_1) => Vector2::from(tex_coord_1.next()
+                        .expect("Not enough tex_coords_1! Expected 1 per vertex.")),
+                    None => Vector2::zero()
+                };
 
-                // TODO!!!: Color Types...
-                // let color_0 = match colors_0 {
-                //     Some(ref mut colors_0) => Vector3::from(colors_0.next()
-                //         .expect("Not enough color_0 entries! Expected 1 per vertex.")),
-                //     None => Vector3::zero()
-                // };
+                let color_0 = match colors_0 {
+                    Some(ref mut colors_0) => Vector3::from(colors_0.next()
+                        .expect("Not enough color_0 entries! Expected 1 per vertex.")),
+                    None => Vector3::zero()
+                };
                 Vertex {
                     position: Vector3::from(position),
                     normal: Vector3::from(normal),
                     tangent: tangent,
-                    // tex_coord_0: tex_coord_0,
-                    // tex_coord_1: tex_coord_1,
-                    // color_0: color_0,
+                    tex_coord_0: tex_coord_0,
+                    tex_coord_1: tex_coord_1,
+                    color_0: color_0,
                     ..Vertex::default()
                 }
             })
             .collect();
 
         // convert indices to u32 if necessary
+        // TODO?: use indices as they are?
         let indices: Vec<u32> = match indices {
             Indices::U8(indices) => indices.map(|i| i as u32).collect(),
             Indices::U16(indices) => indices.map(|i| i as u32).collect(),
