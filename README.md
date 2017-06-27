@@ -1,8 +1,19 @@
 # gltf-viewer
-[![Build Status](https://travis-ci.org/bwasty/gltf-viewer.svg?branch=master)](https://travis-ci.org/bwasty/gltf-viewer) [![](https://tokei.rs/b1/github/bwasty/gltf-viewer)](https://github.com/Aaronepower/tokei)
+[![crates.io](https://img.shields.io/crates/v/gltf-viewer.svg)](https://crates.io/crates/gltf-viewer) [![Build Status](https://travis-ci.org/bwasty/gltf-viewer.svg?branch=master)](https://travis-ci.org/bwasty/gltf-viewer) [![](https://tokei.rs/b1/github/bwasty/gltf-viewer)](https://github.com/Aaronepower/tokei)
 
-glTF Viewer written in Rust (early WIP).
-Current state: copied some code from [learn-opengl-rs](https://github.com/bwasty/learn-opengl-rs/), working on getting gltf data into OpenGL buffers and rendering it.
+glTF Viewer written in Rust (WIP).
+Current state: most simple models can be loaded, but there is no shading/texturing (normals are used as color).
+
+Install with
+```
+cargo install gltf-viewer
+```
+
+Run with
+```
+gltf-viewer <filename>
+```
+Both .gltf and .glb files are supported.
 
 ### Goals
 * Complete gltF 2.0 support

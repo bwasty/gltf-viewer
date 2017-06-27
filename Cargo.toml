@@ -1,7 +1,21 @@
 [package]
-authors = ["Benjamin Wasty <benny.wasty@gmail.com>"]
 name = "gltf-viewer"
-version = "0.1.0"
+version = "0.0.1"
+authors = ["Benjamin Wasty <benny.wasty@gmail.com>"]
+description = "Simple glTF 2.0 viewer (WIP)"
+repository = "https://github.com/bwasty/gltf-viewer"
+readme = "README.md"
+keywords = ["glTF", "3D", "model", "scene", "viewer"]
+categories = ["rendering"]
+license = "Unlicense"
+
+include = [
+    "**/*.rs",
+    "Cargo.toml",
+]
+
+[badges]
+travis-ci = { repository = "https://github.com/bwasty/gltf-viewer", branch = "master" }
 
 [dependencies]
 cgmath = "0.14.1"
