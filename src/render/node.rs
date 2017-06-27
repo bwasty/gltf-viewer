@@ -1,3 +1,4 @@
+use std::ffi::CStr;
 use std::rc::Rc;
 
 use gltf;
@@ -22,11 +23,18 @@ pub struct Node {
 
 impl Node {
     pub fn from_gltf(g_node: gltf::scene::Node) -> Node {
+        let m = &g_node.matrix();
+        let matrix = Matrix4::new(
+            m[0], m[1], m[2], m[2],
+            m[4], m[5], m[6], m[7],
+            m[8], m[9], m[10], m[11],
+            m[12], m[13], m[14], m[15],
+        );
         Node {
             children: g_node.children().map(Node::from_gltf).collect(),
-            // TODO!!
+            // TODO: why doesn't this work?
             // matrix: Matrix4::from(&g_node.matrix()),
-            matrix: Matrix4::identity(),
+            matrix: matrix,
             mesh: g_node.mesh().map(|g_mesh| Rc::new(Mesh::from_gltf(g_mesh))),
             rotation: Quaternion::from(g_node.rotation()),
             scale: Vector3::from(g_node.scale()),
@@ -36,8 +44,25 @@ impl Node {
     }
 
     pub fn draw(&self, shader: &Shader) {
-        // TODO!!: apply matrix/TRS
+        // TODO!: handle case of neither TRS nor matrix -> identity (or already works?)
+        let model_matrix;
+        if !self.matrix.is_zero() { // TODO: optimize - determine in constructor
+            model_matrix = self.matrix;
+        }
+        else {
+            // TODO: optimize (do on setup / cache)
+            model_matrix =
+                Matrix4::from_translation(self.translation) *
+                Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, self.scale.z) *
+                Matrix4::from(self.rotation);
+        }
+
         if let Some(ref mesh) = self.mesh {
+            // TODO: assume identity set and don't set if identity here?
+            unsafe {
+                shader.set_mat4(c_str!("model"), &model_matrix);
+            }
+
             (*mesh).draw(shader);
         }
         for node in &self.children {

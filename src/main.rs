@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 extern crate cgmath;
 use cgmath::{Matrix4, Point3, Deg, perspective};
-use cgmath::prelude::*;
+// use cgmath::prelude::*;
 
 extern crate gl;
 extern crate glfw;
@@ -111,12 +111,6 @@ pub fn main() {
             let view = camera.get_view_matrix();
             shader.set_mat4(c_str!("projection"), &projection);
             shader.set_mat4(c_str!("view"), &view);
-
-            // TODO!!: move to primitive setup / draw
-            // let mut model_matrix = Matrix4::<f32>::from_translation(vec3(0.0, -1.75, 0.0));
-            let mut model_matrix = Matrix4::<f32>::identity();
-            model_matrix = model_matrix * Matrix4::from_scale(1.0);
-            shader.set_mat4(c_str!("model"), &model_matrix);
 
             scene.draw(&shader);
         }

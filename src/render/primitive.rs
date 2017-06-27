@@ -72,6 +72,7 @@ impl Primitive {
 
     pub fn from_gltf(g_primitive: gltf::mesh::Primitive) -> Primitive {
         let positions = g_primitive.position().unwrap();
+        // TODO!: turn all expects into error type
         let normals = g_primitive.normal()
             .expect("NotImplementedYet: Normals required! Calculation of flat normals not implemented yet.");
         let mut tangents = g_primitive.tangent();
