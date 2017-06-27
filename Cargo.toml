@@ -1,6 +1,6 @@
 [package]
 name = "gltf-viewer"
-version = "0.0.1"
+version = "0.0.1-pre"
 authors = ["Benjamin Wasty <benny.wasty@gmail.com>"]
 description = "Simple glTF 2.0 viewer (WIP)"
 repository = "https://github.com/bwasty/gltf-viewer"
