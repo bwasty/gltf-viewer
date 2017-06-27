@@ -5,7 +5,7 @@ use std::ptr;
 
 use gl;
 use gltf;
-use gltf::mesh::{ Indices, TexCoord, Color };
+use gltf::mesh::{ Indices, TexCoords, Colors };
 
 use render::math::*;
 use shader::Shader;
@@ -71,42 +71,43 @@ impl Primitive {
     }
 
     pub fn from_gltf(g_primitive: gltf::mesh::Primitive) -> Primitive {
-        let positions = g_primitive.position().unwrap();
+        let positions = g_primitive.positions().unwrap();
         // TODO!: turn all expects into error type
-        let normals = g_primitive.normal()
+        let normals = g_primitive.normals() // TODO: flat normal calculation
             .expect("NotImplementedYet: Normals required! Calculation of flat normals not implemented yet.");
-        let mut tangents = g_primitive.tangent();
+        let mut tangents = g_primitive.tangents();
 
         // TODO!: support the different texcoord and color formats
-        let mut tex_coords_0 = match g_primitive.tex_coord(0) {
+        let mut tex_coords_0 = match g_primitive.tex_coords(0) {
             Some(tex_coords_0) => {
                 Some(match tex_coords_0 {
-                    TexCoord::F32(tc) => tc,
-                    TexCoord::U8(_) => unimplemented!(),
-                    TexCoord::U16(_) => unimplemented!(),
+                    TexCoords::F32(tc) => tc,
+                    // TODO! TexCoords::U8/U16 (also below)
+                    TexCoords::U8(_) => unimplemented!(),
+                    TexCoords::U16(_) => unimplemented!(),
                 })
             },
             None => None
         };
-        let mut tex_coords_1 = match g_primitive.tex_coord(1) {
+        let mut tex_coords_1 = match g_primitive.tex_coords(1) {
             Some(tex_coords_1) => {
                 Some(match tex_coords_1 {
-                    TexCoord::F32(tc) => tc,
-                    TexCoord::U8(_) => unimplemented!(),
-                    TexCoord::U16(_) => unimplemented!(),
+                    TexCoords::F32(tc) => tc,
+                    TexCoords::U8(_) => unimplemented!(),
+                    TexCoords::U16(_) => unimplemented!(),
                 })
             },
             None => None
         };
-        let mut colors_0 = match g_primitive.color(0) {
+        let mut colors_0 = match g_primitive.colors(0) {
             Some(colors_0) => {
                 Some(match colors_0 {
-                    // Color::RgbU8(Iter<'a, [u8; 3]>),
-                    // Color::RgbaU8(Iter<'a, [u8; 4]>),
-                    // Color::RgbU16(Iter<'a, [u16; 3]>),
-                    // Color::RgbaU16(Iter<'a, [u16; 4]>),
-                    Color::RgbF32(c) => c,
-                    // Color::RgbaF32(c),
+                    // Colors::RgbU8(Iter<'a, [u8; 3]>),
+                    // Colors::RgbaU8(Iter<'a, [u8; 4]>),
+                    // Colors::RgbU16(Iter<'a, [u16; 3]>),
+                    // Colors::RgbaU16(Iter<'a, [u16; 4]>),
+                    Colors::RgbF32(c) => c,
+                    // Colors::RgbaF32(c),
                     _ => unimplemented!()
                 })
             }

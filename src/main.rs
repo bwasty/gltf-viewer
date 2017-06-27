@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#[macro_use] extern crate clap;
 extern crate cgmath;
 use cgmath::{Matrix4, Point3, Deg, perspective};
 // use cgmath::prelude::*;
@@ -8,6 +9,8 @@ extern crate glfw;
 use self::glfw::{Context, Key, Action};
 extern crate gltf;
 extern crate image;
+
+use clap::{Arg, App};
 
 use std::sync::mpsc::Receiver;
 use std::ffi::CStr;
@@ -27,8 +30,19 @@ const SCR_WIDTH: u32 = 800;
 const SCR_HEIGHT: u32 = 600;
 
 pub fn main() {
+    let args = App::new("gltf-viewer")
+        .version(crate_version!())
+        .arg(Arg::with_name("FILE/URL")
+            .required(true)
+            .takes_value(true)
+            .help("glTF file name or URL"))
+        .get_matches();
+    let source = args.value_of("FILE/URL").unwrap();
+
     let mut camera = Camera {
-        position: Point3::new(0.0, 0.0, 3.0),
+        // TODO: position.z - bounding box length
+        position: Point3::new(0.0, 0.0, 2.0),
+        zoom: 60.0,
         ..Camera::default()
     };
 
@@ -68,12 +82,8 @@ pub fn main() {
 
         let shader = Shader::new("src/shaders/simple.vs", "src/shaders/simple.fs");
 
-        let path = "src/data/Box.gltf";
-        // let path = "src/data/minimal.gltf";
-        // let path = "../gltf/glTF-Sample-Models/2.0/BoxAnimated/glTF/BoxAnimated.gltf";
-        // let path = "../gltf/glTF-Sample-Models/2.0/BoxInterleaved/glTF/BoxInterleaved.gltf";
-        let mut importer = gltf::Importer::new();
-        let gltf = match importer.import_from_path(path) {
+        let mut importer = gltf::ZeroCopyImporter::new();
+        let gltf = match importer.import_from_path(source) {
             Ok(gltf) => gltf,
             Err(err) => {
                 println!("Error: {:?}", err);
@@ -107,7 +117,7 @@ pub fn main() {
             shader.use_program();
 
             // view/projection transformations
-            let projection: Matrix4<f32> = perspective(Deg(camera.zoom), SCR_WIDTH as f32 / SCR_HEIGHT as f32, 0.1, 100.0);
+            let projection: Matrix4<f32> = perspective(Deg(camera.zoom), SCR_WIDTH as f32 / SCR_HEIGHT as f32, 0.01, 1000.0);
             let view = camera.get_view_matrix();
             shader.set_mat4(c_str!("projection"), &projection);
             shader.set_mat4(c_str!("view"), &view);
