@@ -70,9 +70,10 @@ pub fn main() {
     window.set_framebuffer_size_polling(true);
     window.set_cursor_pos_polling(true);
     window.set_scroll_polling(true);
-
     // TODO!: capture on click or sth?
     window.set_cursor_mode(glfw::CursorMode::Disabled);
+
+    glfw.set_swap_interval(glfw::SwapInterval::Sync(1)); // V-sync
 
     // gl: load all OpenGL function pointers
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);

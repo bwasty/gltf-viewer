@@ -30,13 +30,15 @@ impl Node {
             m[8], m[9], m[10], m[11],
             m[12], m[13], m[14], m[15],
         );
+        let r = &g_node.rotation();
+        let rotation = Quaternion::new(r[3], r[0], r[1], r[2]); // NOTe: different element order!
         Node {
             children: g_node.children().map(Node::from_gltf).collect(),
             // TODO: why doesn't this work?
             // matrix: Matrix4::from(&g_node.matrix()),
             matrix: matrix,
             mesh: g_node.mesh().map(|g_mesh| Rc::new(Mesh::from_gltf(g_mesh))),
-            rotation: Quaternion::from(g_node.rotation()),
+            rotation: rotation,
             scale: Vector3::from(g_node.scale()),
             translation: Vector3::from(g_node.translation()),
             name: g_node.name().map(|s| s.into()),
@@ -46,7 +48,7 @@ impl Node {
     pub fn draw(&self, shader: &Shader) {
         // TODO!: handle case of neither TRS nor matrix -> identity (or already works?)
         let model_matrix;
-        if !self.matrix.is_zero() { // TODO: optimize - determine in constructor
+        if !self.matrix.is_identity() { // TODO: optimize - determine in constructor
             model_matrix = self.matrix;
         }
         else {
