@@ -1,6 +1,7 @@
 use gltf;
 
 use render::Node;
+use render::math::*;
 use shader::Shader;
 
 pub struct Scene {
@@ -18,8 +19,9 @@ impl Scene {
 
     // TODO!: flatten draw call hierarchy (global Vec<Primitive>?)
     pub fn draw(&self, shader: &Shader) {
+        let model_matrix = Matrix4::identity();
         for node in &self.nodes {
-            node.draw(shader);
+            node.draw(shader, &model_matrix);
         }
     }
 }

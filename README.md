@@ -8,6 +8,7 @@ Current state: most simple models can be loaded, but there is no shading/texturi
 
 <img width="311" alt="gltf-viewer" src="https://user-images.githubusercontent.com/1647415/27612520-375828ee-5b97-11e7-97b4-90785cdbfe8e.png">
 
+<!--
 Install with
 ```
 cargo install gltf-viewer
@@ -18,6 +19,7 @@ Run with
 gltf-viewer <filename>
 ```
 Both .gltf and .glb files are supported.
+-->
 
 ### Goals
 * Complete gltF 2.0 support

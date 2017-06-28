@@ -45,15 +45,15 @@ impl Node {
         }
     }
 
-    pub fn draw(&self, shader: &Shader) {
+    pub fn draw(&self, shader: &Shader, model_matrix: &Matrix4) {
         // TODO!: handle case of neither TRS nor matrix -> identity (or already works?)
-        let model_matrix;
+        let mut model_matrix = *model_matrix;
         if !self.matrix.is_identity() { // TODO: optimize - determine in constructor
-            model_matrix = self.matrix;
+            model_matrix = model_matrix * self.matrix;
         }
         else {
             // TODO: optimize (do on setup / cache)
-            model_matrix =
+            model_matrix = model_matrix *
                 Matrix4::from_translation(self.translation) *
                 Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, self.scale.z) *
                 Matrix4::from(self.rotation);
@@ -68,7 +68,7 @@ impl Node {
             (*mesh).draw(shader);
         }
         for node in &self.children {
-            node.draw(shader);
+            node.draw(shader, &model_matrix);
         }
     }
 }
