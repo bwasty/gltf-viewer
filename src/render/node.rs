@@ -18,7 +18,7 @@ pub struct Node {
     pub translation: Vector3,
     // TODO
     // weights_id: usize,
-    pub name: Option<String>,
+    pub name: Option<String>, // TODO: replace with reference to/index of gltf object?
 }
 
 impl Node {

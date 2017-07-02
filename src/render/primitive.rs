@@ -44,8 +44,10 @@ pub struct Texture {
     pub path: String,
 }
 
+// TODO!: split off vao and texture id's into "Renderable" (?) for draw loop
 pub struct Primitive {
     /*  Mesh Data  */
+    // TODO!: why save vertices, indices after setup?
     pub vertices: Vec<Vertex>,
     pub indices: Vec<u32>,
     pub textures: Vec<Texture>,
@@ -73,7 +75,7 @@ impl Primitive {
     pub fn from_gltf(g_primitive: gltf::mesh::Primitive) -> Primitive {
         let positions = g_primitive.positions().unwrap();
         // TODO!: turn all expects into error type
-        let normals = g_primitive.normals() // TODO: flat normal calculation
+        let normals = g_primitive.normals() // TODO: flat normal calculation (in gltf crate)
             .expect("NotImplementedYet: Normals required! Calculation of flat normals not implemented yet.");
         let mut tangents = g_primitive.tangents();
 
@@ -172,6 +174,7 @@ impl Primitive {
 
     /// render the mesh
     pub unsafe fn draw(&self, shader: &Shader) {
+        // TODO!!: re-write texture handling (doesn't fit gltf...)
         // bind appropriate textures
         let mut diffuse_nr  = 0;
         let mut specular_nr = 0;
