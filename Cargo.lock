@@ -4,7 +4,7 @@ version = "0.0.1-pre"
 dependencies = [
  "cgmath 0.14.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.25.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "futures 0.1.14 (git+https://github.com/alexcrichton/futures-rs.git)",
+ "futures 0.1.14 (git+https://github.com/alteous/futures-rs.git)",
  "gl 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "glfw 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gltf 0.6.0 (git+https://github.com/alteous/gltf.git?branch=incoming)",
@@ -125,11 +125,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "num-traits 0.1.39 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
-
-[[package]]
-name = "futures"
-version = "0.1.14"
-source = "git+https://github.com/alexcrichton/futures-rs.git#570cd2a70ea8bddb15cf6ec6b516afabd8723e6d"
 
 [[package]]
 name = "futures"
@@ -571,7 +566,6 @@ dependencies = [
 "checksum dtoa 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "80c8b71fd71146990a9742fc06dcbbde19161a267e0ad4e572c35162f4578c90"
 "checksum either 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "18785c1ba806c258137c937e44ada9ee7e69a37e3c72077542cd2f069d78562a"
 "checksum enum_primitive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "be4551092f4d519593039259a9ed8daedf0da12e5109c5280338073eaeb81180"
-"checksum futures 0.1.14 (git+https://github.com/alexcrichton/futures-rs.git)" = "<none>"
 "checksum futures 0.1.14 (git+https://github.com/alteous/futures-rs.git)" = "<none>"
 "checksum futures 0.1.14 (registry+https://github.com/rust-lang/crates.io-index)" = "4b63a4792d4f8f686defe3b39b92127fea6344de5d38202b2ee5a11bbbf29d6a"
 "checksum gcc 0.3.51 (registry+https://github.com/rust-lang/crates.io-index)" = "120d07f202dcc3f72859422563522b66fe6463a4c513df062874daad05f85f0a"

@@ -10,6 +10,8 @@ use gltf::mesh::{ Indices, TexCoords, Colors };
 use render::math::*;
 use shader::Shader;
 
+use futures::Future;
+
 #[repr(C)]
 #[derive(Debug)]
 pub struct Vertex {
@@ -73,15 +75,16 @@ impl Primitive {
     }
 
     pub fn from_gltf(g_primitive: gltf::mesh::Primitive) -> Primitive {
-        let positions = g_primitive.positions().unwrap();
+        // TODO!!: handle unwraps...
+        let positions = g_primitive.positions().unwrap().wait().unwrap();
         // TODO!: turn all expects into error type
-        let normals = g_primitive.normals() // TODO: flat normal calculation (in gltf crate)
+        let normals = g_primitive.normals().unwrap().wait() // TODO: flat normal calculation (in gltf crate)
             .expect("NotImplementedYet: Normals required! Calculation of flat normals not implemented yet.");
-        let mut tangents = g_primitive.tangents();
+        // let mut tangents = g_primitive.tangents().unwrap().wait();
 
         // TODO!: support the different texcoord and color formats
-        let mut tex_coords_0 = match g_primitive.tex_coords(0) {
-            Some(tex_coords_0) => {
+        let mut tex_coords_0 = match g_primitive.tex_coords(0).unwrap().wait() {
+            Ok(tex_coords_0) => {
                 Some(match tex_coords_0 {
                     TexCoords::F32(tc) => tc,
                     // TODO! TexCoords::U8/U16 (also below)
@@ -89,20 +92,20 @@ impl Primitive {
                     TexCoords::U16(_) => unimplemented!(),
                 })
             },
-            None => None
+            _ => None
         };
-        let mut tex_coords_1 = match g_primitive.tex_coords(1) {
-            Some(tex_coords_1) => {
+        let mut tex_coords_1 = match g_primitive.tex_coords(1).unwrap().wait() {
+            Ok(tex_coords_1) => {
                 Some(match tex_coords_1 {
                     TexCoords::F32(tc) => tc,
                     TexCoords::U8(_) => unimplemented!(),
                     TexCoords::U16(_) => unimplemented!(),
                 })
             },
-            None => None
+            _ => None
         };
-        let mut colors_0 = match g_primitive.colors(0) {
-            Some(colors_0) => {
+        let mut colors_0 = match g_primitive.colors(0).unwrap().wait() {
+            Ok(colors_0) => {
                 Some(match colors_0 {
                     // Colors::RgbU8(Iter<'a, [u8; 3]>),
                     // Colors::RgbaU8(Iter<'a, [u8; 4]>),
@@ -113,19 +116,21 @@ impl Primitive {
                     _ => unimplemented!()
                 })
             }
-            None => None
+            _ => None
         };
 
-        let indices = g_primitive.indices().expect("NotImplementedYet: Indices required at the moment!");
+        let indices = g_primitive.indices().unwrap().wait()
+            .expect("NotImplementedYet: Indices required at the moment!");
 
         let vertices: Vec<Vertex> = positions
             .zip(normals)
             .map(|(position, normal)| {
-                let tangent = match tangents {
-                    Some(ref mut tangents) => Vector4::from(tangents.next()
-                        .expect("Not enough tangents! Expected 1 per vertex.")),
-                    None => Vector4::zero()
-                };
+                // TODO!
+                // let tangent = match tangents {
+                //     Some(ref mut tangents) => Vector4::from(tangents.next()
+                //         .expect("Not enough tangents! Expected 1 per vertex.")),
+                //     None => Vector4::zero()
+                // };
                 let tex_coord_0 = match tex_coords_0 {
                     Some(ref mut tex_coord_0) => {
                         Vector2::from(tex_coord_0.next()
@@ -147,7 +152,7 @@ impl Primitive {
                 Vertex {
                     position: Vector3::from(position),
                     normal: Vector3::from(normal),
-                    tangent: tangent,
+                    tangent: Vector4::zero(),//tangent,
                     tex_coord_0: tex_coord_0,
                     tex_coord_1: tex_coord_1,
                     color_0: color_0,
