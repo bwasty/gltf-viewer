@@ -20,11 +20,11 @@ travis-ci = { repository = "https://github.com/bwasty/gltf-viewer", branch = "ma
 [dependencies]
 cgmath = "0.14.1"
 clap = "2.25.0"
+futures = { git = "https://github.com/alexcrichton/futures-rs.git" }
 gl = "0.6.2"
 glfw = "0.15.0"
 image = "0.14.0"
 
 [dependencies.gltf]
-# branch = "wrapper"
+branch = "incoming"
 git = "https://github.com/alteous/gltf.git"
-rev = "12508bd3b63a31fa9a29b92cf87e82bc10301389"

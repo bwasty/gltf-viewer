@@ -12,7 +12,8 @@ pub struct Scene {
 impl Scene {
     pub fn from_gltf(g_scene: gltf::scene::Scene) -> Scene {
         Scene {
-            name: g_scene.name().map(|s| s.into()),
+            // TODO!
+            name: None, //g_scene.name().map(|s| s.into()),
             nodes: g_scene.nodes().map(Node::from_gltf).collect()
         }
     }

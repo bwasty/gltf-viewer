@@ -17,7 +17,8 @@ impl Mesh {
     pub fn from_gltf(g_mesh: gltf::mesh::Mesh) -> Mesh {
         Mesh {
             primitives: g_mesh.primitives().map(Primitive::from_gltf).collect(),
-            name: g_mesh.name().map(|s| s.into()),
+            // TODO!
+            name: None//g_mesh.name().map(|s| s.into()),
         }
     }
 

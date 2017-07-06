@@ -10,6 +10,9 @@ use self::glfw::{Context, Key, Action};
 extern crate gltf;
 extern crate image;
 
+extern crate futures;
+use futures::executor::spawn;
+
 use clap::{Arg, App};
 
 use std::sync::mpsc::Receiver;
@@ -83,8 +86,7 @@ pub fn main() {
 
         let shader = Shader::new("src/shaders/simple.vs", "src/shaders/simple.fs");
 
-        let mut importer = gltf::ZeroCopyImporter::new();
-        let gltf = match importer.import_from_path(source) {
+        let gltf = match spawn(gltf::import::from_path(source)).wait_future() {
             Ok(gltf) => gltf,
             Err(err) => {
                 println!("Error: {:?}", err);

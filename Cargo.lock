@@ -4,9 +4,10 @@ version = "0.0.1-pre"
 dependencies = [
  "cgmath 0.14.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.25.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "futures 0.1.14 (git+https://github.com/alexcrichton/futures-rs.git)",
  "gl 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "glfw 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "gltf 0.6.0 (git+https://github.com/alteous/gltf.git?rev=12508bd3b63a31fa9a29b92cf87e82bc10301389)",
+ "gltf 0.6.0 (git+https://github.com/alteous/gltf.git?branch=incoming)",
  "image 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -128,6 +129,16 @@ dependencies = [
 [[package]]
 name = "futures"
 version = "0.1.14"
+source = "git+https://github.com/alexcrichton/futures-rs.git#570cd2a70ea8bddb15cf6ec6b516afabd8723e6d"
+
+[[package]]
+name = "futures"
+version = "0.1.14"
+source = "git+https://github.com/alteous/futures-rs.git#2e41998624506b0768dfcb233b6afa052b28507e"
+
+[[package]]
+name = "futures"
+version = "0.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -187,11 +198,11 @@ dependencies = [
 [[package]]
 name = "gltf"
 version = "0.6.0"
-source = "git+https://github.com/alteous/gltf.git?rev=12508bd3b63a31fa9a29b92cf87e82bc10301389#12508bd3b63a31fa9a29b92cf87e82bc10301389"
+source = "git+https://github.com/alteous/gltf.git?branch=incoming#f80db576eaa2473a5012d5d90bb525849ce560b0"
 dependencies = [
- "gltf_derive 0.1.0 (git+https://github.com/alteous/gltf.git?rev=12508bd3b63a31fa9a29b92cf87e82bc10301389)",
- "jpeg-decoder 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)",
- "png 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "futures 0.1.14 (git+https://github.com/alteous/futures-rs.git)",
+ "gltf_derive 0.1.0 (git+https://github.com/alteous/gltf.git?branch=incoming)",
+ "image 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -200,7 +211,7 @@ dependencies = [
 [[package]]
 name = "gltf_derive"
 version = "0.1.0"
-source = "git+https://github.com/alteous/gltf.git?rev=12508bd3b63a31fa9a29b92cf87e82bc10301389#12508bd3b63a31fa9a29b92cf87e82bc10301389"
+source = "git+https://github.com/alteous/gltf.git?branch=incoming#f80db576eaa2473a5012d5d90bb525849ce560b0"
 dependencies = [
  "inflections 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -560,6 +571,8 @@ dependencies = [
 "checksum dtoa 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "80c8b71fd71146990a9742fc06dcbbde19161a267e0ad4e572c35162f4578c90"
 "checksum either 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "18785c1ba806c258137c937e44ada9ee7e69a37e3c72077542cd2f069d78562a"
 "checksum enum_primitive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "be4551092f4d519593039259a9ed8daedf0da12e5109c5280338073eaeb81180"
+"checksum futures 0.1.14 (git+https://github.com/alexcrichton/futures-rs.git)" = "<none>"
+"checksum futures 0.1.14 (git+https://github.com/alteous/futures-rs.git)" = "<none>"
 "checksum futures 0.1.14 (registry+https://github.com/rust-lang/crates.io-index)" = "4b63a4792d4f8f686defe3b39b92127fea6344de5d38202b2ee5a11bbbf29d6a"
 "checksum gcc 0.3.51 (registry+https://github.com/rust-lang/crates.io-index)" = "120d07f202dcc3f72859422563522b66fe6463a4c513df062874daad05f85f0a"
 "checksum gif 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)" = "e2e41945ba23db3bf51b24756d73d81acb4f28d85c3dccc32c6fae904438c25f"
@@ -567,8 +580,8 @@ dependencies = [
 "checksum gl_generator 0.5.4 (registry+https://github.com/rust-lang/crates.io-index)" = "92a61e91a1f4554abd82f7e8593930c5307a9702c0b2f2d3b1cfcd23b21752fa"
 "checksum glfw 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)" = "995365b58861476496b20fd55cb819f4452f9506404394171165759440f59ade"
 "checksum glfw-sys 3.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f72bb86276679c5370276224546eef2dce99b23da2f364fd8b097c79db310b39"
-"checksum gltf 0.6.0 (git+https://github.com/alteous/gltf.git?rev=12508bd3b63a31fa9a29b92cf87e82bc10301389)" = "<none>"
-"checksum gltf_derive 0.1.0 (git+https://github.com/alteous/gltf.git?rev=12508bd3b63a31fa9a29b92cf87e82bc10301389)" = "<none>"
+"checksum gltf 0.6.0 (git+https://github.com/alteous/gltf.git?branch=incoming)" = "<none>"
+"checksum gltf_derive 0.1.0 (git+https://github.com/alteous/gltf.git?branch=incoming)" = "<none>"
 "checksum image 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d61d2b3f000fb41d268312b92d4dd5ee7823163ceee71a67c676271585dfe598"
 "checksum inflate 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d1238524675af3938a7c74980899535854b88ba07907bb1c944abe5b8fc437e5"
 "checksum inflections 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e6f84b1c7604b27e2a7cf95347f1820b46d10a7d48b7b7c22b3824151c76a68d"
