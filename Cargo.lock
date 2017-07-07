@@ -101,7 +101,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "deflate"
-version = "0.7.12"
+version = "0.7.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "adler32 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -193,7 +193,7 @@ dependencies = [
 [[package]]
 name = "gltf"
 version = "0.6.0"
-source = "git+https://github.com/alteous/gltf.git?branch=incoming#f80db576eaa2473a5012d5d90bb525849ce560b0"
+source = "git+https://github.com/alteous/gltf.git?branch=incoming#b55250f36b9f8c7a14c79d489b46ac84413c2348"
 dependencies = [
  "futures 0.1.14 (git+https://github.com/alteous/futures-rs.git)",
  "gltf_derive 0.1.0 (git+https://github.com/alteous/gltf.git?branch=incoming)",
@@ -206,7 +206,7 @@ dependencies = [
 [[package]]
 name = "gltf_derive"
 version = "0.1.0"
-source = "git+https://github.com/alteous/gltf.git?branch=incoming#f80db576eaa2473a5012d5d90bb525849ce560b0"
+source = "git+https://github.com/alteous/gltf.git?branch=incoming#b55250f36b9f8c7a14c79d489b46ac84413c2348"
 dependencies = [
  "inflections 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -372,7 +372,7 @@ version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bitflags 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "deflate 0.7.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deflate 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "inflate 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-iter 0.1.33 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -562,7 +562,7 @@ dependencies = [
 "checksum cmake 0.1.24 (registry+https://github.com/rust-lang/crates.io-index)" = "b8ebbb35d3dc9cd09497168f33de1acb79b265d350ab0ac34133b98f8509af1f"
 "checksum coco 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c06169f5beb7e31c7c67ebf5540b8b472d23e3eade3b2ec7d1f5b504a85f91bd"
 "checksum color_quant 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a475fc4af42d83d28adf72968d9bcfaf035a1a9381642d8e85d8a04957767b0d"
-"checksum deflate 0.7.12 (registry+https://github.com/rust-lang/crates.io-index)" = "c2fed703f5ddef79391e0364baef1b3e2c89844abd7272b9fb85ed2e3ff9c5bd"
+"checksum deflate 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)" = "2b8c519bdb6db661b4442cf161eace023f509ca664845fd79951fb62145820dd"
 "checksum dtoa 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "80c8b71fd71146990a9742fc06dcbbde19161a267e0ad4e572c35162f4578c90"
 "checksum either 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "18785c1ba806c258137c937e44ada9ee7e69a37e3c72077542cd2f069d78562a"
 "checksum enum_primitive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "be4551092f4d519593039259a9ed8daedf0da12e5109c5280338073eaeb81180"

@@ -83,41 +83,41 @@ impl Primitive {
         // let mut tangents = g_primitive.tangents().unwrap().wait();
 
         // TODO!: support the different texcoord and color formats
-        let mut tex_coords_0 = match g_primitive.tex_coords(0).unwrap().wait() {
-            Ok(tex_coords_0) => {
-                Some(match tex_coords_0 {
-                    TexCoords::F32(tc) => tc,
-                    // TODO! TexCoords::U8/U16 (also below)
-                    TexCoords::U8(_) => unimplemented!(),
-                    TexCoords::U16(_) => unimplemented!(),
-                })
-            },
-            _ => None
-        };
-        let mut tex_coords_1 = match g_primitive.tex_coords(1).unwrap().wait() {
-            Ok(tex_coords_1) => {
-                Some(match tex_coords_1 {
-                    TexCoords::F32(tc) => tc,
-                    TexCoords::U8(_) => unimplemented!(),
-                    TexCoords::U16(_) => unimplemented!(),
-                })
-            },
-            _ => None
-        };
-        let mut colors_0 = match g_primitive.colors(0).unwrap().wait() {
-            Ok(colors_0) => {
-                Some(match colors_0 {
-                    // Colors::RgbU8(Iter<'a, [u8; 3]>),
-                    // Colors::RgbaU8(Iter<'a, [u8; 4]>),
-                    // Colors::RgbU16(Iter<'a, [u16; 3]>),
-                    // Colors::RgbaU16(Iter<'a, [u16; 4]>),
-                    Colors::RgbF32(c) => c,
-                    // Colors::RgbaF32(c),
-                    _ => unimplemented!()
-                })
-            }
-            _ => None
-        };
+        // let mut tex_coords_0 = match g_primitive.tex_coords(0).unwrap().wait() {
+        //     Ok(tex_coords_0) => {
+        //         Some(match tex_coords_0 {
+        //             TexCoords::F32(tc) => tc,
+        //             // TODO! TexCoords::U8/U16 (also below)
+        //             TexCoords::U8(_) => unimplemented!(),
+        //             TexCoords::U16(_) => unimplemented!(),
+        //         })
+        //     },
+        //     _ => None
+        // };
+        // let mut tex_coords_1 = match g_primitive.tex_coords(1).unwrap().wait() {
+        //     Ok(tex_coords_1) => {
+        //         Some(match tex_coords_1 {
+        //             TexCoords::F32(tc) => tc,
+        //             TexCoords::U8(_) => unimplemented!(),
+        //             TexCoords::U16(_) => unimplemented!(),
+        //         })
+        //     },
+        //     _ => None
+        // };
+        // let mut colors_0 = match g_primitive.colors(0).unwrap().wait() {
+        //     Ok(colors_0) => {
+        //         Some(match colors_0 {
+        //             // Colors::RgbU8(Iter<'a, [u8; 3]>),
+        //             // Colors::RgbaU8(Iter<'a, [u8; 4]>),
+        //             // Colors::RgbU16(Iter<'a, [u16; 3]>),
+        //             // Colors::RgbaU16(Iter<'a, [u16; 4]>),
+        //             Colors::RgbF32(c) => c,
+        //             // Colors::RgbaF32(c),
+        //             _ => unimplemented!()
+        //         })
+        //     }
+        //     _ => None
+        // };
 
         let indices = g_primitive.indices().unwrap().wait()
             .expect("NotImplementedYet: Indices required at the moment!");
@@ -131,31 +131,31 @@ impl Primitive {
                 //         .expect("Not enough tangents! Expected 1 per vertex.")),
                 //     None => Vector4::zero()
                 // };
-                let tex_coord_0 = match tex_coords_0 {
-                    Some(ref mut tex_coord_0) => {
-                        Vector2::from(tex_coord_0.next()
-                        .expect("Not enough tex_coords_0! Expected 1 per vertex."))
-                    }
-                    None => Vector2::zero()
-                };
-                let tex_coord_1 = match tex_coords_1 {
-                    Some(ref mut tex_coord_1) => Vector2::from(tex_coord_1.next()
-                        .expect("Not enough tex_coords_1! Expected 1 per vertex.")),
-                    None => Vector2::zero()
-                };
+                // let tex_coord_0 = match tex_coords_0 {
+                //     Some(ref mut tex_coord_0) => {
+                //         Vector2::from(tex_coord_0.next()
+                //         .expect("Not enough tex_coords_0! Expected 1 per vertex."))
+                //     }
+                //     None => Vector2::zero()
+                // };
+                // let tex_coord_1 = match tex_coords_1 {
+                //     Some(ref mut tex_coord_1) => Vector2::from(tex_coord_1.next()
+                //         .expect("Not enough tex_coords_1! Expected 1 per vertex.")),
+                //     None => Vector2::zero()
+                // };
 
-                let color_0 = match colors_0 {
-                    Some(ref mut colors_0) => Vector3::from(colors_0.next()
-                        .expect("Not enough color_0 entries! Expected 1 per vertex.")),
-                    None => Vector3::zero()
-                };
+                // let color_0 = match colors_0 {
+                //     Some(ref mut colors_0) => Vector3::from(colors_0.next()
+                //         .expect("Not enough color_0 entries! Expected 1 per vertex.")),
+                //     None => Vector3::zero()
+                // };
                 Vertex {
                     position: Vector3::from(position),
                     normal: Vector3::from(normal),
-                    tangent: Vector4::zero(),//tangent,
-                    tex_coord_0: tex_coord_0,
-                    tex_coord_1: tex_coord_1,
-                    color_0: color_0,
+                    // tangent: Vector4::zero(),//tangent,
+                    // tex_coord_0: tex_coord_0,
+                    // tex_coord_1: tex_coord_1,
+                    // color_0: color_0,
                     ..Vertex::default()
                 }
             })
