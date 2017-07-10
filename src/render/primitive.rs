@@ -6,6 +6,7 @@ use std::ptr;
 use gl;
 use gltf;
 use gltf::mesh::{ Indices, TexCoords, Colors };
+use gltf::json::mesh::Mode;
 
 use render::math::*;
 use shader::Shader;
@@ -75,91 +76,95 @@ impl Primitive {
     }
 
     pub fn from_gltf(g_primitive: gltf::mesh::Primitive) -> Primitive {
-        // TODO!!: handle unwraps...
-        let positions = g_primitive.positions().unwrap().wait().unwrap();
-        // TODO!: turn all expects into error type
-        let normals = g_primitive.normals().unwrap().wait() // TODO: flat normal calculation (in gltf crate)
-            .expect("NotImplementedYet: Normals required! Calculation of flat normals not implemented yet.");
-        // let mut tangents = g_primitive.tangents().unwrap().wait();
-
-        // TODO!: support the different texcoord and color formats
-        // let mut tex_coords_0 = match g_primitive.tex_coords(0).unwrap().wait() {
-        //     Ok(tex_coords_0) => {
-        //         Some(match tex_coords_0 {
-        //             TexCoords::F32(tc) => tc,
-        //             // TODO! TexCoords::U8/U16 (also below)
-        //             TexCoords::U8(_) => unimplemented!(),
-        //             TexCoords::U16(_) => unimplemented!(),
-        //         })
-        //     },
-        //     _ => None
-        // };
-        // let mut tex_coords_1 = match g_primitive.tex_coords(1).unwrap().wait() {
-        //     Ok(tex_coords_1) => {
-        //         Some(match tex_coords_1 {
-        //             TexCoords::F32(tc) => tc,
-        //             TexCoords::U8(_) => unimplemented!(),
-        //             TexCoords::U16(_) => unimplemented!(),
-        //         })
-        //     },
-        //     _ => None
-        // };
-        // let mut colors_0 = match g_primitive.colors(0).unwrap().wait() {
-        //     Ok(colors_0) => {
-        //         Some(match colors_0 {
-        //             // Colors::RgbU8(Iter<'a, [u8; 3]>),
-        //             // Colors::RgbaU8(Iter<'a, [u8; 4]>),
-        //             // Colors::RgbU16(Iter<'a, [u16; 3]>),
-        //             // Colors::RgbaU16(Iter<'a, [u16; 4]>),
-        //             Colors::RgbF32(c) => c,
-        //             // Colors::RgbaF32(c),
-        //             _ => unimplemented!()
-        //         })
-        //     }
-        //     _ => None
-        // };
-
-        let indices = g_primitive.indices().unwrap().wait()
-            .expect("NotImplementedYet: Indices required at the moment!");
-
-        let vertices: Vec<Vertex> = positions
-            .zip(normals)
-            .map(|(position, normal)| {
-                // TODO!
-                // let tangent = match tangents {
-                //     Some(ref mut tangents) => Vector4::from(tangents.next()
-                //         .expect("Not enough tangents! Expected 1 per vertex.")),
-                //     None => Vector4::zero()
-                // };
-                // let tex_coord_0 = match tex_coords_0 {
-                //     Some(ref mut tex_coord_0) => {
-                //         Vector2::from(tex_coord_0.next()
-                //         .expect("Not enough tex_coords_0! Expected 1 per vertex."))
-                //     }
-                //     None => Vector2::zero()
-                // };
-                // let tex_coord_1 = match tex_coords_1 {
-                //     Some(ref mut tex_coord_1) => Vector2::from(tex_coord_1.next()
-                //         .expect("Not enough tex_coords_1! Expected 1 per vertex.")),
-                //     None => Vector2::zero()
-                // };
-
-                // let color_0 = match colors_0 {
-                //     Some(ref mut colors_0) => Vector3::from(colors_0.next()
-                //         .expect("Not enough color_0 entries! Expected 1 per vertex.")),
-                //     None => Vector3::zero()
-                // };
+        // positions
+        let positions = g_primitive.positions()
+            .expect("primitives must have the POSITION attribute")
+            .wait().unwrap();
+        let mut vertices: Vec<Vertex> = positions
+            .map(|position| {
                 Vertex {
                     position: Vector3::from(position),
-                    normal: Vector3::from(normal),
-                    // tangent: Vector4::zero(),//tangent,
-                    // tex_coord_0: tex_coord_0,
-                    // tex_coord_1: tex_coord_1,
-                    // color_0: color_0,
                     ..Vertex::default()
                 }
-            })
-            .collect();
+            }).collect();
+
+        // normals
+        if let Some(normals) = g_primitive.normals() {
+            let normals = normals.wait().unwrap();
+            for (i, normal) in normals.enumerate() {
+                vertices[i].normal = Vector3::from(normal);
+            }
+        }
+        else {
+            // TODO: flat normal calculation (in gltf crate)
+            println!("WARNING: found no NORMALs for primitive");
+        }
+
+        // tangents
+        if let Some(tangents) = g_primitive.tangents() {
+            let tangents = tangents.wait().unwrap();
+            for (i, tangent) in tangents.enumerate() {
+                vertices[i].tangent = Vector4::from(tangent);
+            }
+        }
+
+        // texture coordinates
+        let mut tex_coord_set = 0;
+        while let Some(tex_coords) = g_primitive.tex_coords(tex_coord_set) {
+            if tex_coord_set > 1 {
+                // TODO: add primitive index, mesh index/name
+                println!("WARNING: Ignoring texture coordinate set {}, \
+                          only supporting 2 sets at the moment.", tex_coord_set);
+                tex_coord_set = tex_coord_set + 1;
+                continue;
+            }
+            let tex_coords = tex_coords.wait().unwrap();
+            let tex_coords = match tex_coords {
+                TexCoords::F32(tc) => tc,
+                // TODO! TexCoords::U8/U16
+                TexCoords::U8(_) => unimplemented!(),
+                TexCoords::U16(_) => unimplemented!(),
+            };
+            for (i, tex_coord) in tex_coords.enumerate() {
+                match tex_coord_set {
+                    0 => vertices[i].tex_coord_0 = Vector2::from(tex_coord),
+                    1 => vertices[i].tex_coord_0 = Vector2::from(tex_coord),
+                    _ => unreachable!()
+                }
+            }
+            tex_coord_set = tex_coord_set + 1;
+        }
+
+        // colors
+        let mut color_set = 0;
+        while let Some(colors) = g_primitive.colors(color_set) {
+            if color_set > 0 {
+                // TODO: add primitive index, mesh index/name
+                println!("WARNING: Ignoring texture coordinate set {}, \
+                          only supporting 2 sets at the moment.", tex_coord_set);
+                color_set = color_set + 1;
+                continue;
+            }
+            let colors = colors.wait().unwrap();
+            let colors = match colors {
+                // TODO!: support other color formats
+                // Colors::RgbU8(Iter<'a, [u8; 3]>),
+                // Colors::RgbaU8(Iter<'a, [u8; 4]>),
+                // Colors::RgbU16(Iter<'a, [u16; 3]>),
+                // Colors::RgbaU16(Iter<'a, [u16; 4]>),
+                Colors::RgbF32(c) => c,
+                // Colors::RgbaF32(c),
+                _ => unimplemented!()
+            };
+            for (i, color) in colors.enumerate() {
+                vertices[i].color_0 = Vector3::from(color);
+            }
+            color_set = color_set + 1;
+        }
+
+        let indices = g_primitive.indices()
+            .expect("not yet implemented: Indices required at the moment!")
+            .wait().unwrap();            ;
 
         // convert indices to u32 if necessary
         // TODO?: use indices as they are?
@@ -169,8 +174,10 @@ impl Primitive {
             Indices::U32(indices) => indices.collect(),
         };
 
-        // TODO: No debug
-        // assert_eq!(primitive.mode(), Mode::Triangles);
+        match g_primitive.mode() {
+            Mode::Triangles => (),
+            _ => panic!("not yet implemented: primitive mode must be Triangles.")
+        }
 
         // TODO!!: textures
         let textures = Vec::new();

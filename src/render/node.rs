@@ -41,8 +41,7 @@ impl Node {
             rotation: rotation,
             scale: Vector3::from(g_node.scale()),
             translation: Vector3::from(g_node.translation()),
-            // TODO!
-            name: None //g_node.name().map(|s| s.into()),
+            name: g_node.name().map(|s| s.into()),
         }
     }
 
