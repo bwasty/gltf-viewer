@@ -1,21 +1,20 @@
 [package]
-name = "gltf-viewer"
-version = "0.0.1-pre"
 authors = ["Benjamin Wasty <benny.wasty@gmail.com>"]
-description = "Simple glTF 2.0 viewer (WIP)"
-repository = "https://github.com/bwasty/gltf-viewer"
-readme = "README.md"
-keywords = ["glTF", "3D", "model", "scene", "viewer"]
 categories = ["rendering"]
+description = "Simple glTF 2.0 viewer (WIP)"
+include = ["**/*.rs", "Cargo.toml"]
+keywords = ["glTF", "3D", "model", "scene", "viewer"]
 license = "Unlicense"
-
-include = [
-    "**/*.rs",
-    "Cargo.toml",
-]
+name = "gltf-viewer"
+readme = "README.md"
+repository = "https://github.com/bwasty/gltf-viewer"
+version = "0.0.1-pre"
 
 [badges]
-travis-ci = { repository = "https://github.com/bwasty/gltf-viewer", branch = "master" }
+
+[badges.travis-ci]
+branch = "master"
+repository = "https://github.com/bwasty/gltf-viewer"
 
 [dependencies]
 cgmath = "0.14.1"
@@ -24,8 +23,9 @@ futures = "0.1.14"
 gl = "0.6.2"
 glfw = "0.15.0"
 image = "0.14.0"
+reqwest = "0.6.2"
 
 [dependencies.gltf]
 branch = "incoming"
-git = "https://github.com/alteous/gltf.git"
 features = ["names"]
+git = "https://github.com/alteous/gltf.git"

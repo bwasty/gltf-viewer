@@ -24,6 +24,8 @@ use camera::Camera;
 use camera::CameraMovement::*;
 mod macros;
 mod mesh;
+mod http_source;
+use http_source::HttpSource;
 
 mod render;
 use render::*;
@@ -85,7 +87,16 @@ pub fn main() {
 
         let shader = Shader::new("src/shaders/simple.vs", "src/shaders/simple.fs");
 
-        let gltf = match gltf::Import::from_path(source).sync() {
+        let import =
+            if source.starts_with("http") {
+                let http_source = HttpSource { url: source.into() };
+                gltf::Import::custom(http_source, Default::default())
+            }
+            else {
+                gltf::Import::from_path(source)
+            };
+
+        let gltf = match import.sync() {
             Ok(gltf) => gltf,
             Err(err) => {
                 println!("Error: {:?}", err);
@@ -189,5 +200,3 @@ fn process_input(window: &mut glfw::Window, delta_time: f32, camera: &mut Camera
     }
 
 }
-
-

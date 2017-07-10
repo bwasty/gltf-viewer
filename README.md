@@ -18,7 +18,7 @@ cargo install gltf-viewer
 
 Run with
 ```
-gltf-viewer <filename>
+gltf-viewer <filename|URL>
 ```
 Both .gltf and .glb files are supported.
 
