@@ -8,10 +8,10 @@ use render::mesh::Mesh;
 use shader::Shader;
 
 pub struct Node {
-    // TODO: camera?
+    // TODO!: camera?
     pub children: Vec<Node>,
     pub matrix: Matrix4,
-    // TODO!: actually use the Rc (share meshes)
+    // TODO!!: actually use the Rc (share meshes)
     pub mesh: Option<Rc<Mesh>>,
     pub rotation: Quaternion,
     pub scale: Vector3,

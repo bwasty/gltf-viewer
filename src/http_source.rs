@@ -11,35 +11,41 @@ extern crate reqwest;
 
 #[derive(Debug)]
 pub struct HttpSource {
-    pub url: String
+    url: reqwest::Url,
+}
+
+impl HttpSource {
+    pub fn new(url: &str) -> HttpSource {
+        HttpSource {
+            url: reqwest::Url::parse(url)
+                .expect("Failed to parse URL")
+        }
+    }
 }
 
 #[derive(Debug)]
 pub enum Error {
-    // TODO!: make proper error type
+    // TODO!: make/use proper error type
     HttpError,
 }
 
-// // TODO!: make clean/nice
 impl Source for HttpSource {
     type Error = Error;
     fn source_gltf(&self) -> BoxFuture<Box<[u8]>, Self::Error> {
-        fetch_data(self.url.clone())
+        fetch_data(self.url.to_string())
     }
 
     fn source_external_data(&self, uri: &str) -> BoxFuture<Box<[u8]>, Self::Error> {
-        let url = reqwest::Url::parse(&self.url).unwrap();
-        let mut segments = url.path_segments().unwrap().collect::<Vec<_>>();
-        let len = segments.len();
-        segments[len - 1] = uri.into();
-        let new_path = segments.join("/");
-        let mut new_url = url.clone();
-        new_url.set_path(&new_path);
-        fetch_data(new_url.as_str().into())
+        let mut new_url = self.url.clone();
+        new_url.path_segments_mut()
+            .expect("URL cannot be base")
+            .pop().push(uri);
+        fetch_data(new_url.to_string())
     }
 }
 
 fn fetch_data(url: String) -> BoxFuture<Box<[u8]>, Error> {
+    // TODO!: use thread
     let future = future::lazy(move || {
         let mut resp = reqwest::get(&url).unwrap();
         assert!(resp.status().is_success());
@@ -49,7 +55,6 @@ fn fetch_data(url: String) -> BoxFuture<Box<[u8]>, Error> {
     });
     Box::new(future)
 }
-
 
 impl std::error::Error for Error {
     fn description(&self) -> &str {

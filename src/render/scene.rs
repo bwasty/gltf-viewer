@@ -17,7 +17,7 @@ impl Scene {
         }
     }
 
-    // TODO!: flatten draw call hierarchy (global Vec<Primitive>?)
+    // TODO: flatten draw call hierarchy (global Vec<Primitive>?)
     pub fn draw(&self, shader: &Shader) {
         let model_matrix = Matrix4::identity();
         for node in &self.nodes {

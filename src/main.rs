@@ -74,7 +74,7 @@ pub fn main() {
     window.set_framebuffer_size_polling(true);
     window.set_cursor_pos_polling(true);
     window.set_scroll_polling(true);
-    // TODO!: capture on click or sth?
+    // TODO: capture on click or sth?
     window.set_cursor_mode(glfw::CursorMode::Disabled);
 
     glfw.set_swap_interval(glfw::SwapInterval::Sync(1)); // V-sync
@@ -89,7 +89,7 @@ pub fn main() {
 
         let gltf =
             if source.starts_with("http") {
-                let http_source = HttpSource { url: source.into() };
+                let http_source = HttpSource::new(source);
                 let import = gltf::Import::custom(http_source, Default::default());
                 import_gltf(import)
             }

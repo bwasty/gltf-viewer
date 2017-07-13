@@ -68,7 +68,7 @@ impl Shader {
         gl::UseProgram(self.id)
     }
 
-    // TODO!!: cache uniform locations!!
+    // TODO!: cache uniform locations!!
     /// utility uniform functions
     /// ------------------------------------------------------------------------
     pub unsafe fn set_bool(&self, name: &CStr, value: bool) {

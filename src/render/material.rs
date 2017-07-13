@@ -8,7 +8,7 @@ use image::GenericImage;
 
 #[derive(Default)]
 pub struct Material {
-    // TODO!!
+    // TODO!!: Material
     name: Option<String>,
 }
 
