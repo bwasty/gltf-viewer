@@ -1,23 +1,33 @@
+use std;
 use std::io::Read;
+use std::fmt;
 
 use futures::future;
 use futures::BoxFuture;
 
-use gltf::import::{Source, Error};
+use gltf::import::{Source};
 
 extern crate reqwest;
 
+#[derive(Debug)]
 pub struct HttpSource {
     pub url: String
 }
 
-// TODO!: make clean/nice
+#[derive(Debug)]
+pub enum Error {
+    // TODO!: make proper error type
+    HttpError,
+}
+
+// // TODO!: make clean/nice
 impl Source for HttpSource {
-    fn source_gltf(&self) -> BoxFuture<Box<[u8]>, Error> {
+    type Error = Error;
+    fn source_gltf(&self) -> BoxFuture<Box<[u8]>, Self::Error> {
         fetch_data(self.url.clone())
     }
 
-    fn source_external_data(&self, uri: &str) -> BoxFuture<Box<[u8]>, Error> {
+    fn source_external_data(&self, uri: &str) -> BoxFuture<Box<[u8]>, Self::Error> {
         let url = reqwest::Url::parse(&self.url).unwrap();
         let mut segments = url.path_segments().unwrap().collect::<Vec<_>>();
         let len = segments.len();
@@ -38,4 +48,22 @@ fn fetch_data(url: String) -> BoxFuture<Box<[u8]>, Error> {
         Ok(data.into_boxed_slice())
     });
     Box::new(future)
+}
+
+
+impl std::error::Error for Error {
+    fn description(&self) -> &str {
+        "HttpSource Error"
+    }
+
+    fn cause(&self) -> Option<&std::error::Error> {
+        unimplemented!()
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use std::error::Error;
+        write!(f, "{}", self.description())
+    }
 }

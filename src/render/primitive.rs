@@ -11,8 +11,6 @@ use gltf::json::mesh::Mode;
 use render::math::*;
 use shader::Shader;
 
-use futures::Future;
-
 #[repr(C)]
 #[derive(Debug)]
 pub struct Vertex {
@@ -78,8 +76,7 @@ impl Primitive {
     pub fn from_gltf(g_primitive: gltf::mesh::Primitive) -> Primitive {
         // positions
         let positions = g_primitive.positions()
-            .expect("primitives must have the POSITION attribute")
-            .wait().unwrap();
+            .expect("primitives must have the POSITION attribute");
         let mut vertices: Vec<Vertex> = positions
             .map(|position| {
                 Vertex {
@@ -90,7 +87,6 @@ impl Primitive {
 
         // normals
         if let Some(normals) = g_primitive.normals() {
-            let normals = normals.wait().unwrap();
             for (i, normal) in normals.enumerate() {
                 vertices[i].normal = Vector3::from(normal);
             }
@@ -102,7 +98,6 @@ impl Primitive {
 
         // tangents
         if let Some(tangents) = g_primitive.tangents() {
-            let tangents = tangents.wait().unwrap();
             for (i, tangent) in tangents.enumerate() {
                 vertices[i].tangent = Vector4::from(tangent);
             }
@@ -118,7 +113,6 @@ impl Primitive {
                 tex_coord_set = tex_coord_set + 1;
                 continue;
             }
-            let tex_coords = tex_coords.wait().unwrap();
             let tex_coords = match tex_coords {
                 TexCoords::F32(tc) => tc,
                 // TODO! TexCoords::U8/U16
@@ -145,7 +139,6 @@ impl Primitive {
                 color_set = color_set + 1;
                 continue;
             }
-            let colors = colors.wait().unwrap();
             let colors = match colors {
                 // TODO!: support other color formats
                 // Colors::RgbU8(Iter<'a, [u8; 3]>),
@@ -163,8 +156,7 @@ impl Primitive {
         }
 
         let indices = g_primitive.indices()
-            .expect("not yet implemented: Indices required at the moment!")
-            .wait().unwrap();            ;
+            .expect("not yet implemented: Indices required at the moment!");
 
         // convert indices to u32 if necessary
         // TODO?: use indices as they are?

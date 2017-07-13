@@ -87,22 +87,17 @@ pub fn main() {
 
         let shader = Shader::new("src/shaders/simple.vs", "src/shaders/simple.fs");
 
-        let import =
+        let gltf =
             if source.starts_with("http") {
                 let http_source = HttpSource { url: source.into() };
-                gltf::Import::custom(http_source, Default::default())
+                let import = gltf::Import::custom(http_source, Default::default());
+                import_gltf(import)
             }
             else {
-                gltf::Import::from_path(source)
+                let import = gltf::Import::from_path(source);
+                import_gltf(import)
             };
 
-        let gltf = match import.sync() {
-            Ok(gltf) => gltf,
-            Err(err) => {
-                println!("Error: {:?}", err);
-                panic!();
-            }
-        };
         // load first scene
         let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap());
 
@@ -199,4 +194,14 @@ fn process_input(window: &mut glfw::Window, delta_time: f32, camera: &mut Camera
         camera.process_keyboard(RIGHT, delta_time);
     }
 
+}
+
+fn import_gltf<S: gltf::import::Source>(import: gltf::Import<S>) -> gltf::Gltf {
+    match import.sync() {
+        Ok(gltf) => gltf,
+        Err(err) => {
+            println!("Error: {:?}", err);
+            panic!();
+        }
+    }
 }
