@@ -16,6 +16,7 @@ use clap::{Arg, App};
 
 use std::sync::mpsc::Receiver;
 use std::ffi::CStr;
+use std::time::SystemTime;
 
 mod shader;
 use shader::Shader;
@@ -26,6 +27,7 @@ mod macros;
 mod mesh;
 mod http_source;
 use http_source::HttpSource;
+mod utils;
 
 mod render;
 use render::*;
@@ -87,6 +89,7 @@ pub fn main() {
 
         let shader = Shader::new("src/shaders/simple.vs", "src/shaders/simple.fs");
 
+        let start = SystemTime::now();
         let gltf =
             if source.starts_with("http") {
                 let http_source = HttpSource::new(source);
@@ -97,6 +100,7 @@ pub fn main() {
                 let import = gltf::Import::from_path(source);
                 import_gltf(import)
             };
+        println!("Imported gltf in {}", utils::elapsed(&start));
 
         // load first scene
         let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap());

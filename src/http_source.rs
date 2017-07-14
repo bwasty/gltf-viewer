@@ -24,8 +24,9 @@ impl fmt::Debug for HttpSource {
 
 impl HttpSource {
     pub fn new(url: &str) -> HttpSource {
-        // 6 threads - like max parallel requests per domain in browsers
-        let pool = CpuPool::new(6);
+        // Use 8 threads - like max parallel requests per domain in some browsers
+        // Seems to be a sweet spot (tested with VC.gltf)
+        let pool = CpuPool::new(8);
 
         HttpSource {
             url: reqwest::Url::parse(url)
@@ -43,13 +44,14 @@ pub enum Error {
 impl HttpSource {
     fn fetch_data(&self, url: String) -> BoxFuture<Box<[u8]>, Error> {
         let future = self.cpu_pool.spawn_fn(move || {
-            let mut resp = reqwest::get(&url).unwrap();
-            // TODO: return error instead
-            assert!(resp.status().is_success(), "request failed: {}", resp.status());
-            // TODO: status not showing on console...
-            // if !resp.status().is_success() {
-            //     return Err(Error::HttpError(format!("{}", resp.status())));
-            // }
+            let mut resp = reqwest::get(&url).unwrap(); // TODO!: generate error
+            if !resp.status().is_success() {
+                // TODO!: returned error does not fully show up on console
+                println!("{}", resp.status()); // 404 Not Found
+                return Err(Error::HttpError(format!("{}", resp.status())));
+                    // Error: Source(HttpError(""))
+                    // thread 'main' panicked at 'explicit panic', src/main.rs:204:12
+            }
             let mut data = vec![];
             let _ = resp.read_to_end(&mut data);
             Ok(data.into_boxed_slice())
@@ -75,11 +77,13 @@ impl Source for HttpSource {
 
 impl std::error::Error for Error {
     fn description(&self) -> &str {
-        "HttpSource Error"
+        match self {
+            &Error::HttpError(ref status) => status
+        }
     }
 
     fn cause(&self) -> Option<&std::error::Error> {
-        unimplemented!() // TODO
+        None // TODO?
     }
 }
 
