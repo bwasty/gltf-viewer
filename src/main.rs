@@ -204,8 +204,8 @@ fn import_gltf<S: gltf::import::Source>(import: gltf::Import<S>) -> gltf::Gltf {
     match import.sync() {
         Ok(gltf) => gltf,
         Err(err) => {
-            println!("Error: {:?}", err);
-            panic!();
+            println!("glTF import failed: {:?}", err);
+            std::process::exit(1);
         }
     }
 }

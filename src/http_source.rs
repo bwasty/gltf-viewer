@@ -46,11 +46,7 @@ impl HttpSource {
         let future = self.cpu_pool.spawn_fn(move || {
             let mut resp = reqwest::get(&url).unwrap(); // TODO!: generate error
             if !resp.status().is_success() {
-                // TODO!: returned error does not fully show up on console
-                println!("{}", resp.status()); // 404 Not Found
-                return Err(Error::HttpError(format!("{}", resp.status())));
-                    // Error: Source(HttpError(""))
-                    // thread 'main' panicked at 'explicit panic', src/main.rs:204:12
+                return Err(Error::HttpError(format!("{}: {}", resp.status(), url)));
             }
             let mut data = vec![];
             let _ = resp.read_to_end(&mut data);
