@@ -29,6 +29,6 @@ reqwest = "0.7.1"
 tokio-core = "0.1.8"
 
 [dependencies.gltf]
-branch = "incoming"
 features = ["names"]
+branch = "incoming"
 git = "https://github.com/alteous/gltf.git"
