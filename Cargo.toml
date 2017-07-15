@@ -30,4 +30,5 @@ tokio-core = "0.1.8"
 
 [dependencies.gltf]
 features = ["names"]
-path = "../gltf"
+branch = "incoming"
+git = "https://github.com/alteous/gltf.git"
