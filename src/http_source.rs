@@ -7,13 +7,22 @@ use futures::BoxFuture;
 extern crate futures_cpupool;
 use self::futures_cpupool::CpuPool;
 
-use gltf::import::{Source};
-
 extern crate reqwest;
+extern crate futures;
+extern crate hyper;
+extern crate tokio_core;
+
+use std::io::{self, Write};
+use futures::{Future, Stream};
+use self::hyper::Client;
+use self::tokio_core::reactor::Core;
+
+use gltf::import::{Source};
 
 pub struct HttpSource {
     url: reqwest::Url,
     cpu_pool: CpuPool,
+    client: Client<hyper::client::HttpConnector>,
 }
 
 impl fmt::Debug for HttpSource {
@@ -28,10 +37,14 @@ impl HttpSource {
         // Seems to be a sweet spot (tested with VC.gltf)
         let pool = CpuPool::new(8);
 
+        let mut core = Core::new().unwrap(); // TODO?
+        let client = Client::new(&core.handle());
+
         HttpSource {
             url: reqwest::Url::parse(url)
                 .expect("Failed to parse URL"),
-            cpu_pool: pool
+            cpu_pool: pool,
+            client: client,
         }
     }
 }
@@ -57,6 +70,8 @@ impl HttpSource {
 }
 
 impl Source for HttpSource {
+//   ^^^^^^ `std::rc::Rc<std::cell::RefCell<http_source::hyper::client::pool::PoolInner<tokio_proto::util::client_proxy::ClientProxy<tokio_proto::streaming::message::Message<http_source::hyper::http::MessageHead<http_source::hyper::http::RequestLine>, http_source::hyper::Body>, tokio_proto::streaming::message::Message<http_source::hyper::http::MessageHead<http_source::hyper::http::RawStatus>, tokio_proto::streaming::body::Body<http_source::hyper::Chunk, http_source::hyper::Error>>, http_source::hyper::Error>>>>` cannot be shared between threads safely
+
     type Error = Error;
     fn source_gltf(&self) -> BoxFuture<Box<[u8]>, Self::Error> {
         self.fetch_data(self.url.to_string())
