@@ -6,6 +6,7 @@ use shader::Shader;
 use render::Primitive;
 
 pub struct Mesh {
+    pub index: usize, // glTF index
     pub primitives: Vec<Primitive>,
     // TODO
     // pub weights: Vec<Rc<?>>
@@ -15,6 +16,7 @@ pub struct Mesh {
 impl Mesh {
     pub fn from_gltf(g_mesh: gltf::mesh::Mesh) -> Mesh {
         Mesh {
+            index: g_mesh.index(),
             primitives: g_mesh.primitives().map(Primitive::from_gltf).collect(),
             name: g_mesh.name().map(|s| s.into()),
         }

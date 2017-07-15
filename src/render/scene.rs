@@ -1,20 +1,29 @@
+use std::rc::Rc;
+
 use gltf;
 
+use render::Mesh;
 use render::Node;
 use render::math::*;
 use shader::Shader;
 
+#[derive(Default)]
 pub struct Scene {
     pub name: Option<String>,
     pub nodes: Vec<Node>,
+    pub meshes: Vec<Rc<Mesh>>,
 }
 
 impl Scene {
     pub fn from_gltf(g_scene: gltf::scene::Scene) -> Scene {
-        Scene {
-            name: g_scene.name().map(|s| s.into()),
-            nodes: g_scene.nodes().map(Node::from_gltf).collect()
-        }
+        let mut scene = Scene {
+            name: g_scene.name().map(|s| s.to_owned()),
+            ..Default::default()
+        };
+        scene.nodes = g_scene.nodes()
+            .map(|g_node| Node::from_gltf(g_node, &mut scene))
+            .collect();
+        scene
     }
 
     // TODO: flatten draw call hierarchy (global Vec<Primitive>?)

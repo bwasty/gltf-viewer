@@ -5,6 +5,7 @@ use gltf;
 
 use render::math::*;
 use render::mesh::Mesh;
+use render::scene::Scene;
 use shader::Shader;
 
 pub struct Node {
@@ -22,7 +23,7 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn from_gltf(g_node: gltf::scene::Node) -> Node {
+    pub fn from_gltf(g_node: gltf::scene::Node, scene: &mut Scene) -> Node {
         let m = &g_node.matrix();
         let matrix = Matrix4::new(
             m[0], m[1], m[2], m[2],
@@ -31,13 +32,26 @@ impl Node {
             m[12], m[13], m[14], m[15],
         );
         let r = &g_node.rotation();
-        let rotation = Quaternion::new(r[3], r[0], r[1], r[2]); // NOTe: different element order!
+        let rotation = Quaternion::new(r[3], r[0], r[1], r[2]); // NOTE: different element order!
+        let mut mesh = None;
+        if let Some(g_mesh) = g_node.mesh() {
+            if let Some(g_mesh) = scene.meshes.iter().find(|mesh| (***mesh).index == g_mesh.index()) {
+                mesh = Some(g_mesh.clone());
+            }
+
+            if mesh.is_none() { // not using else due to borrow-checking madness
+                mesh = Some(Rc::new(Mesh::from_gltf(g_mesh)));
+                scene.meshes.push(mesh.clone().unwrap());
+            }
+        }
         Node {
-            children: g_node.children().map(Node::from_gltf).collect(),
+            children: g_node.children()
+                .map(|g_node| Node::from_gltf(g_node, scene))
+                .collect(),
             // TODO: why doesn't this work?
             // matrix: Matrix4::from(&g_node.matrix()),
             matrix: matrix,
-            mesh: g_node.mesh().map(|g_mesh| Rc::new(Mesh::from_gltf(g_mesh))),
+            mesh: mesh,
             rotation: rotation,
             scale: Vector3::from(g_node.scale()),
             translation: Vector3::from(g_node.translation()),

@@ -58,7 +58,7 @@ pub struct Primitive {
     vbo: u32,
     ebo: u32,
 
-    // TODO: material, mode, targets
+    // TODO: material (RC!), mode, targets
 }
 
 impl Primitive {

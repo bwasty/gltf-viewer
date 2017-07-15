@@ -1,7 +1,7 @@
 # gltf-viewer
 <!-- [![crates.io](https://img.shields.io/crates/v/gltf-viewer.svg)] (https://crates.io/crates/gltf-viewer) -->
-[![Build Status](https://travis-ci.org/bwasty/gltf-viewer.svg?branch=master)](https://travis-ci.org/bwasty/gltf-viewer) <!-- [![](https://tokei.rs/b1/github/bwasty/gltf-viewer)](https://github.com/Aaronepower/tokei)
-[![](https://tokei.rs/b1/github/bwasty/gltf-viewer?category=comments)](https://github.com/Aaronepower/tokei) -->
+[![Build Status](https://travis-ci.org/bwasty/gltf-viewer.svg?branch=master)](https://travis-ci.org/bwasty/gltf-viewer) [![](https://tokei.rs/b1/github/bwasty/gltf-viewer)](https://github.com/Aaronepower/tokei)
+[![](https://tokei.rs/b1/github/bwasty/gltf-viewer?category=comments)](https://github.com/Aaronepower/tokei)
 
 glTF Viewer written in Rust (WIP).
 Current state: most simple models can be loaded, but there is no lighting/texturing (normals are used as color):

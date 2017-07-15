@@ -24,7 +24,6 @@ mod camera;
 use camera::Camera;
 use camera::CameraMovement::*;
 mod macros;
-mod mesh;
 mod http_source;
 use http_source::HttpSource;
 mod utils;
