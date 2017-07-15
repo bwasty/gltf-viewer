@@ -1,7 +1,7 @@
 # gltf-viewer
 [![crates.io](https://img.shields.io/crates/v/gltf-viewer.svg)](https://crates.io/crates/gltf-viewer)
  [![](https://tokei.rs/b1/github/bwasty/gltf-viewer)](https://github.com/Aaronepower/tokei)
-[![](https://tokei.rs/b1/github/bwasty/gltf-viewer?category=comments)](https://github.com/Aaronepower/tokei) [![Build Status](https://travis-ci.org/bwasty/gltf-viewer.svg?branch=master)](https://travis-ci.org/bwasty/gltf-viewer)
+ [![Build Status](https://travis-ci.org/bwasty/gltf-viewer.svg?branch=master)](https://travis-ci.org/bwasty/gltf-viewer)
 
 glTF Viewer written in Rust (WIP).
 Current state: most simple models can be loaded, but there is no lighting/texturing (normals are used as color):
@@ -13,7 +13,7 @@ Current state: most simple models can be loaded, but there is no lighting/textur
 ```shell
 cargo install gltf-viewer
 ```
-### Manual
+### From source
 ```shell
 git clone https://github.com/bwasty/gltf-viewer.git
 cd gltf-viewer
@@ -27,7 +27,7 @@ gltf-viewer <filename|URL>
 Both .gltf and .glb files are supported.
 Navigate the scene with `WASD` + Mouse.
 
-Example:
+### Example
 ```
 gltf-viewer https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BarramundiFish/glTF/BarramundiFish.gltf
 ```

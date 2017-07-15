@@ -86,7 +86,9 @@ pub fn main() {
     let (shader, scene) = unsafe {
         gl::Enable(gl::DEPTH_TEST);
 
-        let shader = Shader::new("src/shaders/simple.vs", "src/shaders/simple.fs");
+        let shader = Shader::from_source(
+            include_str!("shaders/simple.vs"),
+            include_str!("shaders/simple.fs"));
 
         let start = SystemTime::now();
         let gltf =
