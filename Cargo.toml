@@ -2,7 +2,7 @@
 authors = ["Benjamin Wasty <benny.wasty@gmail.com>"]
 categories = ["rendering"]
 description = "Simple glTF 2.0 viewer (WIP)"
-include = ["**/*.rs", "Cargo.toml"]
+include = ["**/*.rs", "src/shaders/*.*", "Cargo.toml"]
 keywords = ["glTF", "3D", "model", "scene", "viewer"]
 license = "Unlicense"
 name = "gltf-viewer"
@@ -14,7 +14,7 @@ version = "0.0.1-pre"
 
 [badges.travis-ci]
 branch = "master"
-repository = "https://github.com/bwasty/gltf-viewer"
+repository = "bwasty/gltf-viewer"
 
 [dependencies]
 cgmath = "0.14.1"
@@ -27,6 +27,5 @@ image = "0.14.0"
 reqwest = "0.7.1"
 
 [dependencies.gltf]
-branch = "incoming"
+version = "0.6.1"
 features = ["names"]
-git = "https://github.com/alteous/gltf.git"

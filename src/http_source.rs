@@ -1,8 +1,9 @@
 use std;
-use std::io::Read;
+use std::boxed::Box;
+use std::io::{self, Read, Write};
 use std::fmt;
 
-use futures::BoxFuture;
+use futures::Future;
 
 extern crate futures_cpupool;
 use self::futures_cpupool::CpuPool;
@@ -42,7 +43,7 @@ pub enum Error {
 }
 
 impl HttpSource {
-    fn fetch_data(&self, url: String) -> BoxFuture<Box<[u8]>, Error> {
+    fn fetch_data(&self, url: String) -> Box<Future<Item=Box<[u8]>, Error=Error>> {
         let future = self.cpu_pool.spawn_fn(move || {
             let mut resp = reqwest::get(&url).unwrap(); // TODO!: generate error
             if !resp.status().is_success() {
@@ -50,6 +51,8 @@ impl HttpSource {
             }
             let mut data = vec![];
             let _ = resp.read_to_end(&mut data);
+            print!(".");
+            let _ = io::stdout().flush();
             Ok(data.into_boxed_slice())
         });
         Box::new(future)
@@ -58,11 +61,13 @@ impl HttpSource {
 
 impl Source for HttpSource {
     type Error = Error;
-    fn source_gltf(&self) -> BoxFuture<Box<[u8]>, Self::Error> {
+    fn source_gltf(&self) -> Box<Future<Item=Box<[u8]>, Error=Self::Error>> {
+        print!("Downloading");
+        let _ = io::stdout().flush();
         self.fetch_data(self.url.to_string())
     }
 
-    fn source_external_data(&self, uri: &str) -> BoxFuture<Box<[u8]>, Self::Error> {
+    fn source_external_data(&self, uri: &str) -> Box<Future<Item=Box<[u8]>, Error=Self::Error>> {
         let mut new_url = self.url.clone();
         new_url.path_segments_mut()
             .expect("URL cannot be base")

@@ -46,7 +46,7 @@ pub fn main() {
 
     let mut camera = Camera {
         // TODO: position.z - bounding box length
-        position: Point3::new(0.0, 0.0, 2.0),
+        position: Point3::new(0.0, 0.0, 1.0),
         zoom: 60.0,
         ..Camera::default()
     };
@@ -99,6 +99,7 @@ pub fn main() {
                 let import = gltf::Import::from_path(source);
                 import_gltf(import)
             };
+        println!(); // to end the "progress dots"
         println!("Imported gltf in {}", utils::elapsed(&start));
 
         // load first scene
