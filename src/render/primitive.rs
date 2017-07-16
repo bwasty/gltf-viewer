@@ -47,16 +47,13 @@ pub struct Texture {
 
 // TODO!: split off vao and texture id's into "Renderable" (?) for draw loop
 pub struct Primitive {
-    /*  Mesh Data  */
-    // TODO!!: why save vertices, indices after setup?
-    pub vertices: Vec<Vertex>,
-    pub indices: Vec<u32>,
-    pub textures: Vec<Texture>,
-    pub vao: u32,
+    textures: Vec<Texture>,
 
-    /*  Render data  */
+    vao: u32,
     vbo: u32,
+
     ebo: u32,
+    num_indices: u32,
 
     // TODO: material (RC!), mode, targets
 }
@@ -64,12 +61,13 @@ pub struct Primitive {
 impl Primitive {
     pub fn new(vertices: Vec<Vertex>, indices: Vec<u32>, textures: Vec<Texture>) -> Primitive {
         let mut prim = Primitive {
-            vertices, indices, textures,
+            num_indices: indices.len() as u32,
+            textures,
             vao: 0, vbo: 0, ebo: 0
         };
 
         // now that we have all the required data, set the vertex buffers and its attribute pointers.
-        unsafe { prim.setup_primitive() }
+        unsafe { prim.setup_primitive(vertices, indices) }
         prim
     }
 
@@ -217,14 +215,14 @@ impl Primitive {
 
         // draw mesh
         gl::BindVertexArray(self.vao);
-        gl::DrawElements(gl::TRIANGLES, self.indices.len() as i32, gl::UNSIGNED_INT, ptr::null());
+        gl::DrawElements(gl::TRIANGLES, self.num_indices as i32, gl::UNSIGNED_INT, ptr::null());
         gl::BindVertexArray(0);
 
         // always good practice to set everything back to defaults once configured.
         gl::ActiveTexture(gl::TEXTURE0);
     }
 
-    unsafe fn setup_primitive(&mut self) {
+    unsafe fn setup_primitive(&mut self, vertices: Vec<Vertex>, indices: Vec<u32>) {
         // create buffers/arrays
         gl::GenVertexArrays(1, &mut self.vao);
         gl::GenBuffers(1, &mut self.vbo);
@@ -236,13 +234,13 @@ impl Primitive {
         // A great thing about structs with repr(C) is that their memory layout is sequential for all its items.
         // The effect is that we can simply pass a pointer to the struct and it translates perfectly to a glm::vec3/2 array which
         // again translates to 3/2 floats which translates to a byte array.
-        let size = (self.vertices.len() * size_of::<Vertex>()) as isize;
-        let data = &self.vertices[0] as *const Vertex as *const c_void;
+        let size = (vertices.len() * size_of::<Vertex>()) as isize;
+        let data = &vertices[0] as *const Vertex as *const c_void;
         gl::BufferData(gl::ARRAY_BUFFER, size, data, gl::STATIC_DRAW);
 
         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.ebo);
-        let size = (self.indices.len() * size_of::<u32>()) as isize;
-        let data = &self.indices[0] as *const u32 as *const c_void;
+        let size = (indices.len() * size_of::<u32>()) as isize;
+        let data = &indices[0] as *const u32 as *const c_void;
         gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, size, data, gl::STATIC_DRAW);
 
         // set the vertex attribute pointers
