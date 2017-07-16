@@ -15,9 +15,15 @@ pub struct Mesh {
 
 impl Mesh {
     pub fn from_gltf(g_mesh: gltf::mesh::Mesh) -> Mesh {
+        let primitives = g_mesh.primitives()
+            .enumerate()
+            .map(|(i, g_prim)| {
+                Primitive::from_gltf(g_prim, i, g_mesh.index())
+            })
+            .collect();
         Mesh {
             index: g_mesh.index(),
-            primitives: g_mesh.primitives().map(Primitive::from_gltf).collect(),
+            primitives: primitives,
             name: g_mesh.name().map(|s| s.into()),
         }
     }
