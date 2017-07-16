@@ -41,8 +41,13 @@ pub fn main() {
             .required(true)
             .takes_value(true)
             .help("glTF file name or URL"))
+        .arg(Arg::with_name("screenshot")
+            .long("screenshot")
+            .short("s")
+            .help("Create screenshot (NOT WORKING YET)"))
         .get_matches();
     let source = args.value_of("FILE/URL").unwrap();
+    let screenshot = args.is_present("screenshot");
 
     let mut camera = Camera {
         // TODO!: position.z - bounding box length
@@ -148,6 +153,11 @@ pub fn main() {
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         window.swap_buffers();
         glfw.poll_events();
+
+        // TODO!: implement screenshotting
+        if screenshot {
+            return;
+        }
     }
 
 }
