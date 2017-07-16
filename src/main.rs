@@ -27,6 +27,7 @@ mod macros;
 mod http_source;
 use http_source::HttpSource;
 mod utils;
+use utils::print_elapsed;
 
 mod render;
 use render::*;
@@ -48,6 +49,8 @@ pub fn main() {
         .get_matches();
     let source = args.value_of("FILE/URL").unwrap();
     let screenshot = args.is_present("screenshot");
+
+    print_struct_sizes();
 
     let mut camera = Camera {
         // TODO!: position.z - bounding box length
@@ -84,6 +87,7 @@ pub fn main() {
     window.set_cursor_mode(glfw::CursorMode::Disabled);
 
     glfw.set_swap_interval(glfw::SwapInterval::Sync(1)); // V-sync
+    // glfw.set_swap_interval(glfw::SwapInterval::None);
 
     // gl: load all OpenGL function pointers
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
@@ -100,7 +104,7 @@ pub fn main() {
         //     "src/shaders/simple.vs",
         //     "src/shaders/simple.fs");
 
-        let start = SystemTime::now();
+        let mut start_time = SystemTime::now();
         let gltf =
             if source.starts_with("http") {
                 let http_source = HttpSource::new(source);
@@ -113,10 +117,15 @@ pub fn main() {
                 let import = gltf::Import::from_path(source);
                 import_gltf(import)
             };
-        println!("Imported glTF in {}", utils::elapsed(&start));
+        print_elapsed("Imported glTF in ", &start_time);
+        start_time = SystemTime::now();
 
         // load first scene
         let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap());
+        print_elapsed("Loaded scene in", &start_time);
+        println!("Nodes: {:<2}\nMeshes: {:<2}",
+            gltf.nodes().count(),
+            scene.meshes.len());
 
         // draw in wireframe
         // gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
@@ -124,13 +133,20 @@ pub fn main() {
         (shader, scene)
     };
 
+    let log_frequency = 120; // frames
+    let mut frame_number = 0;
+    let mut start_time = SystemTime::now();
     // render loop
     while !window.should_close() {
+        frame_number += 1;
+        if frame_number % log_frequency == 0 { start_time = SystemTime::now(); }
+
         // per-frame time logic
         let current_frame = glfw.get_time() as f32;
         delta_time = current_frame - last_frame;
         last_frame = current_frame;
 
+        glfw.poll_events();
         process_events(&events, &mut first_mouse, &mut last_x, &mut last_y, &mut camera);
         process_input(&mut window, delta_time, &mut camera);
 
@@ -150,14 +166,13 @@ pub fn main() {
             scene.draw(&shader);
         }
 
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+        if frame_number % log_frequency == 0 { print_elapsed("Frame time:", &start_time); }
+
         window.swap_buffers();
-        glfw.poll_events();
+        // if frame_number % log_frequency == 0 { print_elapsed("+ swap_buffers:", &start_time);  }
 
         // TODO!: implement screenshotting
-        if screenshot {
-            return;
-        }
+        if screenshot { return }
     }
 
 }
@@ -226,4 +241,14 @@ fn import_gltf<S: gltf::import::Source>(import: gltf::Import<S>) -> gltf::Gltf {
             std::process::exit(1);
         }
     }
+}
+
+fn print_struct_sizes() {
+    println!("Sizes in bytes:");
+    println!("Scene:     {:>3}", std::mem::size_of::<Scene>());
+    println!("Node:      {:>3}", std::mem::size_of::<Node>());
+    println!("Mesh:      {:>3}", std::mem::size_of::<Mesh>());
+    println!("Primitive: {:>3}", std::mem::size_of::<Primitive>());
+    println!("Vertex:    {:>3}", std::mem::size_of::<Vertex>());
+    println!();
 }
