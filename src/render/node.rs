@@ -9,17 +9,16 @@ use render::scene::Scene;
 use shader::Shader;
 
 pub struct Node {
-    // TODO!: camera?
+    // TODO!!: camera?
     pub children: Vec<Node>,
     pub matrix: Matrix4,
-    // TODO!!: actually use the Rc (share meshes)
     pub mesh: Option<Rc<Mesh>>,
     pub rotation: Quaternion,
     pub scale: Vector3,
     pub translation: Vector3,
-    // TODO
+    // TODO: weights
     // weights_id: usize,
-    pub name: Option<String>, // TODO: replace with reference to/index of gltf object?
+    pub name: Option<String>,
 }
 
 impl Node {

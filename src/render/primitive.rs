@@ -20,7 +20,7 @@ pub struct Vertex {
     pub tex_coord_0: Vector2,
     pub tex_coord_1: Vector2,
     pub color_0: Vector3, // TODO: vec4 support
-    // TODO!
+    // TODO: joints, weights
     // pub joints_0: Vector4,
     // pub weights_0: Vector4,
 }
@@ -48,7 +48,7 @@ pub struct Texture {
 // TODO!: split off vao and texture id's into "Renderable" (?) for draw loop
 pub struct Primitive {
     /*  Mesh Data  */
-    // TODO!: why save vertices, indices after setup?
+    // TODO!!: why save vertices, indices after setup?
     pub vertices: Vec<Vertex>,
     pub indices: Vec<u32>,
     pub textures: Vec<Texture>,
@@ -107,7 +107,7 @@ impl Primitive {
         let mut tex_coord_set = 0;
         while let Some(tex_coords) = g_primitive.tex_coords(tex_coord_set) {
             if tex_coord_set > 1 {
-                // TODO: add primitive index, mesh index/name
+                // TODO!!!: add primitive index, mesh index/name
                 println!("WARNING: Ignoring texture coordinate set {}, \
                           only supporting 2 sets at the moment.", tex_coord_set);
                 tex_coord_set = tex_coord_set + 1;
@@ -133,7 +133,7 @@ impl Primitive {
         let mut color_set = 0;
         while let Some(colors) = g_primitive.colors(color_set) {
             if color_set > 0 {
-                // TODO: add primitive index, mesh index/name
+                // TODO!!!: add primitive index, mesh index/name
                 println!("WARNING: Ignoring texture coordinate set {}, \
                           only supporting 2 sets at the moment.", tex_coord_set);
                 color_set = color_set + 1;

@@ -8,7 +8,7 @@ use render::Primitive;
 pub struct Mesh {
     pub index: usize, // glTF index
     pub primitives: Vec<Primitive>,
-    // TODO
+    // TODO: weights
     // pub weights: Vec<Rc<?>>
     pub name: Option<String>
 }

@@ -45,7 +45,7 @@ pub fn main() {
     let source = args.value_of("FILE/URL").unwrap();
 
     let mut camera = Camera {
-        // TODO: position.z - bounding box length
+        // TODO!: position.z - bounding box length
         position: Point3::new(0.0, 0.0, 1.0),
         zoom: 60.0,
         ..Camera::default()

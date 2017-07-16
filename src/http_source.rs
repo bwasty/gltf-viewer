@@ -45,7 +45,8 @@ pub enum Error {
 impl HttpSource {
     fn fetch_data(&self, url: String) -> Box<Future<Item=Box<[u8]>, Error=Error>> {
         let future = self.cpu_pool.spawn_fn(move || {
-            let mut resp = reqwest::get(&url).unwrap(); // TODO!: generate error
+            let mut resp = reqwest::get(&url)
+                .expect(&format!("Network problem on GET {}", url));
             if !resp.status().is_success() {
                 return Err(Error::HttpError(format!("{}: {}", resp.status(), url)));
             }
@@ -62,7 +63,7 @@ impl HttpSource {
 impl Source for HttpSource {
     type Error = Error;
     fn source_gltf(&self) -> Box<Future<Item=Box<[u8]>, Error=Self::Error>> {
-        print!("Downloading");
+        println!("Downloading");
         let _ = io::stdout().flush();
         self.fetch_data(self.url.to_string())
     }
@@ -84,7 +85,7 @@ impl std::error::Error for Error {
     }
 
     fn cause(&self) -> Option<&std::error::Error> {
-        None // TODO?
+        None
     }
 }
 
