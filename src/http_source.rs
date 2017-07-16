@@ -11,7 +11,7 @@ extern crate futures;
 extern crate hyper;
 extern crate tokio_core;
 
-use futures::Future;
+use futures::{Future, Stream};
 use self::hyper::Client;
 use self::tokio_core::reactor::Core;
 
@@ -54,18 +54,27 @@ pub enum Error {
 
 impl HttpSource {
     fn fetch_data(&self, url: String) -> Box<Future<Item=Box<[u8]>, Error=Error>> {
-        let future = self.cpu_pool.spawn_fn(move || {
-            let mut resp = reqwest::get(&url).unwrap(); // TODO!: generate error
-            if !resp.status().is_success() {
-                return Err(Error::HttpError(format!("{}: {}", resp.status(), url)));
-            }
-            let mut data = vec![];
-            let _ = resp.read_to_end(&mut data);
-            print!(".");
-            let _ = io::stdout().flush();
-            Ok(data.into_boxed_slice())
-        });
-        Box::new(future)
+        // let future = self.cpu_pool.spawn_fn(move || {
+            // let mut resp = reqwest::get(&url).unwrap(); // TODO!: generate error
+            // if !resp.status().is_success() {
+            //     return Err(Error::HttpError(format!("{}: {}", resp.status(), url)));
+            // }
+            // let mut data = vec![];
+            // let _ = resp.read_to_end(&mut data);
+            // print!(".");
+            // let _ = io::stdout().flush();
+            // Ok(data.into_boxed_slice())
+        // });
+
+        let future = self.client.get(url.parse().unwrap())
+            .map(|res| {
+                res.body().concat2().and_then(move |body| {
+                    let data: &[u8] = &body;
+                    Ok(Box::new(data))
+                })
+            });
+        // TODO!: where/how to run core.work/turn()?? another thread?
+        Box::new(future) // TODO!!: Type error...how to convert??
     }
 }
 
