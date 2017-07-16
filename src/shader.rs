@@ -108,23 +108,25 @@ impl Shader {
         info_log.set_len(1024 - 1); // subtract 1 to skip the trailing null character
         if type_ != "PROGRAM" {
             gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut success);
-            if success != gl::TRUE as GLint {
-                gl::GetShaderInfoLog(shader, 1024, ptr::null_mut(), info_log.as_mut_ptr() as *mut GLchar);
-                println!("ERROR::SHADER_COMPILATION_ERROR of type: {}\n{}\n \
-                          -- --------------------------------------------------- -- ",
-                         type_,
-                         str::from_utf8(&info_log).unwrap());
-            }
+            let log_type = if success == gl::TRUE as GLint { "WARNING" } else { "ERROR" };
+            let mut length = 0;
+            gl::GetShaderInfoLog(shader, 1024, &mut length, info_log.as_mut_ptr() as *mut GLchar);
+            if length == 0 { return }
+            println!("{}::SHADER_COMPILATION_{} of type: {}\n{}",
+                      log_type, log_type,
+                      type_,
+                      str::from_utf8(&info_log[0..length as usize]).unwrap());
 
         } else {
             gl::GetProgramiv(shader, gl::LINK_STATUS, &mut success);
-            if success != gl::TRUE as GLint {
-                gl::GetProgramInfoLog(shader, 1024, ptr::null_mut(), info_log.as_mut_ptr() as *mut GLchar);
-                println!("ERROR::PROGRAM_LINKING_ERROR of type: {}\n{}\n \
-                          -- --------------------------------------------------- -- ",
-                         type_,
-                         str::from_utf8(&info_log).unwrap());
-            }
+            let log_type = if success == gl::TRUE as GLint { "WARNING" } else { "ERROR" };
+            let mut length = 0;
+            gl::GetProgramInfoLog(shader, 1024, &mut length, info_log.as_mut_ptr() as *mut GLchar);
+            if length == 0 { return }
+            println!("{}::PROGRAM_LINKING_{} of type: {}\n{}",
+                      log_type, log_type,
+                      type_,
+                      str::from_utf8(&info_log[0..length as usize]).unwrap());
         }
 
     }

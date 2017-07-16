@@ -90,19 +90,25 @@ pub fn main() {
             include_str!("shaders/simple.vs"),
             include_str!("shaders/simple.fs"));
 
+        // NOTE: shader debug version
+        // let shader = Shader::new(
+        //     "src/shaders/simple.vs",
+        //     "src/shaders/simple.fs");
+
         let start = SystemTime::now();
         let gltf =
             if source.starts_with("http") {
                 let http_source = HttpSource::new(source);
                 let import = gltf::Import::custom(http_source, Default::default());
-                import_gltf(import)
+                let gltf = import_gltf(import);
+                println!(); // to end the "progress dots"
+                gltf
             }
             else {
                 let import = gltf::Import::from_path(source);
                 import_gltf(import)
             };
-        println!(); // to end the "progress dots"
-        println!("Imported gltf in {}", utils::elapsed(&start));
+        println!("Imported glTF in {}", utils::elapsed(&start));
 
         // load first scene
         let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap());

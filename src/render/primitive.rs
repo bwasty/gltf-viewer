@@ -244,23 +244,25 @@ impl Primitive {
         gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, size, data, gl::STATIC_DRAW);
 
         // set the vertex attribute pointers
-        // TODO!!: adapt to new Vertex struct
         let size = size_of::<Vertex>() as i32;
-        // vertex positions
+        // POSITION
         gl::EnableVertexAttribArray(0);
         gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, position) as *const c_void);
-        // vertex normals
+        // NORMAL
         gl::EnableVertexAttribArray(1);
         gl::VertexAttribPointer(1, 3, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, normal) as *const c_void);
-        // vertex texture coords
+        // TANGENT
         gl::EnableVertexAttribArray(2);
-        gl::VertexAttribPointer(2, 2, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, tex_coord_0) as *const c_void);
-        // vertex tangent
+        gl::VertexAttribPointer(2, 4, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, tangent) as *const c_void);
+        // TEXCOORD_0
         gl::EnableVertexAttribArray(3);
-        gl::VertexAttribPointer(3, 3, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, tangent) as *const c_void);
-        // vertex bitangent
-        // gl::EnableVertexAttribArray(4);
-        // gl::VertexAttribPointer(4, 3, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, bitangent) as *const c_void);
+        gl::VertexAttribPointer(3, 2, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, tex_coord_0) as *const c_void);
+        // TEXCOORD_1
+        gl::EnableVertexAttribArray(4);
+        gl::VertexAttribPointer(4, 2, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, tex_coord_1) as *const c_void);
+        // COLOR_0
+        gl::EnableVertexAttribArray(5);
+        gl::VertexAttribPointer(5, 3, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, color_0) as *const c_void);
 
         gl::BindVertexArray(0);
     }
