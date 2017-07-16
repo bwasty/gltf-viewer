@@ -1,6 +1,6 @@
 [root]
 name = "gltf-viewer"
-version = "0.0.1-pre"
+version = "0.0.3-pre"
 dependencies = [
  "cgmath 0.14.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.25.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -8,7 +8,7 @@ dependencies = [
  "futures-cpupool 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "gl 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "glfw 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "gltf 0.6.0",
+ "gltf 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.11.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -263,7 +263,8 @@ dependencies = [
 
 [[package]]
 name = "gltf"
-version = "0.6.0"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "base64 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.14 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1065,6 +1066,7 @@ dependencies = [
 "checksum gl_generator 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)" = "e7acbf2ba3d52e9e1ad96a84362129e9c1aa0af55ebfc86a91004e1b83eca61c"
 "checksum glfw 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)" = "995365b58861476496b20fd55cb819f4452f9506404394171165759440f59ade"
 "checksum glfw-sys 3.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f72bb86276679c5370276224546eef2dce99b23da2f364fd8b097c79db310b39"
+"checksum gltf 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ec9929e0bd35094b9e4949a41a16db2f3a08cefdcaeb1923a1d6c89dff8df66f"
 "checksum gltf-derive 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fb938e5a964ecbc5633e5d62cbf2c788de43ab5dd121a0bb1c8e6075aefde8ac"
 "checksum httparse 1.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "af2f2dd97457e8fb1ae7c5a420db346af389926e36f43768b96f101546b04a07"
 "checksum hyper 0.11.1 (registry+https://github.com/rust-lang/crates.io-index)" = "75f57d451deabf8ad8fa1488d27b24834c9f5b6ca996da8d0c9dc5ce9c8d4d34"

@@ -46,7 +46,7 @@ pub fn main() {
 
     let mut camera = Camera {
         // TODO: position.z - bounding box length
-        position: Point3::new(0.0, 0.0, 2.0),
+        position: Point3::new(0.0, 0.0, 1.0),
         zoom: 60.0,
         ..Camera::default()
     };
@@ -86,7 +86,9 @@ pub fn main() {
     let (shader, scene) = unsafe {
         gl::Enable(gl::DEPTH_TEST);
 
-        let shader = Shader::new("src/shaders/simple.vs", "src/shaders/simple.fs");
+        let shader = Shader::from_source(
+            include_str!("shaders/simple.vs"),
+            include_str!("shaders/simple.fs"));
 
         let start = SystemTime::now();
         let gltf =
@@ -99,6 +101,7 @@ pub fn main() {
                 let import = gltf::Import::from_path(source);
                 import_gltf(import)
             };
+        println!(); // to end the "progress dots"
         println!("Imported gltf in {}", utils::elapsed(&start));
 
         // load first scene

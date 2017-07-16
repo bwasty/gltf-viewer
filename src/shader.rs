@@ -19,7 +19,6 @@ pub struct Shader {
 #[allow(dead_code)]
 impl Shader {
     pub fn new(vertex_path: &str, fragment_path: &str) -> Shader {
-        let mut shader = Shader { id: 0 };
         // 1. retrieve the vertex/fragment source code from filesystem
         let mut v_shader_file = File::open(vertex_path).expect(&format!("Failed to open {}", vertex_path));
         let mut f_shader_file = File::open(fragment_path).expect(&format!("Failed to open {}", fragment_path));
@@ -31,6 +30,12 @@ impl Shader {
         f_shader_file
             .read_to_string(&mut fragment_code)
             .expect("Failed to read fragment shader");
+
+        Self::from_source(&vertex_code, &fragment_code)
+    }
+
+    pub fn from_source(vertex_code: &str, fragment_code: &str) -> Shader {
+        let mut shader = Shader { id: 0 };
 
         let v_shader_code = CString::new(vertex_code.as_bytes()).unwrap();
         let f_shader_code = CString::new(fragment_code.as_bytes()).unwrap();
