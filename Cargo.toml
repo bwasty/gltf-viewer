@@ -2,7 +2,12 @@
 authors = ["Benjamin Wasty <benny.wasty@gmail.com>"]
 categories = ["rendering"]
 description = "Simple glTF 2.0 viewer (WIP)"
-include = ["**/*.rs", "src/shaders/*.*", "Cargo.toml"]
+include = [
+    "Cargo.toml",
+    "Cargo.lock", # Note: currently ignored by `cargo package`, see rust-lang/cargo#2263
+    "**/*.rs",
+    "src/shaders/*.*",
+]
 keywords = ["glTF", "3D", "model", "scene", "viewer"]
 license = "Unlicense"
 name = "gltf-viewer"
