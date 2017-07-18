@@ -1,4 +1,6 @@
 #![allow(dead_code)]
+// #![allow(unused_features)]
+// #![feature(test)]
 #[macro_use] extern crate clap;
 extern crate cgmath;
 use cgmath::{Matrix4, Point3, Deg, perspective};
@@ -49,8 +51,6 @@ pub fn main() {
         .get_matches();
     let source = args.value_of("FILE/URL").unwrap();
     let screenshot = args.is_present("screenshot");
-
-    print_struct_sizes();
 
     let mut camera = Camera {
         // TODO!: position.z - bounding box length
@@ -243,12 +243,33 @@ fn import_gltf<S: gltf::import::Source>(import: gltf::Import<S>) -> gltf::Gltf {
     }
 }
 
-fn print_struct_sizes() {
-    println!("Sizes in bytes:");
-    println!("Scene:     {:>3}", std::mem::size_of::<Scene>());
-    println!("Node:      {:>3}", std::mem::size_of::<Node>());
-    println!("Mesh:      {:>3}", std::mem::size_of::<Mesh>());
-    println!("Primitive: {:>3}", std::mem::size_of::<Primitive>());
-    println!("Vertex:    {:>3}", std::mem::size_of::<Vertex>());
-    println!();
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn print_struct_sizes() {
+        // run witn `cargo test -- --nocapture`
+        println!("Sizes in bytes:");
+        println!("Scene:     {:>3}", std::mem::size_of::<Scene>());
+        println!("Node:      {:>3}", std::mem::size_of::<Node>());
+        println!("Mesh:      {:>3}", std::mem::size_of::<Mesh>());
+        println!("Primitive: {:>3}", std::mem::size_of::<Primitive>());
+        println!("Vertex:    {:>3}", std::mem::size_of::<Vertex>());
+        println!();
+        println!("Option<String>: {:>3}", std::mem::size_of::<Option<String>>());
+        println!("String:         {:>3}", std::mem::size_of::<String>());
+        println!("Vec<f32>:       {:>3}", std::mem::size_of::<Vec<f32>>());
+        println!("Vec<Node>:      {:>3}", std::mem::size_of::<Vec<Node>>());
+    }
+
+    // extern crate test;
+    // use self::test::Bencher;
+    // #[bench]
+    // fn bench_elapsed(b: &mut Bencher) {
+    //     let start_time = SystemTime::now();
+    //     b.iter(|| {
+    //         print_elapsed("Foobar", &start_time);
+    //     })
+    // }
 }

@@ -19,6 +19,8 @@ pub struct Node {
     // TODO: weights
     // weights_id: usize,
     pub name: Option<String>,
+
+    final_transform: Matrix4, // including parent transforms
 }
 
 impl Node {
@@ -55,6 +57,8 @@ impl Node {
             scale: Vector3::from(g_node.scale()),
             translation: Vector3::from(g_node.translation()),
             name: g_node.name().map(|s| s.into()),
+
+            final_transform: Matrix4::identity(), // TODO!: init already?
         }
     }
 
