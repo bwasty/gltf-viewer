@@ -1,6 +1,5 @@
 use std::time::{SystemTime, Duration};
 
-#[allow(dead_code)]
 pub fn elapsed(start_time: &SystemTime) -> String {
     let elapsed = start_time.elapsed().unwrap();
     format_duration(elapsed)

@@ -84,7 +84,7 @@ pub fn main() {
     window.set_cursor_pos_polling(true);
     window.set_scroll_polling(true);
     // TODO: capture on click or sth?
-    window.set_cursor_mode(glfw::CursorMode::Disabled);
+    // window.set_cursor_mode(glfw::CursorMode::Disabled);
 
     glfw.set_swap_interval(glfw::SwapInterval::Sync(1)); // V-sync
     // glfw.set_swap_interval(glfw::SwapInterval::None);
@@ -133,41 +133,48 @@ pub fn main() {
         (shader, scene)
     };
 
-    let mut timer = FrameTimer::new("frame", 240);
-    let mut swap_timer = FrameTimer::new("swap_buffers", 240);
+    let mut frame_timer = FrameTimer::new("frame", 300);
+    let mut render_timer = FrameTimer::new("rendering", 300);
+
     // render loop
     while !window.should_close() {
-        timer.start();
+        frame_timer.start();
 
         // per-frame time logic
         let current_frame = glfw.get_time() as f32;
         delta_time = current_frame - last_frame;
         last_frame = current_frame;
 
+        // poll events - perf note: this is slow while navigating! up to 1ms avg, 5ms max
         glfw.poll_events();
+
         process_events(&events, &mut first_mouse, &mut last_x, &mut last_y, &mut camera);
         process_input(&mut window, delta_time, &mut camera);
 
         // render
         unsafe {
+            render_timer.start();
+
             gl::ClearColor(0.1, 0.2, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             shader.use_program();
 
             // view/projection transformations
+            // TODO!: only re-compute/set perspective on Zoom changes (also view?)
             let projection: Matrix4<f32> = perspective(Deg(camera.zoom), SCR_WIDTH as f32 / SCR_HEIGHT as f32, 0.01, 1000.0);
             let view = camera.get_view_matrix();
             shader.set_mat4(c_str!("projection"), &projection);
             shader.set_mat4(c_str!("view"), &view);
 
             scene.draw(&shader);
+
+            render_timer.end();
         }
 
-        timer.end();
-        swap_timer.start();
+        frame_timer.end();
+
         window.swap_buffers();
-        swap_timer.end();
 
         // TODO!: implement screenshotting
         if screenshot { return }
@@ -261,13 +268,16 @@ mod tests {
         println!("Vec<Node>:      {:>3}", std::mem::size_of::<Vec<Node>>());
     }
 
-    // extern crate test;
-    // use self::test::Bencher;
-    // #[bench]
-    // fn bench_elapsed(b: &mut Bencher) {
-    //     let start_time = SystemTime::now();
-    //     b.iter(|| {
-    //         print_elapsed("Foobar", &start_time);
-    //     })
-    // }
+//     extern crate test;
+//     use self::test::Bencher;
+//     #[bench]
+//     fn bench_frame_timer(b: &mut Bencher) {
+//         let mut timer = FrameTimer::new("Foobar", 60);
+//         b.iter(|| {
+//             for _ in 0..60 {
+//                 timer.start();
+//                 timer.end();
+//             }
+//         })
+//     }
 }
