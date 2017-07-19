@@ -29,7 +29,7 @@ mod macros;
 mod http_source;
 use http_source::HttpSource;
 mod utils;
-use utils::print_elapsed;
+use utils::{print_elapsed, FrameTimer};
 
 mod render;
 use render::*;
@@ -133,13 +133,11 @@ pub fn main() {
         (shader, scene)
     };
 
-    let log_frequency = 120; // frames
-    let mut frame_number = 0;
-    let mut start_time = SystemTime::now();
+    let mut timer = FrameTimer::new("frame", 240);
+    let mut swap_timer = FrameTimer::new("swap_buffers", 240);
     // render loop
     while !window.should_close() {
-        frame_number += 1;
-        if frame_number % log_frequency == 0 { start_time = SystemTime::now(); }
+        timer.start();
 
         // per-frame time logic
         let current_frame = glfw.get_time() as f32;
@@ -166,10 +164,10 @@ pub fn main() {
             scene.draw(&shader);
         }
 
-        if frame_number % log_frequency == 0 { print_elapsed("Frame time:", &start_time); }
-
+        timer.end();
+        swap_timer.start();
         window.swap_buffers();
-        // if frame_number % log_frequency == 0 { print_elapsed("+ swap_buffers:", &start_time);  }
+        swap_timer.end();
 
         // TODO!: implement screenshotting
         if screenshot { return }
