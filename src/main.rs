@@ -91,10 +91,10 @@ pub fn main() {
     // gl: load all OpenGL function pointers
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
 
-    let (mut shader, scene) = unsafe {
+    let (mut shader, mut scene, loc_projection, loc_view) = unsafe {
         gl::Enable(gl::DEPTH_TEST);
 
-        let shader = Shader::from_source(
+        let mut shader = Shader::from_source(
             include_str!("shaders/simple.vs"),
             include_str!("shaders/simple.fs"));
 
@@ -102,6 +102,10 @@ pub fn main() {
         // let shader = Shader::new(
         //     "src/shaders/simple.vs",
         //     "src/shaders/simple.fs");
+
+        shader.use_program();
+        let loc_projection = shader.uniform_location("projection");
+        let loc_view = shader.uniform_location("view");
 
         let mut start_time = SystemTime::now();
         let gltf =
@@ -129,7 +133,7 @@ pub fn main() {
         // draw in wireframe
         // gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
 
-        (shader, scene)
+        (shader, scene, loc_projection, loc_view)
     };
 
     let mut frame_timer = FrameTimer::new("frame", 300);
@@ -163,8 +167,8 @@ pub fn main() {
             // TODO!: only re-compute/set perspective on Zoom changes (also view?)
             let projection: Matrix4<f32> = perspective(Deg(camera.zoom), SCR_WIDTH as f32 / SCR_HEIGHT as f32, 0.01, 1000.0);
             let view = camera.get_view_matrix();
-            shader.set_mat4("projection", &projection);
-            shader.set_mat4("view", &view);
+            shader.set_mat4(loc_projection, &projection);
+            shader.set_mat4(loc_view, &view);
 
             scene.draw(&mut shader);
 

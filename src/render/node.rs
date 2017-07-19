@@ -20,6 +20,7 @@ pub struct Node {
     pub name: Option<String>,
 
     final_transform: Matrix4, // including parent transforms
+    model_loc: Option<i32>,
 }
 
 impl Node {
@@ -58,10 +59,11 @@ impl Node {
             name: g_node.name().map(|s| s.into()),
 
             final_transform: Matrix4::identity(), // TODO!: init already?
+            model_loc: None,
         }
     }
 
-    pub fn draw(&self, shader: &mut Shader, model_matrix: &Matrix4) {
+    pub fn draw(&mut self, shader: &mut Shader, model_matrix: &Matrix4) {
         // TODO!: handle case of neither TRS nor matrix -> identity (or already works?)
         let mut model_matrix = *model_matrix;
         if !self.matrix.is_identity() { // TODO: optimize - determine in constructor
@@ -78,12 +80,15 @@ impl Node {
         if let Some(ref mesh) = self.mesh {
             // TODO: assume identity set and don't set if identity here?
             unsafe {
-                shader.set_mat4("model", &model_matrix);
+                if self.model_loc.is_none() {
+                    self.model_loc = Some(shader.uniform_location("model"));
+                }
+                shader.set_mat4(self.model_loc.unwrap(), &model_matrix);
             }
 
             (*mesh).draw(shader);
         }
-        for node in &self.children {
+        for node in &mut self.children {
             node.draw(shader, &model_matrix);
         }
     }
