@@ -109,7 +109,7 @@ impl Primitive {
                 println!("WARNING: Ignoring texture coordinate set {}, \
                           only supporting 2 sets at the moment. (mesh: {}, primitive: {})",
                           tex_coord_set, mesh_index, primitive_index);
-                tex_coord_set = tex_coord_set + 1;
+                tex_coord_set += 1;
                 continue;
             }
             let tex_coords = match tex_coords {
@@ -121,11 +121,11 @@ impl Primitive {
             for (i, tex_coord) in tex_coords.enumerate() {
                 match tex_coord_set {
                     0 => vertices[i].tex_coord_0 = Vector2::from(tex_coord),
-                    1 => vertices[i].tex_coord_0 = Vector2::from(tex_coord),
+                    1 => vertices[i].tex_coord_1 = Vector2::from(tex_coord),
                     _ => unreachable!()
                 }
             }
-            tex_coord_set = tex_coord_set + 1;
+            tex_coord_set += 1;
         }
 
         // colors
@@ -135,7 +135,7 @@ impl Primitive {
                 println!("WARNING: Ignoring color set {}, \
                           only supporting 1 set at the moment. (mesh: {}, primitive: {})",
                           color_set, mesh_index, primitive_index);
-                color_set = color_set + 1;
+                color_set += 1;
                 continue;
             }
             let colors = match colors {
@@ -151,7 +151,7 @@ impl Primitive {
             for (i, color) in colors.enumerate() {
                 vertices[i].color_0 = Vector3::from(color);
             }
-            color_set = color_set + 1;
+            color_set += 1;
         }
 
         let indices = g_primitive.indices()

@@ -79,8 +79,8 @@ impl Source for HttpSource {
 
 impl std::error::Error for Error {
     fn description(&self) -> &str {
-        match self {
-            &Error::HttpError(ref status) => status
+        match *self {
+            Error::HttpError(ref status) => status
         }
     }
 
