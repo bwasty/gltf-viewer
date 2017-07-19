@@ -1,4 +1,3 @@
-use std::ffi::CStr;
 use std::rc::Rc;
 
 use gltf;
@@ -62,7 +61,7 @@ impl Node {
         }
     }
 
-    pub fn draw(&self, shader: &Shader, model_matrix: &Matrix4) {
+    pub fn draw(&self, shader: &mut Shader, model_matrix: &Matrix4) {
         // TODO!: handle case of neither TRS nor matrix -> identity (or already works?)
         let mut model_matrix = *model_matrix;
         if !self.matrix.is_identity() { // TODO: optimize - determine in constructor
@@ -79,7 +78,7 @@ impl Node {
         if let Some(ref mesh) = self.mesh {
             // TODO: assume identity set and don't set if identity here?
             unsafe {
-                shader.set_mat4(c_str!("model"), &model_matrix);
+                shader.set_mat4("model", &model_matrix);
             }
 
             (*mesh).draw(shader);

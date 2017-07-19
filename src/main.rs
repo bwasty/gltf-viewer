@@ -17,7 +17,6 @@ extern crate futures;
 use clap::{Arg, App};
 
 use std::sync::mpsc::Receiver;
-use std::ffi::CStr;
 use std::time::SystemTime;
 
 mod shader;
@@ -92,7 +91,7 @@ pub fn main() {
     // gl: load all OpenGL function pointers
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
 
-    let (shader, scene) = unsafe {
+    let (mut shader, scene) = unsafe {
         gl::Enable(gl::DEPTH_TEST);
 
         let shader = Shader::from_source(
@@ -164,10 +163,10 @@ pub fn main() {
             // TODO!: only re-compute/set perspective on Zoom changes (also view?)
             let projection: Matrix4<f32> = perspective(Deg(camera.zoom), SCR_WIDTH as f32 / SCR_HEIGHT as f32, 0.01, 1000.0);
             let view = camera.get_view_matrix();
-            shader.set_mat4(c_str!("projection"), &projection);
-            shader.set_mat4(c_str!("view"), &view);
+            shader.set_mat4("projection", &projection);
+            shader.set_mat4("view", &view);
 
-            scene.draw(&shader);
+            scene.draw(&mut shader);
 
             render_timer.end();
         }

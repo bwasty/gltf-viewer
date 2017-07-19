@@ -1,4 +1,5 @@
-use std::ffi::{CString, CStr};
+use std::collections::HashMap;
+use std::ffi::CString;
 use std::fs::File;
 use std::io::Read;
 use std::ptr;
@@ -12,6 +13,7 @@ use cgmath::prelude::*;
 
 pub struct Shader {
     pub id: u32,
+    uniform_location_cache: HashMap<&'static str, i32>
 }
 
 /// NOTE: mixture of `shader_s.h` and `shader_m.h` (the latter just contains
@@ -35,7 +37,7 @@ impl Shader {
     }
 
     pub fn from_source(vertex_code: &str, fragment_code: &str) -> Shader {
-        let mut shader = Shader { id: 0 };
+        let mut shader = Shader { id: 0, uniform_location_cache: HashMap::new() };
 
         let v_shader_code = CString::new(vertex_code.as_bytes()).unwrap();
         let f_shader_code = CString::new(fragment_code.as_bytes()).unwrap();
@@ -73,31 +75,42 @@ impl Shader {
         gl::UseProgram(self.id)
     }
 
-    // TODO!: cache uniform locations!!
     /// utility uniform functions
     /// ------------------------------------------------------------------------
-    pub unsafe fn set_bool(&self, name: &CStr, value: bool) {
-        gl::Uniform1i(gl::GetUniformLocation(self.id, name.as_ptr()), value as i32);
+    pub unsafe fn set_bool(&mut self, name: &'static str, value: bool) {
+        gl::Uniform1i(self.get_uniform_location(name), value as i32);
     }
     /// ------------------------------------------------------------------------
-    pub unsafe fn set_int(&self, name: &CStr, value: i32) {
-        gl::Uniform1i(gl::GetUniformLocation(self.id, name.as_ptr()), value);
+    pub unsafe fn set_int(&mut self, name: &'static str, value: i32) {
+        gl::Uniform1i(self.get_uniform_location(name), value);
     }
     /// ------------------------------------------------------------------------
-    pub unsafe fn set_float(&self, name: &CStr, value: f32) {
-        gl::Uniform1f(gl::GetUniformLocation(self.id, name.as_ptr()), value);
+    pub unsafe fn set_float(&mut self, name: &'static str, value: f32) {
+        gl::Uniform1f(self.get_uniform_location(name), value);
     }
     /// ------------------------------------------------------------------------
-    pub unsafe fn set_vector3(&self, name: &CStr, value: &Vector3<f32>) {
-        gl::Uniform3fv(gl::GetUniformLocation(self.id, name.as_ptr()), 1, value.as_ptr());
+    pub unsafe fn set_vector3(&mut self, name: &'static str, value: &Vector3<f32>) {
+        gl::Uniform3fv(self.get_uniform_location(name), 1, value.as_ptr());
     }
     /// ------------------------------------------------------------------------
-    pub unsafe fn set_vec3(&self, name: &CStr, x: f32, y: f32, z: f32) {
-        gl::Uniform3f(gl::GetUniformLocation(self.id, name.as_ptr()), x, y, z);
+    pub unsafe fn set_vec3(&mut self, name: &'static str, x: f32, y: f32, z: f32) {
+        gl::Uniform3f(self.get_uniform_location(name), x, y, z);
     }
     /// ------------------------------------------------------------------------
-    pub unsafe fn set_mat4(&self, name: &CStr, mat: &Matrix4<f32>) {
-        gl::UniformMatrix4fv(gl::GetUniformLocation(self.id, name.as_ptr()), 1, gl::FALSE, mat.as_ptr());
+    pub unsafe fn set_mat4(&mut self, name: &'static str, mat: &Matrix4<f32>) {
+        gl::UniformMatrix4fv(self.get_uniform_location(name), 1, gl::FALSE, mat.as_ptr());
+    }
+
+    /// get uniform location with caching
+    unsafe fn get_uniform_location(&mut self, name: &'static str) -> i32 {
+        if let Some(loc) = self.uniform_location_cache.get(name) {
+            return *loc;
+        }
+
+        let c_name = CString::new(name).unwrap();
+        let loc = gl::GetUniformLocation(self.id, c_name.as_ptr());
+        self.uniform_location_cache.insert(name, loc);
+        loc
     }
 
     /// utility function for checking shader compilation/linking errors.
