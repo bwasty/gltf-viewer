@@ -20,6 +20,9 @@ cd gltf-viewer
 cargo install gltf-viewer
 ```
 
+### Additional dependencies (Ubuntu)
+`sudo apt-get install cmake libssl-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev` (rough list, to be refined)
+
 ## Usage
 ```shell
 gltf-viewer <filename|URL>

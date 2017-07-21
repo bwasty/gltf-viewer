@@ -6,10 +6,29 @@ use image;
 use image::DynamicImage::*;
 use image::GenericImage;
 
-#[derive(Default)]
+use gltf;
+
+use render::math::*;
+
+// TODO!!: Material
 pub struct Material {
-    // TODO!!: Material
-    name: Option<String>,
+    pub index: usize, /// glTF index
+    pub name: Option<String>,
+
+    pub base_color_factor: Vector4,
+    // pub base_color_texture: Rc<Texture>
+}
+
+pub fn from_gltf(g_material: &gltf::material::Material) -> Material {
+    let pbr = g_material.pbr_metallic_roughness()
+        .expect("not yet implemented: material must contain pbr_metallic_roughness");
+    Material {
+        index: g_material.index(),
+        name: g_material.name().map(|s| s.into()),
+        base_color_factor: Vector4::from(pbr.base_color_factor()),
+        // TODO: perhaps RC only the underlying image? no, also opengl id...
+        // base_color_texture: Rc::new(Texture)
+    }
 }
 
 unsafe fn texture_from_file(path: &str, directory: &str) -> u32 {
