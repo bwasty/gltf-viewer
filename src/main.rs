@@ -136,12 +136,12 @@ pub fn main() {
         (shader, scene, loc_projection, loc_view)
     };
 
-    let mut frame_timer = FrameTimer::new("frame", 300);
+    // let mut frame_timer = FrameTimer::new("frame", 300);
     let mut render_timer = FrameTimer::new("rendering", 300);
 
     // render loop
     while !window.should_close() {
-        frame_timer.start();
+        // frame_timer.start();
 
         // per-frame time logic
         let current_frame = glfw.get_time() as f32;
@@ -175,7 +175,7 @@ pub fn main() {
             render_timer.end();
         }
 
-        frame_timer.end();
+        // frame_timer.end();
 
         window.swap_buffers();
 
