@@ -58,38 +58,43 @@ impl Node {
             translation: Vector3::from(g_node.translation()),
             name: g_node.name().map(|s| s.into()),
 
-            final_transform: Matrix4::identity(), // TODO!: init already?
+            final_transform: Matrix4::identity(),
             model_loc: None,
         }
     }
 
-    pub fn draw(&mut self, shader: &mut Shader, model_matrix: &Matrix4) {
-        // TODO!: handle case of neither TRS nor matrix -> identity (or already works?)
-        let mut model_matrix = *model_matrix;
-        if !self.matrix.is_identity() { // TODO: optimize - determine in constructor
-            model_matrix = model_matrix * self.matrix;
+    pub fn update_transform(&mut self, parent_transform: &Matrix4) {
+        self.final_transform = *parent_transform;
+
+        if !self.matrix.is_identity() {
+            self.final_transform = self.final_transform * self.matrix;
         }
         else {
-            // TODO: optimize (do on setup / cache)
-            model_matrix = model_matrix *
+            // TODO?: detect if all default and set None? does NOT happen for any sample model
+            self.final_transform = self.final_transform *
                 Matrix4::from_translation(self.translation) *
                 Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, self.scale.z) *
                 Matrix4::from(self.rotation);
         }
 
+        for node in &mut self.children {
+            node.update_transform(&self.final_transform);
+        }
+    }
+
+    pub fn draw(&mut self, shader: &mut Shader) {
         if let Some(ref mesh) = self.mesh {
-            // TODO: assume identity set and don't set if identity here?
             unsafe {
                 if self.model_loc.is_none() {
                     self.model_loc = Some(shader.uniform_location("model"));
                 }
-                shader.set_mat4(self.model_loc.unwrap(), &model_matrix);
+                shader.set_mat4(self.model_loc.unwrap(), &self.final_transform);
             }
 
             (*mesh).draw(shader);
         }
         for node in &mut self.children {
-            node.draw(shader, &model_matrix);
+            node.draw(shader);
         }
     }
 }

@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::time::SystemTime;
 
 use gltf;
 
@@ -6,6 +7,7 @@ use render::Mesh;
 use render::Node;
 use render::math::*;
 use shader::Shader;
+use utils::print_elapsed;
 
 #[derive(Default)]
 pub struct Scene {
@@ -23,14 +25,22 @@ impl Scene {
         scene.nodes = g_scene.nodes()
             .map(|g_node| Node::from_gltf(g_node, &mut scene))
             .collect();
+
+        // propagate transforms
+        let start_time = SystemTime::now();
+        let root_transform = Matrix4::identity();
+        for node in &mut scene.nodes {
+            node.update_transform(&root_transform);
+        }
+        print_elapsed("propagate transforms", &start_time);
+
         scene
     }
 
-    // TODO: flatten draw call hierarchy (global Vec<Primitive>?)
+    // TODO: flatten draw call hierarchy (global Vec<SPrimitive>?)
     pub fn draw(&mut self, shader: &mut Shader) {
-        let model_matrix = Matrix4::identity();
         for node in &mut self.nodes {
-            node.draw(shader, &model_matrix);
+            node.draw(shader);
         }
     }
 }

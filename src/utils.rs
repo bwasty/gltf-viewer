@@ -22,7 +22,7 @@ fn format_duration(duration: Duration) -> String {
 }
 
 pub fn print_elapsed(message: &str, start_time: &SystemTime) {
-    println!("{:<20}{}", message, elapsed(start_time));
+    println!("{:<25}{}", message, elapsed(start_time));
 }
 
 pub struct FrameTimer {
