@@ -1,7 +1,12 @@
-use std::time::{SystemTime, Duration};
+use std::time::{SystemTime, Duration, Instant};
 
 pub fn elapsed(start_time: &SystemTime) -> String {
     let elapsed = start_time.elapsed().unwrap();
+    format_duration(elapsed)
+}
+
+pub fn elapsed2(start_time: &Instant) -> String {
+    let elapsed = start_time.elapsed();
     format_duration(elapsed)
 }
 
@@ -18,7 +23,7 @@ fn format_duration(duration: Duration) -> String {
             if ms > 20.0      { 0 }
             else if ms > 1.0  { 1 }
             else  {
-                return format!("{:>3} µs", nanos / 1000)
+                return format!("{:>3} µs", nanos as f64 / 1000.0)
             };
         format!("{:>3.*} ms", places, ms)
     }
@@ -26,6 +31,10 @@ fn format_duration(duration: Duration) -> String {
 
 pub fn print_elapsed(message: &str, start_time: &SystemTime) {
     println!("{:<25}{}", message, elapsed(start_time));
+}
+
+pub fn print_elapsed2(message: &str, start_time: &Instant) {
+    println!("{:<25}{}", message, elapsed2(start_time));
 }
 
 pub struct FrameTimer {
@@ -71,3 +80,46 @@ impl FrameTimer {
         self.frame_times.clear();
     }
 }
+
+pub struct FrameTimer2 {
+    message: String,
+    averaging_window: usize,
+    current_frame_start: Instant,
+    frame_times: Vec<Duration>,
+}
+
+/// Timing helper that averages timings over `averaging_window`
+// frames and then prints avg/min/max
+impl FrameTimer2 {
+    pub fn new(message: &str, averaging_window: usize) -> FrameTimer {
+        FrameTimer {
+            message: message.to_owned(),
+            averaging_window: averaging_window,
+            current_frame_start: SystemTime::now(),
+            frame_times: Vec::with_capacity(averaging_window),
+        }
+    }
+
+    pub fn start(&mut self) {
+        self.current_frame_start = Instant::now();
+    }
+
+    pub fn end(&mut self) {
+        self.frame_times.push(self.current_frame_start.elapsed());
+        if self.frame_times.len() == self.averaging_window {
+            self.print_and_reset();
+        }
+    }
+
+    pub fn print_and_reset(&mut self) {
+        {
+            let avg = self.frame_times.iter().sum::<Duration>() / self.frame_times.len() as u32;
+            let min = self.frame_times.iter().min().unwrap();
+            let max = self.frame_times.iter().max().unwrap();
+            println!("{:<15}{} (min: {}, max: {})", self.message,
+                format_duration(avg), format_duration(*min), format_duration(*max));
+        }
+        self.frame_times.clear();
+    }
+}
+
