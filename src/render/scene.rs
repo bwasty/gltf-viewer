@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use std::time::SystemTime;
+use std::time::Instant;
 
 use gltf;
 
@@ -27,7 +27,7 @@ impl Scene {
             .collect();
 
         // propagate transforms
-        let start_time = SystemTime::now();
+        let start_time = Instant::now();
         let root_transform = Matrix4::identity();
         for node in &mut scene.nodes {
             node.update_transform(&root_transform);
