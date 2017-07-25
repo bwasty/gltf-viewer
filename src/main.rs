@@ -9,6 +9,10 @@ use cgmath::{Matrix4, Point3, Deg, perspective};
 extern crate gl;
 extern crate glfw;
 use self::glfw::{Context, Key, Action};
+
+extern crate glutin;
+use glutin::GlContext;
+
 extern crate gltf;
 extern crate image;
 
@@ -28,7 +32,7 @@ mod macros;
 mod http_source;
 use http_source::HttpSource;
 mod utils;
-use utils::{print_elapsed, FrameTimer};
+use utils::{print_elapsed, FrameTimer, gl_check_error};
 
 mod render;
 use render::*;
@@ -66,8 +70,125 @@ pub fn main() {
     let mut delta_time: f32;
     let mut last_frame: f32 = 0.0;
 
+    // glutin: initialize and configure
+    let mut events_loop = glutin::EventsLoop::new();
+    let window = glutin::WindowBuilder::new()
+            .with_title("gltf-viewer")
+            .with_dimensions(SCR_WIDTH, SCR_HEIGHT);
+    let context = glutin::ContextBuilder::new()
+        .with_vsync(true);
+    let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
+    unsafe {
+        gl_window.make_current().unwrap();
+    }
+
+    // gl: load all OpenGL function pointers
+    gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
+
+    let (mut shader, mut scene, loc_projection, loc_view) = unsafe {
+            gl::ClearColor(0.1, 1.0, 0.3, 1.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+
+        gl::Enable(gl::DEPTH_TEST);
+
+        let mut shader = Shader::from_source(
+            include_str!("shaders/simple.vs"),
+            include_str!("shaders/simple.fs"));
+
+        // NOTE: shader debug version
+        // let shader = Shader::new(
+        //     "src/shaders/simple.vs",
+        //     "src/shaders/simple.fs");
+
+        shader.use_program();
+        let loc_projection = shader.uniform_location("projection");
+        let loc_view = shader.uniform_location("view");
+
+        let mut start_time = SystemTime::now();
+        let gltf =
+            if source.starts_with("http") {
+                let http_source = HttpSource::new(source);
+                let import = gltf::Import::custom(http_source, Default::default());
+                let gltf = import_gltf(import);
+                println!(); // to end the "progress dots"
+                gltf
+            }
+            else {
+                let import = gltf::Import::from_path(source);
+                import_gltf(import)
+            };
+        print_elapsed("Imported glTF in ", &start_time);
+        start_time = SystemTime::now();
+
+        // load first scene
+        let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap());
+        print_elapsed("Loaded scene in", &start_time);
+        println!("Nodes: {:<2}\nMeshes: {:<2}",
+            gltf.nodes().count(),
+            scene.meshes.len());
+
+        // draw in wireframe
+        // gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+
+        gl_check_error!();
+
+        (shader, scene, loc_projection, loc_view)
+    };
+
+    // let mut frame_timer = FrameTimer::new("frame", 300);
+    let mut render_timer = FrameTimer::new("rendering", 300);
+
+    // render loop
+    let mut running = true;
+    while running {
+        events_loop.poll_events(|event| {
+            // println!("{:?}", event);
+            match event {
+                glutin::Event::WindowEvent{ event, .. } => match event {
+                    glutin::WindowEvent::Closed => running = false,
+                    glutin::WindowEvent::Resized(w, h) => gl_window.resize(w, h),
+                    _ => ()
+                },
+                _ => ()
+            }
+        });
+
+        // render
+        unsafe {
+            render_timer.start();
+
+            gl::ClearColor(0.1, 1.0, 0.3, 1.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+
+            shader.use_program();
+
+            // view/projection transformations
+            // TODO!: only re-compute/set perspective on Zoom changes (also view?)
+            let projection: Matrix4<f32> = perspective(Deg(camera.zoom), SCR_WIDTH as f32 / SCR_HEIGHT as f32, 0.01, 1000.0);
+            let view = camera.get_view_matrix();
+            shader.set_mat4(loc_projection, &projection);
+            shader.set_mat4(loc_view, &view);
+
+            scene.draw(&mut shader);
+
+            render_timer.end();
+
+            gl_check_error!();
+        }
+
+        // frame_timer.end();
+
+        gl_window.swap_buffers().unwrap();
+
+        // TODO!: implement screenshotting
+        if screenshot { return }
+    }
+
+    std::process::exit(0);
+
     // glfw: initialize and configure
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+    // TODO!!
     glfw.window_hint(glfw::WindowHint::ContextVersion(4, 1)); // max on macOS
     glfw.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
     #[cfg(target_os = "macos")]
