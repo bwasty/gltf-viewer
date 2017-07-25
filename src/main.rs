@@ -17,7 +17,6 @@ extern crate futures;
 use clap::{Arg, App};
 
 use std::sync::mpsc::Receiver;
-use std::time::SystemTime;
 use std::time::Instant;
 
 mod shader;
@@ -30,7 +29,6 @@ mod http_source;
 use http_source::HttpSource;
 mod utils;
 use utils::{print_elapsed, FrameTimer};
-use utils::{print_elapsed2, FrameTimer2};
 
 mod render;
 use render::*;
@@ -109,18 +107,7 @@ pub fn main() {
         let loc_projection = shader.uniform_location("projection");
         let loc_view = shader.uniform_location("view");
 
-        /// TODO!!:TMP
-        for _ in 1..5 {
-            let s = SystemTime::now();
-            print_elapsed("Nothing", &s);
-            let s = Instant::now();
-            print_elapsed2("Nothing2", &s);
-            println!();
-        }
-        ///
-
-        let mut start_time = SystemTime::now();
-        let mut start_time2 = Instant::now();
+        let mut start_time = Instant::now();
         let gltf =
             if source.starts_with("http") {
                 let http_source = HttpSource::new(source);
@@ -135,14 +122,11 @@ pub fn main() {
             };
 
         print_elapsed("Imported glTF in ", &start_time);
-        print_elapsed2("Imported glTF in ", &start_time2);
-        start_time = SystemTime::now();
-        start_time2 = Instant::now();
+        start_time = Instant::now();
 
         // load first scene
         let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap());
         print_elapsed("Loaded scene in", &start_time);
-        print_elapsed2("Loaded scene in", &start_time2);
         println!("Nodes: {:<2}\nMeshes: {:<2}",
             gltf.nodes().count(),
             scene.meshes.len());
@@ -155,7 +139,6 @@ pub fn main() {
 
     // let mut frame_timer = FrameTimer::new("frame", 300);
     let mut render_timer = FrameTimer::new("rendering", 300);
-    let mut render_timer2 = FrameTimer2::new("rendering2", 300);
 
     // render loop
     while !window.should_close() {
@@ -175,7 +158,6 @@ pub fn main() {
         // render
         unsafe {
             render_timer.start();
-            render_timer2.start();
 
             gl::ClearColor(0.1, 0.2, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
@@ -192,7 +174,6 @@ pub fn main() {
             scene.draw(&mut shader);
 
             render_timer.end();
-            render_timer2.end();
         }
 
         // frame_timer.end();
