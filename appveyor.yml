@@ -1,5 +1,5 @@
-# Based on the "trust" template v0.1.1
-# https://github.com/japaric/trust/tree/v0.1.1
+# Based on the "trust" template
+# https://github.com/japaric/trust/tree/29b0e084ff2c40d1aa1b6a5d66ab81eca90439e1
 
 environment:
   global:
@@ -12,18 +12,17 @@ environment:
   # These are all the build jobs. Adjust as necessary. Comment out what you
   # don't need
   matrix:
-    # TODO: not working due to cmake / glfw issues
     # MinGW
     #- TARGET: i686-pc-windows-gnu
-    #- TARGET: x86_64-pc-windows-gnu
+    - TARGET: x86_64-pc-windows-gnu
 
     # MSVC
     #- TARGET: i686-pc-windows-msvc
     - TARGET: x86_64-pc-windows-msvc
 
     # Testing other channels
-    # - TARGET: x86_64-pc-windows-gnu
-    #   RUST_VERSION: nightly
+    - TARGET: x86_64-pc-windows-gnu
+      RUST_VERSION: nightly
     - TARGET: x86_64-pc-windows-msvc
       RUST_VERSION: nightly
 
