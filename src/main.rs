@@ -25,7 +25,6 @@ extern crate futures;
 
 use clap::{Arg, App};
 
-// use std::sync::mpsc::Receiver;
 use std::time::Instant;
 
 mod shader;
@@ -60,60 +59,112 @@ pub fn main() {
     let source = args.value_of("FILE/URL").unwrap();
     let screenshot = args.is_present("screenshot");
 
-    let mut camera = Camera {
-        // TODO!: position.z - bounding box length
-        position: Point3::new(0.0, 0.0, 1.0),
-        zoom: 60.0,
-        ..Camera::default()
-    };
+    let mut viewer = GltfViewer::new(source);
+    viewer.start_render_loop(screenshot);
+}
 
-    let mut first_mouse = true;
-    let mut last_x: f32 = SCR_WIDTH as f32 / 2.0;
-    let mut last_y: f32 = SCR_HEIGHT as f32 / 2.0;
+struct GltfViewer {
+    camera: Camera,
+    first_mouse: bool,
+    last_x: f32,
+    last_y: f32,
+    events_loop: glutin::EventsLoop,
+    gl_window: glutin::GlWindow,
 
-    // glutin: initialize and configure
-    let mut events_loop = glutin::EventsLoop::new();
+    shader: Shader,
+    loc_projection: i32,
+    loc_view: i32,
 
-    // TODO?: hints for 4.1, core profile, forward compat
-    let window = glutin::WindowBuilder::new()
-            .with_title("gltf-viewer")
-            // TODO: configurable initial dimensions
-            .with_dimensions(SCR_WIDTH, SCR_HEIGHT);
+    scene: Scene,
+
+    delta_time: f64, // seconds
+    last_frame: Instant,
+}
+
+impl GltfViewer {
+    pub fn new(source: &str) -> GltfViewer {
+        let camera = Camera {
+            // TODO!: position.z - bounding box length
+            position: Point3::new(0.0, 0.0, 1.0),
+            zoom: 60.0,
+            ..Camera::default()
+        };
+
+        let first_mouse = true;
+        let last_x: f32 = SCR_WIDTH as f32 / 2.0;
+        let last_y: f32 = SCR_HEIGHT as f32 / 2.0;
+
+        // glutin: initialize and configure
+        let events_loop = glutin::EventsLoop::new();
+
+        // TODO?: hints for 4.1, core profile, forward compat
+        let window = glutin::WindowBuilder::new()
+                .with_title("gltf-viewer")
+                // TODO: configurable initial dimensions
+                .with_dimensions(SCR_WIDTH, SCR_HEIGHT);
+
+        let context = glutin::ContextBuilder::new()
+            .with_vsync(true);
+        let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
+
+        unsafe {
+            gl_window.make_current().unwrap();
+        }
+
+        // TODO!: capturing - on click or uncapture somehow?
+        // TODO!!: find solution for macOS - see https://github.com/tomaka/glutin/issues/226
+         #[cfg(target_os = "macos")]
+        let _ = gl_window.set_cursor_state(CursorState::Hide);
+         #[cfg(not(target_os = "macos"))]
+        let _ = gl_window.set_cursor_state(CursorState::Grab);
 
 
-    let context = glutin::ContextBuilder::new()
-        .with_vsync(true);
-    let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
+        // gl: load all OpenGL function pointers
+        gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
 
-    unsafe {
-        gl_window.make_current().unwrap();
-    }
-
-    // TODO!: capturing - on click or uncapture somehow?
-    let _ = gl_window.set_cursor_state(CursorState::Hide);
-
-    // gl: load all OpenGL function pointers
-    gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
-
-    let (mut shader, mut scene, loc_projection, loc_view) = unsafe {
+        let (shader, loc_projection, loc_view) = unsafe {
             gl::ClearColor(0.1, 1.0, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-        gl::Enable(gl::DEPTH_TEST);
+            gl::Enable(gl::DEPTH_TEST);
 
-        let mut shader = Shader::from_source(
-            include_str!("shaders/simple.vs"),
-            include_str!("shaders/simple.fs"));
+            let mut shader = Shader::from_source(
+                include_str!("shaders/simple.vs"),
+                include_str!("shaders/simple.fs"));
 
-        // NOTE: shader debug version
-        // let shader = Shader::new(
-        //     "src/shaders/simple.vs",
-        //     "src/shaders/simple.fs");
+            // NOTE: shader debug version
+            // let shader = Shader::new(
+            //     "src/shaders/simple.vs",
+            //     "src/shaders/simple.fs");
 
-        shader.use_program();
-        let loc_projection = shader.uniform_location("projection");
-        let loc_view = shader.uniform_location("view");
+            shader.use_program();
+            let loc_projection = shader.uniform_location("projection");
+            let loc_view = shader.uniform_location("view");
 
+            // TODO: keyboard switch?
+            // draw in wireframe
+            gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+
+            (shader, loc_projection, loc_view)
+        };
+
+        GltfViewer {
+            camera,
+            first_mouse, last_x, last_y,
+
+            events_loop,
+            gl_window,
+
+            shader, loc_projection, loc_view,
+
+            scene: Self::load(source),
+
+            delta_time: 0.0, // seconds
+            last_frame: Instant::now(),
+        }
+    }
+
+    pub fn load(source: &str) -> Scene {
         let mut start_time = Instant::now();
         let gltf =
             if source.starts_with("http") {
@@ -137,56 +188,60 @@ pub fn main() {
             gltf.nodes().count(),
             scene.meshes.len());
 
-        // TODO: keyboard switch?
-        // draw in wireframe
-        // gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+        scene
+    }
 
-        (shader, scene, loc_projection, loc_view)
-    };
+    pub fn start_render_loop(&mut self, screenshot: bool) {
+        let mut render_timer = FrameTimer::new("rendering", 300);
+        loop {
+            // per-frame time logic
+            // NOTE: Deliberately ignoring the seconds of `elapsed()`
+            self.delta_time = (self.last_frame.elapsed().subsec_nanos() as f64) / 1_000_000_000.0;
+            self.last_frame = Instant::now();
 
-    // timing
-    let mut delta_time: f64; // seconds
-    let mut last_frame: Instant = Instant::now();
+            let keep_running = process_events(
+                &mut self.events_loop, &self.gl_window,
+                &mut self.first_mouse, &mut self.last_x, &mut self.last_y,
+                &mut self.camera);
+            if !keep_running { break }
+            self.camera.update(self.delta_time); // navigation
 
-    let mut render_timer = FrameTimer::new("rendering", 300);
+            // render
+            unsafe {
+                render_timer.start();
 
-    // render loop
-    let mut running = true;
-    while running {
-        // per-frame time logic
-        // NOTE: Deliberately ignoring the seconds of `elapsed()`
-        delta_time = (last_frame.elapsed().subsec_nanos() as f64) / 1_000_000_000.0;
-        last_frame = Instant::now();
+                gl::ClearColor(0.1, 0.2, 0.3, 1.0);
+                gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-        // TODO!!: refactor into struct...
-        running = process_events(&mut events_loop, &gl_window, &mut first_mouse, &mut last_x, &mut last_y, &mut camera);
-        camera.update(delta_time); // navigation
+                self.shader.use_program();
 
-        // render
-        unsafe {
-            render_timer.start();
+                // view/projection transformations
+                // TODO!: only re-compute/set perspective on Zoom changes (also view?)
+                let projection: Matrix4<f32> = perspective(Deg(self.camera.zoom), SCR_WIDTH as f32 / SCR_HEIGHT as f32, 0.01, 1000.0);
+                let view = self.camera.get_view_matrix();
+                self.shader.set_mat4(self.loc_projection, &projection);
+                self.shader.set_mat4(self.loc_view, &view);
 
-            gl::ClearColor(0.1, 0.2, 0.3, 1.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+                self.scene.draw(&mut self.shader);
 
-            shader.use_program();
+                render_timer.end();
+            }
 
-            // view/projection transformations
-            // TODO!: only re-compute/set perspective on Zoom changes (also view?)
-            let projection: Matrix4<f32> = perspective(Deg(camera.zoom), SCR_WIDTH as f32 / SCR_HEIGHT as f32, 0.01, 1000.0);
-            let view = camera.get_view_matrix();
-            shader.set_mat4(loc_projection, &projection);
-            shader.set_mat4(loc_view, &view);
+            self.gl_window.swap_buffers().unwrap();
 
-            scene.draw(&mut shader);
-
-            render_timer.end();
+            // TODO!: implement screenshotting
+            if screenshot { return }
         }
+    }
+}
 
-        gl_window.swap_buffers().unwrap();
-
-        // TODO!: implement screenshotting
-        if screenshot { return }
+fn import_gltf<S: gltf::import::Source>(import: gltf::Import<S>) -> gltf::Gltf {
+    match import.sync() {
+        Ok(gltf) => gltf,
+        Err(err) => {
+            println!("glTF import failed: {:?}", err);
+            std::process::exit(1);
+        }
     }
 }
 
@@ -253,16 +308,6 @@ fn process_input(input: glutin::KeyboardInput, camera: &mut Camera) -> bool {
         }
     }
     true
-}
-
-fn import_gltf<S: gltf::import::Source>(import: gltf::Import<S>) -> gltf::Gltf {
-    match import.sync() {
-        Ok(gltf) => gltf,
-        Err(err) => {
-            println!("glTF import failed: {:?}", err);
-            std::process::exit(1);
-        }
-    }
 }
 
 #[cfg(test)]
