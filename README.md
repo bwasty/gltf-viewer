@@ -1,7 +1,11 @@
 # gltf-viewer
 [![crates.io](https://img.shields.io/crates/v/gltf-viewer.svg)](https://crates.io/crates/gltf-viewer)
+[![GitHub release](https://img.shields.io/github/release/bwasty/gltf-viewer.svg)](https://github.com/bwasty/gltf-viewer/releases/latest)
  [![](https://tokei.rs/b1/github/bwasty/gltf-viewer)](https://github.com/Aaronepower/tokei)
  [![Build Status](https://travis-ci.org/bwasty/gltf-viewer.svg?branch=master)](https://travis-ci.org/bwasty/gltf-viewer)
+ [![Build status](https://ci.appveyor.com/api/projects/status/51ukh02thpb0r9cf/branch/master?svg=true)](https://ci.appveyor.com/project/bwasty/gltf-viewer/branch/master)<br>
+ [![Crates.io](https://img.shields.io/crates/d/gltf-viewer.svg)](https://crates.io/crates/gltf-viewer)
+ [![Github All Releases](https://img.shields.io/github/downloads/bwasty/gltf-viewer/total.svg)](https://github.com/bwasty/gltf-viewer/releases)
 
 glTF Viewer written in Rust (WIP).
 Current state: most simple models can be loaded, but there is no lighting/texturing (normals are used as color):
@@ -9,19 +13,21 @@ Current state: most simple models can be loaded, but there is no lighting/textur
 <img width="311" alt="gltf-viewer" src="https://user-images.githubusercontent.com/1647415/27612520-375828ee-5b97-11e7-97b4-90785cdbfe8e.png">
 
 ## Installation
-### From crates.io
+### Binaries (Win/Linux/macOS)
+See [Latest Release](https://github.com/bwasty/gltf-viewer/releases/latest)
+### From crate (requires [Rust](https://www.rust-lang.org))
 ```shell
 cargo install gltf-viewer
 ```
-### From source
+or
 ```shell
 git clone https://github.com/bwasty/gltf-viewer.git
 cd gltf-viewer
 cargo install gltf-viewer
 ```
 
-### Additional dependencies (Ubuntu)
-`sudo apt-get install cmake libssl-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev` (rough list, to be refined)
+#### Additional dependencies (Ubuntu)
+`sudo apt-get install libssl-dev`
 
 ## Usage
 ```shell
