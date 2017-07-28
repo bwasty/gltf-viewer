@@ -21,7 +21,10 @@ const YAW: f32 = -90.0;
 const PITCH: f32 = 0.0;
 const SPEED: f32 = 2.5;
 const SENSITIVTY: f32 = 0.1;
+const ZOOM_SENSITIVITY: f32 = 0.1;
 const ZOOM: f32 = 45.0;
+const MIN_ZOOM: f32 = 1.0;
+const MAZ_ZOOM: f32 = 90.0;
 
 pub struct Camera {
     // Camera Attributes
@@ -104,15 +107,18 @@ impl Camera {
     }
 
     // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
-    pub fn process_mouse_scroll(&mut self, yoffset: f32) {
-        if self.zoom >= 1.0 && self.zoom <= 45.0 {
+    pub fn process_mouse_scroll(&mut self, mut yoffset: f32) {
+
+
+        yoffset *= ZOOM_SENSITIVITY;
+        if self.zoom >= MIN_ZOOM && self.zoom <= MAZ_ZOOM {
             self.zoom -= yoffset;
         }
-        if self.zoom <= 1.0 {
-            self.zoom = 1.0;
+        if self.zoom <= MIN_ZOOM {
+            self.zoom = MIN_ZOOM;
         }
-        if self.zoom >= 45.0 {
-            self.zoom = 45.0;
+        if self.zoom >= MAZ_ZOOM {
+            self.zoom = MAZ_ZOOM;
         }
     }
 

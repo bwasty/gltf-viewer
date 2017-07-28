@@ -9,7 +9,7 @@ use cgmath::{Matrix4, Point3, Deg, perspective};
 extern crate gl;
 
 extern crate glutin;
-use glutin::GlContext;
+use glutin::{GlContext, WindowEvent, MouseScrollDelta};
 
 extern crate gltf;
 extern crate image;
@@ -53,19 +53,19 @@ pub fn main() {
     let source = args.value_of("FILE/URL").unwrap();
     let screenshot = args.is_present("screenshot");
 
-    let camera = Camera {
+    let mut camera = Camera {
         // TODO!: position.z - bounding box length
         position: Point3::new(0.0, 0.0, 1.0),
         zoom: 60.0,
         ..Camera::default()
     };
 
-    // TODO!!
-    // let mut first_mouse = true;
-    // let mut last_x: f32 = SCR_WIDTH as f32 / 2.0;
-    // let mut last_y: f32 = SCR_HEIGHT as f32 / 2.0;
+    let mut first_mouse = true;
+    let mut last_x: f32 = SCR_WIDTH as f32 / 2.0;
+    let mut last_y: f32 = SCR_HEIGHT as f32 / 2.0;
 
-    // // timing
+    // TODO!!
+    // timing
     // let mut delta_time: f32;
     // let mut last_frame: f32 = 0.0;
 
@@ -144,17 +144,7 @@ pub fn main() {
     let mut running = true;
     while running {
         // TODO!!: process_events, process_input
-        events_loop.poll_events(|event| {
-            // println!("{:?}", event);
-            match event {
-                glutin::Event::WindowEvent{ event, .. } => match event {
-                    glutin::WindowEvent::Closed => running = false,
-                    glutin::WindowEvent::Resized(w, h) => gl_window.resize(w, h),
-                    _ => ()
-                },
-                _ => ()
-            }
-        });
+        running = process_events(&mut events_loop, &gl_window, &mut first_mouse, &mut last_x, &mut last_y, &mut camera);
 
         // render
         unsafe {
@@ -188,41 +178,50 @@ pub fn main() {
     }
 }
 
-// fn process_events(events: &Receiver<(f64, glfw::WindowEvent)>,
-//                   first_mouse: &mut bool,
-//                   last_x: &mut f32,
-//                   last_y: &mut f32,
-//                   camera: &mut Camera) {
-//     for (_, event) in glfw::flush_messages(events) {
-//         match event {
-//             glfw::WindowEvent::FramebufferSize(width, height) => {
-//                 // make sure the viewport matches the new window dimensions; note that width and
-//                 // height will be significantly larger than specified on retina displays.
-//                 unsafe { gl::Viewport(0, 0, width, height) }
-//             }
-//             glfw::WindowEvent::CursorPos(xpos, ypos) => {
-//                 let (xpos, ypos) = (xpos as f32, ypos as f32);
-//                 if *first_mouse {
-//                     *last_x = xpos;
-//                     *last_y = ypos;
-//                     *first_mouse = false;
-//                 }
+fn process_events(
+    events_loop: &mut glutin::EventsLoop,
+    gl_window: &glutin::GlWindow,
+    first_mouse: &mut bool,
+    last_x: &mut f32,
+    last_y: &mut f32,
+    camera: &mut Camera) -> bool
+{
+    let mut keep_running = true;
+    events_loop.poll_events(|event| {
+        // println!("{:?}", event);
+        match event {
+            glutin::Event::WindowEvent{ event, .. } => match event {
+                WindowEvent::Closed => keep_running = false,
+                WindowEvent::Resized(w, h) => gl_window.resize(w, h), // TODO!: handle aspect ratio changes
+                WindowEvent::DroppedFile(_path_buf) => (), // TODO!: drag file in
+                WindowEvent::MouseMoved { position: (xpos, ypos), .. } => {
+                    let (xpos, ypos) = (xpos as f32, ypos as f32);
+                    if *first_mouse {
+                        *last_x = xpos;
+                        *last_y = ypos;
+                        *first_mouse = false;
+                    }
 
-//                 let xoffset = xpos - *last_x;
-//                 let yoffset = *last_y - ypos; // reversed since y-coordinates go from bottom to top
+                    let xoffset = xpos - *last_x;
+                    let yoffset = *last_y - ypos; // reversed since y-coordinates go from bottom to top
 
-//                 *last_x = xpos;
-//                 *last_y = ypos;
+                    *last_x = xpos;
+                    *last_y = ypos;
 
-//                 camera.process_mouse_movement(xoffset, yoffset, true);
-//             }
-//             glfw::WindowEvent::Scroll(_xoffset, yoffset) => {
-//                 camera.process_mouse_scroll(yoffset as f32);
-//             }
-//             _ => {}
-//         }
-//     }
-// }
+                    camera.process_mouse_movement(xoffset, yoffset, true);
+                },
+                WindowEvent::MouseWheel { delta: MouseScrollDelta::PixelDelta(_xoffset, yoffset), .. } => {
+                    // TODO!: need to handle LineDelta case too?
+                    camera.process_mouse_scroll(yoffset);
+                }
+                _ => ()
+            },
+            _ => ()
+        }
+    });
+
+    keep_running
+}
 
 // fn process_input(window: &mut glfw::Window, delta_time: f32, camera: &mut Camera) {
 //     if window.get_key(Key::Escape) == Action::Press {
