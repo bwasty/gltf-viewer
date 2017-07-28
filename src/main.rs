@@ -9,7 +9,14 @@ use cgmath::{Matrix4, Point3, Deg, perspective};
 extern crate gl;
 
 extern crate glutin;
-use glutin::{GlContext, WindowEvent, MouseScrollDelta};
+use glutin::{
+    CursorState,
+    ElementState,
+    MouseScrollDelta,
+    GlContext,
+    VirtualKeyCode,
+    WindowEvent,
+};
 
 extern crate gltf;
 extern crate image;
@@ -25,12 +32,12 @@ mod shader;
 use shader::Shader;
 mod camera;
 use camera::Camera;
-// use camera::CameraMovement::*;
+use camera::CameraMovement::*;
 mod macros;
 mod http_source;
 use http_source::HttpSource;
 mod utils;
-use utils::{print_elapsed, FrameTimer, gl_check_error};
+use utils::{print_elapsed, FrameTimer};
 
 mod render;
 use render::*;
@@ -64,27 +71,26 @@ pub fn main() {
     let mut last_x: f32 = SCR_WIDTH as f32 / 2.0;
     let mut last_y: f32 = SCR_HEIGHT as f32 / 2.0;
 
-    // TODO!!
-    // timing
-    // let mut delta_time: f32;
-    // let mut last_frame: f32 = 0.0;
-
     // glutin: initialize and configure
     let mut events_loop = glutin::EventsLoop::new();
-    // TODO!?: hints for 4.1, core, forward compat
 
+    // TODO?: hints for 4.1, core profile, forward compat
     let window = glutin::WindowBuilder::new()
             .with_title("gltf-viewer")
             // TODO: configurable initial dimensions
             .with_dimensions(SCR_WIDTH, SCR_HEIGHT);
-    // TODO!!: capturing - on click or uncapture somehow?
+
 
     let context = glutin::ContextBuilder::new()
         .with_vsync(true);
     let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
+
     unsafe {
         gl_window.make_current().unwrap();
     }
+
+    // TODO!: capturing - on click or uncapture somehow?
+    let _ = gl_window.set_cursor_state(CursorState::Hide);
 
     // gl: load all OpenGL function pointers
     gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
@@ -131,20 +137,30 @@ pub fn main() {
             gltf.nodes().count(),
             scene.meshes.len());
 
+        // TODO: keyboard switch?
         // draw in wireframe
         // gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
 
         (shader, scene, loc_projection, loc_view)
     };
 
-    // let mut frame_timer = FrameTimer::new("frame", 300);
+    // timing
+    let mut delta_time: f64; // seconds
+    let mut last_frame: Instant = Instant::now();
+
     let mut render_timer = FrameTimer::new("rendering", 300);
 
     // render loop
     let mut running = true;
     while running {
-        // TODO!!: process_events, process_input
+        // per-frame time logic
+        // NOTE: Deliberately ignoring the seconds of `elapsed()`
+        delta_time = (last_frame.elapsed().subsec_nanos() as f64) / 1_000_000_000.0;
+        last_frame = Instant::now();
+
+        // TODO!!: refactor into struct...
         running = process_events(&mut events_loop, &gl_window, &mut first_mouse, &mut last_x, &mut last_y, &mut camera);
+        camera.update(delta_time); // navigation
 
         // render
         unsafe {
@@ -165,11 +181,7 @@ pub fn main() {
             scene.draw(&mut shader);
 
             render_timer.end();
-
-            gl_check_error!(); // TODO!!: fix closing issue & remove
         }
-
-        // frame_timer.end();
 
         gl_window.swap_buffers().unwrap();
 
@@ -184,11 +196,10 @@ fn process_events(
     first_mouse: &mut bool,
     last_x: &mut f32,
     last_y: &mut f32,
-    camera: &mut Camera) -> bool
+    mut camera: &mut Camera) -> bool
 {
     let mut keep_running = true;
     events_loop.poll_events(|event| {
-        // println!("{:?}", event);
         match event {
             glutin::Event::WindowEvent{ event, .. } => match event {
                 WindowEvent::Closed => keep_running = false,
@@ -211,8 +222,11 @@ fn process_events(
                     camera.process_mouse_movement(xoffset, yoffset, true);
                 },
                 WindowEvent::MouseWheel { delta: MouseScrollDelta::PixelDelta(_xoffset, yoffset), .. } => {
-                    // TODO!: need to handle LineDelta case too?
+                    // TODO: need to handle LineDelta case too?
                     camera.process_mouse_scroll(yoffset);
+                }
+                WindowEvent::KeyboardInput { input, .. } => {
+                    keep_running = process_input(input, &mut camera);
                 }
                 _ => ()
             },
@@ -223,25 +237,23 @@ fn process_events(
     keep_running
 }
 
-// fn process_input(window: &mut glfw::Window, delta_time: f32, camera: &mut Camera) {
-//     if window.get_key(Key::Escape) == Action::Press {
-//         window.set_should_close(true)
-//     }
-
-//     if window.get_key(Key::W) == Action::Press {
-//         camera.process_keyboard(FORWARD, delta_time);
-//     }
-//     if window.get_key(Key::S) == Action::Press {
-//         camera.process_keyboard(BACKWARD, delta_time);
-//     }
-//     if window.get_key(Key::A) == Action::Press {
-//         camera.process_keyboard(LEFT, delta_time);
-//     }
-//     if window.get_key(Key::D) == Action::Press {
-//         camera.process_keyboard(RIGHT, delta_time);
-//     }
-
-// }
+fn process_input(input: glutin::KeyboardInput, camera: &mut Camera) -> bool {
+    let pressed = match input.state {
+        ElementState::Pressed => true,
+        ElementState::Released => false
+    };
+    if let Some(code) = input.virtual_keycode {
+        match code {
+            VirtualKeyCode::Escape if pressed => return false,
+            VirtualKeyCode::W => camera.process_keyboard(FORWARD, pressed),
+            VirtualKeyCode::S => camera.process_keyboard(BACKWARD, pressed),
+            VirtualKeyCode::A => camera.process_keyboard(LEFT, pressed),
+            VirtualKeyCode::D => camera.process_keyboard(RIGHT, pressed),
+            _ => ()
+        }
+    }
+    true
+}
 
 fn import_gltf<S: gltf::import::Source>(import: gltf::Import<S>) -> gltf::Gltf {
     match import.sync() {
@@ -259,7 +271,7 @@ mod tests {
 
     #[test]
     fn print_struct_sizes() {
-        // run witn `cargo test -- --nocapture`
+        // run with `cargo test -- --nocapture`
         println!("Sizes in bytes:");
         println!("Scene:     {:>3}", std::mem::size_of::<Scene>());
         println!("Node:      {:>3}", std::mem::size_of::<Node>());

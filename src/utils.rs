@@ -97,6 +97,7 @@ pub unsafe fn gl_check_error(file: &str, line: u32) -> u32 {
     error_code
 }
 
+#[allow(unused_macros)]
 macro_rules! gl_check_error {
     () => (
         gl_check_error(file!(), line!())

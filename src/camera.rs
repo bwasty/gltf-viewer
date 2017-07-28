@@ -40,6 +40,13 @@ pub struct Camera {
     pub movement_speed: f32,
     pub mouse_sensitivity: f32,
     pub zoom: f32,
+
+    // pub moving_up: bool,
+    pub moving_left: bool,
+    // pub moving_down: bool,
+    pub moving_right: bool,
+    pub moving_forward: bool,
+    pub moving_backward: bool,
 }
 
 impl Default for Camera {
@@ -55,6 +62,13 @@ impl Default for Camera {
             movement_speed: SPEED,
             mouse_sensitivity: SENSITIVTY,
             zoom: ZOOM,
+
+            // moving_up: false,
+            moving_left: false,
+            // moving_down: false,
+            moving_right: false,
+            moving_forward: false,
+            moving_backward: false,
         };
         camera.update_camera_vectors();
         camera
@@ -67,20 +81,28 @@ impl Camera {
         Matrix4::look_at(self.position, self.position + self.front, self.up)
     }
 
-    /// Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-    pub fn process_keyboard(&mut self, direction: CameraMovement, delta_time: f32) {
-        let velocity = self.movement_speed * delta_time;
-        if direction == FORWARD {
+    pub fn update(&mut self, delta_time: f64) {
+        let velocity = self.movement_speed * delta_time as f32;
+        if self.moving_forward {
             self.position += self.front * velocity;
         }
-        if direction == BACKWARD {
+        if self.moving_backward {
             self.position += -(self.front * velocity);
         }
-        if direction == LEFT {
+        if self.moving_left {
             self.position += -(self.right * velocity);
         }
-        if direction == RIGHT {
+        if self.moving_right {
             self.position += self.right * velocity;
+        }
+    }
+
+    pub fn process_keyboard(&mut self, direction: CameraMovement, pressed: bool) {
+        match direction {
+            FORWARD => self.moving_forward = pressed,
+            BACKWARD => self.moving_backward= pressed,
+            LEFT => self.moving_left = pressed,
+            RIGHT => self.moving_right = pressed,
         }
     }
 
@@ -108,8 +130,6 @@ impl Camera {
 
     // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     pub fn process_mouse_scroll(&mut self, mut yoffset: f32) {
-
-
         yoffset *= ZOOM_SENSITIVITY;
         if self.zoom >= MIN_ZOOM && self.zoom <= MAZ_ZOOM {
             self.zoom -= yoffset;
