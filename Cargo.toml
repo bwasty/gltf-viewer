@@ -13,7 +13,7 @@ license = "Unlicense"
 name = "gltf-viewer"
 readme = "README.md"
 repository = "https://github.com/bwasty/gltf-viewer"
-version = "0.0.3-pre"
+version = "0.0.3"
 
 [badges]
 
