@@ -178,6 +178,7 @@ impl GltfViewer {
                 let import = gltf::Import::from_path(source);
                 import_gltf(import)
             };
+
         print_elapsed("Imported glTF in ", &start_time);
         start_time = Instant::now();
 
