@@ -143,7 +143,7 @@ impl GltfViewer {
 
             // TODO: keyboard switch?
             // draw in wireframe
-            gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+            // gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
 
             (shader, loc_projection, loc_view)
         };
