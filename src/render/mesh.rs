@@ -28,7 +28,7 @@ impl Mesh {
         }
     }
 
-    pub fn draw(&self, shader: &Shader) {
+    pub fn draw(&self, shader: &mut Shader) {
         for primitive in &self.primitives {
             unsafe { primitive.draw(shader) }
         }

@@ -183,8 +183,15 @@ impl Primitive {
     }
 
     /// render the mesh
-    pub unsafe fn draw(&self, _shader: &Shader) {
-        // TODO!!!: re-write texture handling
+    pub unsafe fn draw(&self, shader: &mut Shader) {
+        if let Some(ref base_color_texture) = self.material.base_color_texture {
+            // TODO!!: move to setup_primitive
+            let loc = shader.uniform_location("base_color_texture");
+            shader.set_int(loc, 0);
+            gl::ActiveTexture(gl::TEXTURE0);
+
+            gl::BindTexture(gl::TEXTURE_2D, base_color_texture.id)
+        }
 
         // draw mesh
         gl::BindVertexArray(self.vao);
