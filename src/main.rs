@@ -128,14 +128,15 @@ impl GltfViewer {
 
             gl::Enable(gl::DEPTH_TEST);
 
-            let mut shader = Shader::from_source(
-                include_str!("shaders/simple.vs"),
-                include_str!("shaders/simple.fs"));
+            // TODO!!!: switch again before release!
+            // let mut shader = Shader::from_source(
+            //     include_str!("shaders/simple.vs"),
+            //     include_str!("shaders/simple.fs"));
 
             // NOTE: shader debug version
-            // let shader = Shader::new(
-            //     "src/shaders/simple.vs",
-            //     "src/shaders/simple.fs");
+            let mut shader = Shader::new(
+                "src/shaders/simple.vs",
+                "src/shaders/simple.fs");
 
             shader.use_program();
             let loc_projection = shader.uniform_location("projection");

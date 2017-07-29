@@ -39,7 +39,8 @@ impl Texture {
             gl::TexImage2D(gl::TEXTURE_2D, 0, format as i32, dyn_img.width() as i32, dyn_img.height() as i32,
                 0, format, gl::UNSIGNED_BYTE, &data[0] as *const u8 as *const c_void);
 
-            // TODO!!: get parameters and whether to generate mipmaps from sampler
+            // TODO!!!: get parameters and whether to generate mipmaps from sampler
+            // Broken example: BoxTextured
             // let sampler = g_texture.sampler();
             gl::GenerateMipmap(gl::TEXTURE_2D);
 

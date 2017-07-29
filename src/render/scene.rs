@@ -3,7 +3,7 @@ use std::time::Instant;
 
 use gltf;
 
-use render::{Mesh, Node, Texture};
+use render::{Mesh, Node, Texture, Material};
 use render::math::*;
 use shader::Shader;
 use utils::print_elapsed;
@@ -14,7 +14,7 @@ pub struct Scene {
     pub nodes: Vec<Node>,
     pub meshes: Vec<Rc<Mesh>>,
     pub textures: Vec<Rc<Texture>>,
-    // TODO!: Materials
+    pub materials: Vec<Rc<Material>>,
 }
 
 impl Scene {

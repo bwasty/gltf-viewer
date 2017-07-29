@@ -174,23 +174,33 @@ impl Primitive {
             _ => panic!("not yet implemented: primitive mode must be Triangles.")
         }
 
-        // TODO!!: actually use the Rc...
         let g_material = g_primitive.material()
             .unwrap(); // NOTE: tmp - see https://github.com/alteous/gltf/issues/57
-        let material = Material::from_gltf(&g_material, scene);
-        let material = Rc::new(material);
-        Primitive::new(vertices, indices, material)
+
+        let mut material = None;
+        if let Some(mat) = scene.materials.iter().find(|m| (***m).index == g_material.index()) {
+            material = mat.clone().into()
+        }
+
+        if material.is_none() { // no else due to borrow checker madness
+            let mat = Rc::new(Material::from_gltf(&g_material, scene));
+            scene.materials.push(mat.clone());
+            material = mat.into();
+        };
+
+        Primitive::new(vertices, indices, material.unwrap())
     }
 
     /// render the mesh
     pub unsafe fn draw(&self, shader: &mut Shader) {
+        // TODO: fully cache uniform locations
+        let loc = shader.uniform_location("base_color_factor");
+        shader.set_vector4(loc, &self.material.base_color_factor);
         if let Some(ref base_color_texture) = self.material.base_color_texture {
-            // TODO!!: move to setup_primitive
             let loc = shader.uniform_location("base_color_texture");
             shader.set_int(loc, 0);
             gl::ActiveTexture(gl::TEXTURE0);
-
-            gl::BindTexture(gl::TEXTURE_2D, base_color_texture.id)
+            gl::BindTexture(gl::TEXTURE_2D, base_color_texture.id);
         }
 
         // draw mesh

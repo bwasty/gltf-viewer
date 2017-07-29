@@ -13,7 +13,7 @@ pub struct Material {
     pub base_color_factor: Vector4,
     pub base_color_texture: Option<Rc<Texture>>,
 
-    // TODO!!: Material - rest of properties
+    // TODO!: Material - rest of properties
 }
 
 impl Material {
@@ -39,7 +39,6 @@ impl Material {
             name: g_material.name().map(|s| s.into()),
             base_color_factor: pbr.base_color_factor().into(),
             // TODO: perhaps RC only the underlying image? no, also opengl id...
-            // base_color_texture: Rc::new(Texture)
             base_color_texture: texture
         }
     }
