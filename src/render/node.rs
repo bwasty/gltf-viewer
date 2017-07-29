@@ -25,19 +25,18 @@ pub struct Node {
 
 impl Node {
     pub fn from_gltf(g_node: gltf::scene::Node, scene: &mut Scene) -> Node {
-        let m = &g_node.matrix();
-        let matrix = Matrix4::new(
-            m[0], m[1], m[2], m[3],
-            m[4], m[5], m[6], m[7],
-            m[8], m[9], m[10], m[11],
-            m[12], m[13], m[14], m[15],
-        );
+        // convert matrix in 3 steps due to type system weirdness
+        let matrix = &g_node.matrix();
+        let matrix: &Matrix4 = matrix.into();
+        let matrix = *matrix;
+
         let r = &g_node.rotation();
         let rotation = Quaternion::new(r[3], r[0], r[1], r[2]); // NOTE: different element order!
+
         let mut mesh = None;
         if let Some(g_mesh) = g_node.mesh() {
-            if let Some(g_mesh) = scene.meshes.iter().find(|mesh| (***mesh).index == g_mesh.index()) {
-                mesh = Some(g_mesh.clone());
+            if let Some(existing_mesh) = scene.meshes.iter().find(|mesh| (***mesh).index == g_mesh.index()) {
+                mesh = Some(existing_mesh.clone());
             }
 
             if mesh.is_none() { // not using else due to borrow-checking madness
@@ -49,8 +48,6 @@ impl Node {
             children: g_node.children()
                 .map(|g_node| Node::from_gltf(g_node, scene))
                 .collect(),
-            // TODO: why doesn't this work?
-            // matrix: Matrix4::from(&g_node.matrix()),
             matrix: matrix,
             mesh: mesh,
             rotation: rotation,
