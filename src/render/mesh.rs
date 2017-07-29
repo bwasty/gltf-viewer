@@ -3,7 +3,7 @@
 use gltf;
 
 use shader::Shader;
-use render::Primitive;
+use render::{Primitive, Scene};
 
 pub struct Mesh {
     pub index: usize, // glTF index
@@ -14,11 +14,11 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn from_gltf(g_mesh: gltf::mesh::Mesh) -> Mesh {
+    pub fn from_gltf(g_mesh: gltf::mesh::Mesh, scene: &mut Scene) -> Mesh {
         let primitives = g_mesh.primitives()
             .enumerate()
             .map(|(i, g_prim)| {
-                Primitive::from_gltf(g_prim, i, g_mesh.index())
+                Primitive::from_gltf(g_prim, i, g_mesh.index(), scene)
             })
             .collect();
         Mesh {

@@ -40,7 +40,7 @@ impl Node {
             }
 
             if mesh.is_none() { // not using else due to borrow-checking madness
-                mesh = Some(Rc::new(Mesh::from_gltf(g_mesh)));
+                mesh = Some(Rc::new(Mesh::from_gltf(g_mesh, scene)));
                 scene.meshes.push(mesh.clone().unwrap());
             }
         }

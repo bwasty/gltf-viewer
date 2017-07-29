@@ -1,61 +1,46 @@
-use std::os::raw::c_void;
-use std::path::Path;
-
-use gl;
-use image;
-use image::DynamicImage::*;
-use image::GenericImage;
+use std::rc::Rc;
 
 use gltf;
 
 use render::math::*;
+use render::Scene;
+use render::Texture;
 
-// TODO!!: Material
 pub struct Material {
     pub index: usize, /// glTF index
     pub name: Option<String>,
 
     pub base_color_factor: Vector4,
-    // pub base_color_texture: Rc<Texture>
+    pub base_color_texture: Option<Rc<Texture>>,
+
+    // TODO!!: Material - rest of properties
 }
 
-pub fn from_gltf(g_material: &gltf::material::Material) -> Material {
-    let pbr = g_material.pbr_metallic_roughness()
-        .expect("not yet implemented: material must contain pbr_metallic_roughness");
-    Material {
-        index: g_material.index(),
-        name: g_material.name().map(|s| s.into()),
-        base_color_factor: Vector4::from(pbr.base_color_factor()),
-        // TODO: perhaps RC only the underlying image? no, also opengl id...
-        // base_color_texture: Rc::new(Texture)
+impl Material {
+    pub fn from_gltf(g_material: &gltf::material::Material, scene: &mut Scene) -> Material {
+        let pbr = g_material.pbr_metallic_roughness()
+            .unwrap(); // tmp - see https://github.com/alteous/gltf/issues/48
+
+        let mut texture = None;
+        if let Some(base_color_tex_info) = pbr.base_color_texture() {
+            let g_texture = &*base_color_tex_info;
+            if let Some(tex) = scene.textures.iter().find(|tex| (***tex).index == g_texture.index()) {
+                texture = Some(tex.clone());
+            }
+
+            if texture.is_none() { // not using else due to borrow-checking madness
+                texture = Some(Rc::new(Texture::from_gltf(g_texture)));
+                scene.textures.push(texture.clone().unwrap());
+            }
+        }
+
+        Material {
+            index: g_material.index(),
+            name: g_material.name().map(|s| s.into()),
+            base_color_factor: pbr.base_color_factor().into(),
+            // TODO: perhaps RC only the underlying image? no, also opengl id...
+            // base_color_texture: Rc::new(Texture)
+            base_color_texture: texture
+        }
     }
-}
-
-unsafe fn texture_from_file(path: &str, directory: &str) -> u32 {
-    let filename = format!("{}/{}", directory, path);
-
-    let mut texture_id = 0;
-    gl::GenTextures(1, &mut texture_id);
-
-    let img = image::open(&Path::new(&filename)).expect("Texture failed to load");
-    let format = match img {
-        ImageLuma8(_) => gl::RED,
-        ImageLumaA8(_) => gl::RG,
-        ImageRgb8(_) => gl::RGB,
-        ImageRgba8(_) => gl::RGBA,
-    };
-
-    let data = img.raw_pixels();
-
-    gl::BindTexture(gl::TEXTURE_2D, texture_id);
-    gl::TexImage2D(gl::TEXTURE_2D, 0, format as i32, img.width() as i32, img.height() as i32,
-        0, format, gl::UNSIGNED_BYTE, &data[0] as *const u8 as *const c_void);
-    gl::GenerateMipmap(gl::TEXTURE_2D);
-
-    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
-    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
-
-    texture_id
 }

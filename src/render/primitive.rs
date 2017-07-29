@@ -1,7 +1,7 @@
-use std::ffi::CString;
 use std::mem::size_of;
 use std::os::raw::c_void;
 use std::ptr;
+use std::rc::Rc;
 
 use gl;
 use gltf;
@@ -9,6 +9,7 @@ use gltf::mesh::{ Indices, TexCoords, Colors };
 use gltf::json::mesh::Mode;
 
 use render::math::*;
+use render::{Material, Scene};
 use shader::Shader;
 
 #[repr(C)]
@@ -45,25 +46,23 @@ pub struct Texture {
     pub path: String,
 }
 
-// TODO!: split off vao and texture id's into "Renderable" (?) for draw loop
 pub struct Primitive {
-    textures: Vec<Texture>,
-
     vao: u32,
     vbo: u32,
 
     ebo: u32,
     num_indices: u32,
 
-    // TODO: material (RC!), mode, targets
+    material: Rc<Material>,
+    // TODO!: mode, targets
 }
 
 impl Primitive {
-    pub fn new(vertices: Vec<Vertex>, indices: Vec<u32>, textures: Vec<Texture>) -> Primitive {
+    pub fn new(vertices: Vec<Vertex>, indices: Vec<u32>, material: Rc<Material>) -> Primitive {
         let mut prim = Primitive {
             num_indices: indices.len() as u32,
-            textures,
-            vao: 0, vbo: 0, ebo: 0
+            vao: 0, vbo: 0, ebo: 0,
+            material,
         };
 
         // now that we have all the required data, set the vertex buffers and its attribute pointers.
@@ -71,7 +70,12 @@ impl Primitive {
         prim
     }
 
-    pub fn from_gltf(g_primitive: gltf::mesh::Primitive, primitive_index: usize, mesh_index: usize) -> Primitive {
+    pub fn from_gltf(
+        g_primitive: gltf::mesh::Primitive,
+        primitive_index: usize,
+        mesh_index: usize,
+        scene: &mut Scene) -> Primitive
+    {
         // positions
         let positions = g_primitive.positions()
             .expect(&format!("primitives must have the POSITION attribute (mesh: {}, primitive: {})",
@@ -170,48 +174,17 @@ impl Primitive {
             _ => panic!("not yet implemented: primitive mode must be Triangles.")
         }
 
-        // TODO!!: textures
-        let textures = Vec::new();
-        Primitive::new(vertices, indices, textures)
+        // TODO!!: actually use the Rc...
+        let g_material = g_primitive.material()
+            .unwrap(); // NOTE: tmp - see https://github.com/alteous/gltf/issues/57
+        let material = Material::from_gltf(&g_material, scene);
+        let material = Rc::new(material);
+        Primitive::new(vertices, indices, material)
     }
 
     /// render the mesh
-    pub unsafe fn draw(&self, shader: &Shader) {
-        // TODO!!: re-write texture handling (doesn't fit gltf...)
-        // bind appropriate textures
-        let mut diffuse_nr  = 0;
-        let mut specular_nr = 0;
-        let mut normal_nr   = 0;
-        let mut height_nr   = 0;
-        for (i, texture) in self.textures.iter().enumerate() {
-            gl::ActiveTexture(gl::TEXTURE0 + i as u32); // active proper texture unit before binding
-            // retrieve texture number (the N in diffuse_textureN)
-            let name = &texture.type_;
-            let number = match name.as_str() {
-                "texture_diffuse" => {
-                    diffuse_nr += 1;
-                    diffuse_nr
-                },
-                "texture_specular" => {
-                    specular_nr += 1;
-                    specular_nr
-                }
-                "texture_normal" => {
-                    normal_nr += 1;
-                    normal_nr
-                }
-                "texture_height" => {
-                    height_nr += 1;
-                    height_nr
-                }
-                _ => panic!("unknown texture type")
-            };
-            // now set the sampler to the correct texture unit
-            let sampler = CString::new(format!("{}{}", name, number)).unwrap();
-            gl::Uniform1i(gl::GetUniformLocation(shader.id, sampler.as_ptr()), i as i32);
-            // and finally bind the texture
-            gl::BindTexture(gl::TEXTURE_2D, texture.id);
-        }
+    pub unsafe fn draw(&self, _shader: &Shader) {
+        // TODO!!!: re-write texture handling
 
         // draw mesh
         gl::BindVertexArray(self.vao);
