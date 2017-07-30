@@ -231,8 +231,13 @@ impl GltfViewer {
 
             self.gl_window.swap_buffers().unwrap();
 
-            // TODO!: implement screenshotting
-            if screenshot { return }
+            // TODO!: implement real screenshotting
+            if screenshot {
+                // HACK: render for a sec for test script that loads all samples
+                if render_timer.frame_times.len() > 60 {
+                    return
+                }
+            }
         }
     }
 }

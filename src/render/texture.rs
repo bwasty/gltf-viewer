@@ -16,6 +16,7 @@ pub struct Texture {
     pub id: u32, // OpenGL id
 }
 
+// TODO!!: broken texture rendering: Suzanne (all black; base color factor makes it white)
 impl Texture {
     pub fn from_gltf(g_texture: &gltf::texture::Texture) -> Texture {
         let mut texture_id = 0;

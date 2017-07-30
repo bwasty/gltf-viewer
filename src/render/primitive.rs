@@ -174,6 +174,7 @@ impl Primitive {
             _ => panic!("not yet implemented: primitive mode must be Triangles.")
         }
 
+        // TODO!!: unwraps for Triangle, SimpleMeshes, Cameras, AnimatedTriangle
         let g_material = g_primitive.material()
             .unwrap(); // NOTE: tmp - see https://github.com/alteous/gltf/issues/57
 

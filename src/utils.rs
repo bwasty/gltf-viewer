@@ -38,7 +38,7 @@ pub struct FrameTimer {
     message: String,
     averaging_window: usize,
     current_frame_start: Instant,
-    frame_times: Vec<Duration>,
+    pub frame_times: Vec<Duration>,
 }
 
 /// Timing helper that averages timings over `averaging_window`
