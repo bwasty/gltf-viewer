@@ -35,7 +35,7 @@ install:
   - source ~/.cargo/env || true
 
 script:
-  - travis_wait bash ci/script.sh
+  - travis_wait ci/script.sh
 
 after_script: set +e
 
