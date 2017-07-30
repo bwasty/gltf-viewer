@@ -49,8 +49,9 @@ pub struct Texture {
 pub struct Primitive {
     vao: u32,
     vbo: u32,
+    num_vertices: u32,
 
-    ebo: u32,
+    ebo: Option<u32>,
     num_indices: u32,
 
     material: Rc<Material>,
@@ -58,10 +59,12 @@ pub struct Primitive {
 }
 
 impl Primitive {
-    pub fn new(vertices: Vec<Vertex>, indices: Vec<u32>, material: Rc<Material>) -> Primitive {
+    pub fn new(vertices: Vec<Vertex>, indices: Option<Vec<u32>>, material: Rc<Material>) -> Primitive {
+        let num_indices = indices.as_ref().map(|i| i.len()).unwrap_or(0);
         let mut prim = Primitive {
-            num_indices: indices.len() as u32,
-            vao: 0, vbo: 0, ebo: 0,
+            num_vertices: vertices.len() as u32,
+            num_indices: num_indices as u32,
+            vao: 0, vbo: 0, ebo: None,
             material,
         };
 
@@ -158,22 +161,22 @@ impl Primitive {
             color_set += 1;
         }
 
-        let indices = g_primitive.indices()
-            .expect("not yet implemented: Indices required at the moment!");
-
-        // convert indices to u32 if necessary
-        // TODO?: use indices as they are?
-        let indices: Vec<u32> = match indices {
-            Indices::U8(indices) => indices.map(|i| i as u32).collect(),
-            Indices::U16(indices) => indices.map(|i| i as u32).collect(),
-            Indices::U32(indices) => indices.collect(),
-        };
+        let mut indices: Option<Vec<u32>> = None;
+        if let Some(g_indices) = g_primitive.indices() {
+            // convert indices to u32 if necessary
+            indices = Some(match g_indices {
+                Indices::U8(indices) => indices.map(|i| i as u32).collect(),
+                Indices::U16(indices) => indices.map(|i| i as u32).collect(),
+                Indices::U32(indices) => indices.collect(),
+            });
+        }
 
         assert_eq!(g_primitive.mode(), Mode::Triangles, "not yet implemented: primitive mode must be Triangles.");
 
         // TODO!!: unwraps for Triangle, SimpleMeshes, Cameras, AnimatedTriangle
         let g_material = g_primitive.material()
-            .unwrap(); // NOTE: tmp - see https://github.com/alteous/gltf/issues/57
+            .expect("not yet implemented: default material, need an explicit one");
+            // NOTE: tmp - see https://github.com/alteous/gltf/issues/57
 
         let mut material = None;
         if let Some(mat) = scene.materials.iter().find(|m| (***m).index == g_material.index()) {
@@ -203,18 +206,27 @@ impl Primitive {
 
         // draw mesh
         gl::BindVertexArray(self.vao);
-        gl::DrawElements(gl::TRIANGLES, self.num_indices as i32, gl::UNSIGNED_INT, ptr::null());
+        if self.ebo.is_some() {
+            gl::DrawElements(gl::TRIANGLES, self.num_indices as i32, gl::UNSIGNED_INT, ptr::null());
+        }
+        else {
+            gl::DrawArrays(gl::TRIANGLES, 0, self.num_vertices as i32)
+        }
         gl::BindVertexArray(0);
 
         // always good practice to set everything back to defaults once configured.
         gl::ActiveTexture(gl::TEXTURE0);
     }
 
-    unsafe fn setup_primitive(&mut self, vertices: Vec<Vertex>, indices: Vec<u32>) {
+    unsafe fn setup_primitive(&mut self, vertices: Vec<Vertex>, indices: Option<Vec<u32>>) {
         // create buffers/arrays
         gl::GenVertexArrays(1, &mut self.vao);
         gl::GenBuffers(1, &mut self.vbo);
-        gl::GenBuffers(1, &mut self.ebo);
+        if indices.is_some() {
+            let mut ebo = 0;
+            gl::GenBuffers(1, &mut ebo);
+            self.ebo = Some(ebo);
+        }
 
         gl::BindVertexArray(self.vao);
         // load data into vertex buffers
@@ -226,10 +238,13 @@ impl Primitive {
         let data = &vertices[0] as *const Vertex as *const c_void;
         gl::BufferData(gl::ARRAY_BUFFER, size, data, gl::STATIC_DRAW);
 
-        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.ebo);
-        let size = (indices.len() * size_of::<u32>()) as isize;
-        let data = &indices[0] as *const u32 as *const c_void;
-        gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, size, data, gl::STATIC_DRAW);
+        if let Some(ebo) = self.ebo {
+            let indices = indices.unwrap();
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
+            let size = (indices.len() * size_of::<u32>()) as isize;
+            let data = &indices[0] as *const u32 as *const c_void;
+            gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, size, data, gl::STATIC_DRAW);
+        }
 
         // set the vertex attribute pointers
         let size = size_of::<Vertex>() as i32;
