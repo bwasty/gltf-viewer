@@ -169,10 +169,7 @@ impl Primitive {
             Indices::U32(indices) => indices.collect(),
         };
 
-        match g_primitive.mode() {
-            Mode::Triangles => (),
-            _ => panic!("not yet implemented: primitive mode must be Triangles.")
-        }
+        assert_eq!(g_primitive.mode(), Mode::Triangles, "not yet implemented: primitive mode must be Triangles.");
 
         // TODO!!: unwraps for Triangle, SimpleMeshes, Cameras, AnimatedTriangle
         let g_material = g_primitive.material()

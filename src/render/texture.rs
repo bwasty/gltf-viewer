@@ -2,8 +2,7 @@ use std::os::raw::c_void;
 
 use gl;
 use gltf;
-use gltf::json::texture::WrappingMode::*;
-use gltf::json::texture::{MinFilter, MagFilter};
+use gltf::json::texture::MinFilter;
 
 use image::DynamicImage::*;
 use image::GenericImage;
@@ -102,49 +101,29 @@ impl Texture {
             _ => false
         };
 
-        let wrap_s = match sampler.wrap_s() {
-            ClampToEdge => gl::CLAMP_TO_EDGE,
-            MirroredRepeat => gl::MIRRORED_REPEAT,
-            Repeat => gl::REPEAT,
-        };
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, wrap_s as i32);
-        let wrap_t = match sampler.wrap_t() {
-            ClampToEdge => gl::CLAMP_TO_EDGE,
-            MirroredRepeat => gl::MIRRORED_REPEAT,
-            Repeat => gl::REPEAT,
-        };
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, wrap_t as i32);
+        let wrap_s = sampler.wrap_s().as_gl_enum();
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, wrap_s);
+        let wrap_t = sampler.wrap_t().as_gl_enum();
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, wrap_t);
 
         // **Default Filtering Implementation Note:** When filtering options are defined,
         // runtime must use them. Otherwise, it is free to adapt filtering to performance or quality goals.
         if let Some(min_filter) = sampler.min_filter() {
-            let gl_min_filter = match min_filter {
-                MinFilter::Nearest => gl::NEAREST,
-                MinFilter::Linear => gl::LINEAR,
-                MinFilter::NearestMipmapNearest => gl::NEAREST_MIPMAP_NEAREST,
-                MinFilter::LinearMipmapNearest => gl::LINEAR_MIPMAP_NEAREST,
-                MinFilter::NearestMipmapLinear => gl::NEAREST_MIPMAP_LINEAR,
-                MinFilter::LinearMipmapLinear => gl::LINEAR_MIPMAP_LINEAR,
-            };
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl_min_filter as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, min_filter.as_gl_enum());
         }
         else {
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
         }
         if let Some(mag_filter) = sampler.mag_filter() {
-            let gl_mag_filter = match mag_filter {
-                MagFilter::Nearest => gl::NEAREST,
-                MagFilter::Linear => gl::LINEAR
-            };
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl_mag_filter as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, mag_filter.as_gl_enum());
         }
         else {
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
         }
 
         let needs_power_of_two =
-            wrap_s != gl::CLAMP_TO_EDGE ||
-            wrap_t != gl::CLAMP_TO_EDGE ||
+            wrap_s != gl::CLAMP_TO_EDGE as i32 ||
+            wrap_t != gl::CLAMP_TO_EDGE as i32 ||
             mip_maps;
         (needs_power_of_two, mip_maps)
     }

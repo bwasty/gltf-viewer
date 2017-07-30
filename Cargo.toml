@@ -35,3 +35,6 @@ reqwest = "0.7.2"
 [dependencies.gltf]
 version = "0.7.0"
 features = ["names"]
+
+[patch.crates-io]
+gltf = { path = "../gltf"}
