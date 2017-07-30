@@ -103,22 +103,3 @@ macro_rules! gl_check_error {
         gl_check_error(file!(), line!())
     )
 }
-
-/// Determine if a number is a power of two, for texture resizing
-/// Source: https://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
-/// Using the simpler version that considers 0 a power of two - irrelevant here.
-pub fn is_power_of_two(v: u32) -> bool {
-    (v & (v - 1)) == 0
-}
-
-/// Determine the next highest power of two, for texture resizing
-/// Source: https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-pub fn next_power_of_two(mut v: u32) -> u32 {
-    v -= 1;
-    v |= v >> 1;
-    v |= v >> 2;
-    v |= v >> 4;
-    v |= v >> 8;
-    v |= v >> 16;
-    v + 1
-}
