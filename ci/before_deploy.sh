@@ -20,7 +20,7 @@ main() {
     test -f Cargo.lock || cargo generate-lockfile
 
     # NOTE: times out on travis - lto at fault?
-    cross rustc --target "$TARGET" --release #-- -C lto
+    cross rustc --target "$TARGET" --release -- -C lto
 
     cp target/"$TARGET"/release/gltf-viewer "$stage"/
 
