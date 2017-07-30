@@ -9,6 +9,8 @@ use image::DynamicImage::*;
 use image::GenericImage;
 use image::FilterType;
 
+use utils::{is_power_of_two, next_power_of_two};
+
 pub struct Texture {
     pub index: usize, // glTF index
     pub name: Option<String>,
@@ -21,8 +23,7 @@ impl Texture {
         // TODO!: share images via Rc? detect if occurs?
         let img = g_texture.source();
         let dyn_img = img.data();
-        // TODO!!!: detect if POT / closest larger POT for resize
-        let dyn_img = &dyn_img.resize(256, 256, FilterType::Lanczos3);
+
         let format = match *dyn_img {
             ImageLuma8(_) => gl::RED,
             ImageLumaA8(_) => gl::RG,
@@ -30,13 +31,26 @@ impl Texture {
             ImageRgba8(_) => gl::RGBA,
         };
 
-        let data = dyn_img.raw_pixels();
+        // TODO: make nicer (borrow checker problems...)
+        // TODO!!: add spec conditions to the check:
+        // - Has a wrapping mode (either wrapS or wrapT) equal to REPEAT or MIRRORED_REPEAT, or
+        // - Has a minification filter (minFilter) that uses mipmapping (NEAREST_MIPMAP_NEAREST, NEAREST_MIPMAP_LINEAR, LINEAR_MIPMAP_NEAREST, or LINEAR_MIPMAP_LINEAR).
+        let (data, width, height) =
+            if !is_power_of_two(dyn_img.width()) || !is_power_of_two(dyn_img.height()) {
+                let nwidth = next_power_of_two(dyn_img.width());
+                let nheight = next_power_of_two(dyn_img.height());
+                let resized = dyn_img.resize(nwidth, nheight, FilterType::Lanczos3);
+                (resized.raw_pixels(), resized.width(), resized.height())
+            }
+            else {
+                (dyn_img.raw_pixels(), dyn_img.width(), dyn_img.height())
+            };
 
         let mut texture_id = 0;
         unsafe {
             gl::GenTextures(1, &mut texture_id);
             gl::BindTexture(gl::TEXTURE_2D, texture_id);
-            gl::TexImage2D(gl::TEXTURE_2D, 0, format as i32, dyn_img.width() as i32, dyn_img.height() as i32,
+            gl::TexImage2D(gl::TEXTURE_2D, 0, format as i32, width as i32, height as i32,
                 0, format, gl::UNSIGNED_BYTE, &data[0] as *const u8 as *const c_void);
 
             // NOTE: tmp - see https://github.com/alteous/gltf/issues/56
