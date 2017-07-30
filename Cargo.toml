@@ -37,4 +37,5 @@ version = "0.7.0"
 features = ["names"]
 
 [patch.crates-io]
-gltf = { path = "../gltf"}
+# gltf = { path = "../gltf"}
+gltf = { git = "https://github.com/alteous/gltf", branch = "incoming" }
