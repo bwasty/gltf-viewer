@@ -23,6 +23,8 @@ impl Material {
 
         let mut texture = None;
         if let Some(base_color_tex_info) = pbr.base_color_texture() {
+            // TODO!: save tex coord set from info
+            assert_eq!(base_color_tex_info.tex_coord(), 0, "not yet implemented: tex coord set must be 0 (Material::from_gltf)");
             let g_texture = &*base_color_tex_info;
             if let Some(tex) = scene.textures.iter().find(|tex| (***tex).index == g_texture.index()) {
                 texture = Some(tex.clone());

@@ -112,7 +112,7 @@ impl GltfViewer {
         }
 
         // TODO!: capturing - on click or uncapture somehow?
-        // TODO!!: find solution for macOS - see https://github.com/tomaka/glutin/issues/226
+        // TODO!: find solution for macOS - see https://github.com/tomaka/glutin/issues/226
          #[cfg(target_os = "macos")]
         let _ = gl_window.set_cursor_state(CursorState::Hide);
          #[cfg(not(target_os = "macos"))]

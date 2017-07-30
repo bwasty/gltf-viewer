@@ -130,7 +130,7 @@ impl Shader {
             let mut length = 0;
             gl::GetShaderInfoLog(shader, 1024, &mut length, info_log.as_mut_ptr() as *mut GLchar);
             if length == 0 { return }
-            println!("{}::SHADER_COMPILATION_{} of type: {}\n{}",
+            panic!("{}::SHADER_COMPILATION_{} of type: {}\n{}",
                       log_type, log_type,
                       type_,
                       str::from_utf8(&info_log[0..length as usize]).unwrap());
@@ -141,7 +141,7 @@ impl Shader {
             let mut length = 0;
             gl::GetProgramInfoLog(shader, 1024, &mut length, info_log.as_mut_ptr() as *mut GLchar);
             if length == 0 { return }
-            println!("{}::PROGRAM_LINKING_{} of type: {}\n{}",
+            panic!("{}::PROGRAM_LINKING_{} of type: {}\n{}",
                       log_type, log_type,
                       type_,
                       str::from_utf8(&info_log[0..length as usize]).unwrap());
