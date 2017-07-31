@@ -33,5 +33,10 @@ image = "0.14.0"
 reqwest = "0.7.2"
 
 [dependencies.gltf]
-version = "0.7.0"
+# version = "0.7.0"
+git = "https://github.com/alteous/gltf"
+branch = "incoming"
 features = ["names"]
+
+# [patch.crates-io]
+# gltf = { path = "../gltf"}

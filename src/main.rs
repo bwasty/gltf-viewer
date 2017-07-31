@@ -85,7 +85,7 @@ impl GltfViewer {
     pub fn new(source: &str) -> GltfViewer {
         let camera = Camera {
             // TODO!: position.z - bounding box length
-            position: Point3::new(0.0, 0.0, 1.0),
+            position: Point3::new(0.0, 0.0, 2.0),
             zoom: 60.0,
             ..Camera::default()
         };
