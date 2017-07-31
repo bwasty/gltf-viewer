@@ -19,27 +19,12 @@ pub struct Texture {
 impl Texture {
     pub fn from_gltf(g_texture: &gltf::texture::Texture) -> Texture {
         let mut texture_id = 0;
-        let needs_power_of_two;
-        let generate_mip_maps;
         unsafe {
             gl::GenTextures(1, &mut texture_id);
             gl::BindTexture(gl::TEXTURE_2D, texture_id);
-
-            // NOTE: tmp - see https://github.com/alteous/gltf/issues/56
-            if let Some(sampler) = g_texture.sampler() {
-                let ret = Self::set_sampler_params(sampler);
-                needs_power_of_two = ret.0;
-                generate_mip_maps = ret.1;
-            }
-            else {
-                gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-                gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-                gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
-                gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
-                needs_power_of_two = true;
-                generate_mip_maps = true
-            }
         }
+        let (needs_power_of_two, generate_mip_maps) =
+            unsafe { Self::set_sampler_params(g_texture.sampler()) };
 
         // TODO!: share images via Rc? detect if occurs?
         let img = g_texture.source();
@@ -97,14 +82,10 @@ impl Texture {
             Some(MinFilter::NearestMipmapNearest) |
             Some(MinFilter::LinearMipmapNearest) |
             Some(MinFilter::NearestMipmapLinear) |
-            Some(MinFilter::LinearMipmapLinear) => true,
+            Some(MinFilter::LinearMipmapLinear) |
+            None => true, // see below
             _ => false
         };
-
-        let wrap_s = sampler.wrap_s().as_gl_enum();
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, wrap_s);
-        let wrap_t = sampler.wrap_t().as_gl_enum();
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, wrap_t);
 
         // **Default Filtering Implementation Note:** When filtering options are defined,
         // runtime must use them. Otherwise, it is free to adapt filtering to performance or quality goals.
@@ -120,6 +101,11 @@ impl Texture {
         else {
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
         }
+
+        let wrap_s = sampler.wrap_s().as_gl_enum();
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, wrap_s);
+        let wrap_t = sampler.wrap_t().as_gl_enum();
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, wrap_t);
 
         let needs_power_of_two =
             wrap_s != gl::CLAMP_TO_EDGE as i32 ||

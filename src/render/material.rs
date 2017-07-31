@@ -7,7 +7,7 @@ use render::Scene;
 use render::Texture;
 
 pub struct Material {
-    pub index: usize, /// glTF index
+    pub index: Option<usize>, /// glTF index
     pub name: Option<String>,
 
     pub base_color_factor: Vector4,
@@ -18,8 +18,7 @@ pub struct Material {
 
 impl Material {
     pub fn from_gltf(g_material: &gltf::material::Material, scene: &mut Scene) -> Material {
-        let pbr = g_material.pbr_metallic_roughness()
-            .unwrap(); // tmp - see https://github.com/alteous/gltf/issues/48
+        let pbr = g_material.pbr_metallic_roughness();
 
         let mut texture = None;
         if let Some(base_color_tex_info) = pbr.base_color_texture() {

@@ -173,10 +173,7 @@ impl Primitive {
 
         assert_eq!(g_primitive.mode(), Mode::Triangles, "not yet implemented: primitive mode must be Triangles.");
 
-        // TODO!!: unwraps for Triangle, SimpleMeshes, Cameras, AnimatedTriangle
-        let g_material = g_primitive.material()
-            .expect("not yet implemented: default material, need an explicit one");
-            // NOTE: tmp - see https://github.com/alteous/gltf/issues/57
+        let g_material = g_primitive.material();
 
         let mut material = None;
         if let Some(mat) = scene.materials.iter().find(|m| (***m).index == g_material.index()) {
