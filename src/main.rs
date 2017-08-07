@@ -32,6 +32,7 @@ use shader::Shader;
 mod camera;
 use camera::Camera;
 use camera::CameraMovement::*;
+mod framebuffer;
 mod macros;
 mod http_source;
 use http_source::HttpSource;
