@@ -20,12 +20,15 @@ use glutin::{
 
 extern crate gltf;
 extern crate image;
+use image::{DynamicImage, ImageFormat};
 
 extern crate futures;
 
 use clap::{Arg, App};
 
+use std::fs::File;
 use std::time::Instant;
+use std::os::raw::c_void;
 
 mod shader;
 use shader::Shader;
@@ -33,11 +36,12 @@ mod camera;
 use camera::Camera;
 use camera::CameraMovement::*;
 mod framebuffer;
+// use framebuffer::Framebuffer;
 mod macros;
 mod http_source;
 use http_source::HttpSource;
 mod utils;
-use utils::{print_elapsed, FrameTimer};
+use utils::{print_elapsed, FrameTimer, gl_check_error};
 
 mod render;
 use render::*;
@@ -228,17 +232,31 @@ impl GltfViewer {
                 self.scene.draw(&mut self.shader);
 
                 render_timer.end();
-            }
 
-            self.gl_window.swap_buffers().unwrap();
+                // TODO!: avoid this branch in normal render loop...
+                if screenshot {
+                    // TODO!!: get proper (retina) dimensions from window...
+                    let width = SCR_WIDTH * 2;
+                    let height = SCR_HEIGHT * 2;
+                    let mut img = DynamicImage::new_rgb8(width, height);
+                    {
+                        let pixels = img.as_mut_rgb8().unwrap();
+                        gl::PixelStorei(gl::PACK_ALIGNMENT, 1);
+                        gl::ReadPixels(0, 0, width as i32, height as i32, gl::RGB,
+                            gl::UNSIGNED_BYTE, pixels.as_mut_ptr() as *mut c_void);
+                    }
 
-            // TODO!: implement real screenshotting
-            if screenshot {
-                // HACK: render for a sec for test script that loads all samples
-                if render_timer.frame_times.len() > 60 {
+                    // TODO!: file name param
+                    let mut file = File::create("screenshot.png").unwrap();
+                    if let Err(err) = img.save(&mut file, ImageFormat::PNG) {
+                        println!("{}", err);
+                    }
+
                     return
                 }
             }
+
+            self.gl_window.swap_buffers().unwrap();
         }
     }
 }
