@@ -31,6 +31,10 @@ use std::fs::File;
 use std::time::Instant;
 use std::os::raw::c_void;
 
+#[macro_use]extern crate log;
+extern crate simplelog;
+use simplelog::{TermLogger, LogLevelFilter, Config};
+
 mod shader;
 use shader::Shader;
 mod camera;
@@ -81,14 +85,15 @@ pub fn main() {
     let width: u32 = args.value_of("WIDTH").unwrap().parse().unwrap();
     let height: u32 = args.value_of("HEIGHT").unwrap().parse().unwrap();
 
-    // TODO!!: use "verbose" parameter
+    let log_level = if args.is_present("verbose") { LogLevelFilter::Info } else { LogLevelFilter::Warn };
+    let _ = TermLogger::init(log_level, Config { time: None, target: None, ..Config::default() });
 
     let mut viewer = GltfViewer::new(source, width, height);
 
     if args.is_present("screenshot") {
         let filename = args.value_of("screenshot").unwrap();
         if !filename.to_lowercase().ends_with(".png") {
-            println!("WARNING: filename should end with .png");
+            warn!("filename should end with .png");
         }
         viewer.screenshot(filename);
         return;
@@ -229,7 +234,7 @@ impl GltfViewer {
         // load first scene
         let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap());
         print_elapsed("Loaded scene in", &start_time);
-        println!("Nodes: {:<2}\nMeshes: {:<2}",
+        info!("Nodes: {:<2}, Meshes: {:<2}",
             gltf.nodes().count(),
             scene.meshes.len());
 
@@ -302,7 +307,7 @@ impl GltfViewer {
 
         let mut file = File::create(filename).unwrap();
         if let Err(err) = img.save(&mut file, ImageFormat::PNG) {
-            println!("{}", err);
+            error!("{}", err);
         }
         else {
             println!("Saved {}x{} screenshot to {}", width, height, filename);
@@ -314,7 +319,7 @@ fn import_gltf<S: gltf::import::Source>(import: gltf::Import<S>) -> gltf::Gltf {
     match import.sync() {
         Ok(gltf) => gltf,
         Err(err) => {
-            println!("glTF import failed: {:?}", err);
+            error!("glTF import failed: {:?}", err);
             std::process::exit(1);
         }
     }

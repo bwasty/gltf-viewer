@@ -112,7 +112,7 @@ impl Shader {
         let c_name = CString::new(name).unwrap();
         let loc = gl::GetUniformLocation(self.id, c_name.as_ptr());
         if loc == -1 {
-            println!("WARNING: uniform '{}' unknown for shader {}", name, self.id);
+            warn!("uniform '{}' unknown for shader {}", name, self.id);
         }
         self.uniform_location_cache.insert(name, loc);
         loc

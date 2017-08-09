@@ -98,8 +98,8 @@ impl Primitive {
             }
         }
         else {
-            println!("WARNING: found no NORMALs for primitive {} of mesh {} \
-                      (flat normal calculation not implemented yet)", primitive_index, mesh_index);
+            warn!("found no NORMALs for primitive {} of mesh {} \
+                   (flat normal calculation not implemented yet)", primitive_index, mesh_index);
         }
 
         // tangents
@@ -113,9 +113,9 @@ impl Primitive {
         let mut tex_coord_set = 0;
         while let Some(tex_coords) = g_primitive.tex_coords(tex_coord_set) {
             if tex_coord_set > 1 {
-                println!("WARNING: Ignoring texture coordinate set {}, \
-                          only supporting 2 sets at the moment. (mesh: {}, primitive: {})",
-                          tex_coord_set, mesh_index, primitive_index);
+                warn!("Ignoring texture coordinate set {}, \
+                        only supporting 2 sets at the moment. (mesh: {}, primitive: {})",
+                        tex_coord_set, mesh_index, primitive_index);
                 tex_coord_set += 1;
                 continue;
             }
@@ -139,9 +139,9 @@ impl Primitive {
         let mut color_set = 0;
         while let Some(colors) = g_primitive.colors(color_set) {
             if color_set > 0 {
-                println!("WARNING: Ignoring color set {}, \
-                          only supporting 1 set at the moment. (mesh: {}, primitive: {})",
-                          color_set, mesh_index, primitive_index);
+                warn!("Ignoring color set {}, \
+                       only supporting 1 set at the moment. (mesh: {}, primitive: {})",
+                       color_set, mesh_index, primitive_index);
                 color_set += 1;
                 continue;
             }

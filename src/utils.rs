@@ -31,7 +31,7 @@ fn format_duration(duration: Duration) -> String {
 }
 
 pub fn print_elapsed(message: &str, start_time: &Instant) {
-    println!("{:<25}{}", message, elapsed(start_time));
+    info!("{:<25}{}", message, elapsed(start_time));
 }
 
 pub struct FrameTimer {
@@ -69,7 +69,7 @@ impl FrameTimer {
             let avg = self.frame_times.iter().sum::<Duration>() / self.frame_times.len() as u32;
             let min = self.frame_times.iter().min().unwrap();
             let max = self.frame_times.iter().max().unwrap();
-            println!("{:<15}{} (min: {}, max: {})", self.message,
+            info!("{:<15}{} (min: {}, max: {})", self.message,
                 format_duration(avg), format_duration(*min), format_duration(*max));
         }
         self.frame_times.clear();
@@ -90,7 +90,7 @@ pub unsafe fn gl_check_error(file: &str, line: u32) -> u32 {
             _ => "unknown GL error code"
         };
 
-        println!("{} | {} ({})", error, file, line);
+        error!("{} | {} ({})", error, file, line);
 
         error_code = gl::GetError();
     }

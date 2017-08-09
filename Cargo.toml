@@ -31,6 +31,8 @@ glutin = "0.9.2"
 # TODO!: explicit dependency really needed?
 image = "0.14.0"
 reqwest = "0.7.2"
+log = "0.3"
+simplelog = "0.4.2"
 
 [dependencies.gltf]
 # version = "0.7.0"
