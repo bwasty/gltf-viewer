@@ -16,6 +16,7 @@ use glutin::{
     GlContext,
     VirtualKeyCode,
     WindowEvent,
+    ControlFlow,
 };
 
 extern crate gltf;
@@ -24,7 +25,7 @@ use image::{DynamicImage, ImageFormat};
 
 extern crate futures;
 
-use clap::{Arg, App};
+use clap::{Arg, App, AppSettings};
 
 use std::fs::File;
 use std::time::Instant;
@@ -36,12 +37,11 @@ mod camera;
 use camera::Camera;
 use camera::CameraMovement::*;
 mod framebuffer;
-// use framebuffer::Framebuffer;
 mod macros;
 mod http_source;
 use http_source::HttpSource;
 mod utils;
-use utils::{print_elapsed, FrameTimer, gl_check_error};
+use utils::{print_elapsed, FrameTimer};
 
 mod render;
 use render::*;
@@ -52,6 +52,8 @@ const SCR_HEIGHT: u32 = 600;
 pub fn main() {
     let args = App::new("gltf-viewer")
         .version(crate_version!())
+        .setting(AppSettings::UnifiedHelpMessage)
+        .setting(AppSettings::DeriveDisplayOrder)
         .arg(Arg::with_name("FILE/URL")
             .required(true)
             .takes_value(true)
@@ -59,13 +61,29 @@ pub fn main() {
         .arg(Arg::with_name("screenshot")
             .long("screenshot")
             .short("s")
-            .help("Create screenshot (NOT WORKING YET)"))
+            .value_name("FILE")
+            .help("Create screenshot (PNG)"))
+        .arg(Arg::with_name("verbose")
+            .long("verbose")
+            .short("-v")
+            .help("Enable verbose logging."))
         .get_matches();
     let source = args.value_of("FILE/URL").unwrap();
-    let screenshot = args.is_present("screenshot");
+
+    // TODO!!: use "verbose" parameter
 
     let mut viewer = GltfViewer::new(source);
-    viewer.start_render_loop(screenshot);
+
+    if args.is_present("screenshot") {
+        let filename = args.value_of("screenshot").unwrap();
+        if !filename.to_lowercase().ends_with(".png") {
+            println!("WARNING: filename should end with .png");
+        }
+        viewer.screenshot(filename);
+        return;
+    }
+
+    viewer.start_render_loop();
 }
 
 struct GltfViewer {
@@ -84,6 +102,8 @@ struct GltfViewer {
 
     delta_time: f64, // seconds
     last_frame: Instant,
+
+    render_timer: FrameTimer,
 }
 
 impl GltfViewer {
@@ -128,7 +148,7 @@ impl GltfViewer {
         gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
 
         let (shader, loc_projection, loc_view) = unsafe {
-            gl::ClearColor(0.1, 1.0, 0.3, 1.0);
+            gl::ClearColor(0.0, 1.0, 0.0, 1.0); // green for debugging
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             gl::Enable(gl::DEPTH_TEST);
@@ -167,6 +187,8 @@ impl GltfViewer {
 
             delta_time: 0.0, // seconds
             last_frame: Instant::now(),
+
+            render_timer: FrameTimer::new("rendering", 300),
         }
     }
 
@@ -198,65 +220,78 @@ impl GltfViewer {
         scene
     }
 
-    pub fn start_render_loop(&mut self, screenshot: bool) {
-        let mut render_timer = FrameTimer::new("rendering", 300);
+    pub fn start_render_loop(&mut self) {
         loop {
-            // per-frame time logic
-            // NOTE: Deliberately ignoring the seconds of `elapsed()`
-            self.delta_time = (self.last_frame.elapsed().subsec_nanos() as f64) / 1_000_000_000.0;
-            self.last_frame = Instant::now();
-
-            let keep_running = process_events(
-                &mut self.events_loop, &self.gl_window,
-                &mut self.first_mouse, &mut self.last_x, &mut self.last_y,
-                &mut self.camera);
-            if !keep_running { break }
-            self.camera.update(self.delta_time); // navigation
-
-            // render
-            unsafe {
-                render_timer.start();
-
-                gl::ClearColor(0.1, 0.2, 0.3, 1.0);
-                gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-
-                self.shader.use_program();
-
-                // view/projection transformations
-                // TODO!: only re-compute/set perspective on Zoom changes (also view?)
-                let projection: Matrix4<f32> = perspective(Deg(self.camera.zoom), SCR_WIDTH as f32 / SCR_HEIGHT as f32, 0.01, 1000.0);
-                let view = self.camera.get_view_matrix();
-                self.shader.set_mat4(self.loc_projection, &projection);
-                self.shader.set_mat4(self.loc_view, &view);
-
-                self.scene.draw(&mut self.shader);
-
-                render_timer.end();
-
-                // TODO!: avoid this branch in normal render loop...
-                if screenshot {
-                    // TODO!!: get proper (retina) dimensions from window...
-                    let width = SCR_WIDTH * 2;
-                    let height = SCR_HEIGHT * 2;
-                    let mut img = DynamicImage::new_rgb8(width, height);
-                    {
-                        let pixels = img.as_mut_rgb8().unwrap();
-                        gl::PixelStorei(gl::PACK_ALIGNMENT, 1);
-                        gl::ReadPixels(0, 0, width as i32, height as i32, gl::RGB,
-                            gl::UNSIGNED_BYTE, pixels.as_mut_ptr() as *mut c_void);
-                    }
-
-                    // TODO!: file name param
-                    let mut file = File::create("screenshot.png").unwrap();
-                    if let Err(err) = img.save(&mut file, ImageFormat::PNG) {
-                        println!("{}", err);
-                    }
-
-                    return
-                }
+            let cf = self.draw();
+            match cf {
+                ControlFlow::Break => break,
+                ControlFlow::Continue => ()
             }
 
             self.gl_window.swap_buffers().unwrap();
+        }
+    }
+
+    // Returns whether to keep running
+    pub fn draw(&mut self) -> ControlFlow {
+        // per-frame time logic
+        // NOTE: Deliberately ignoring the seconds of `elapsed()`
+        self.delta_time = (self.last_frame.elapsed().subsec_nanos() as f64) / 1_000_000_000.0;
+        self.last_frame = Instant::now();
+
+        // events
+        let keep_running = process_events(
+            &mut self.events_loop, &self.gl_window,
+            &mut self.first_mouse, &mut self.last_x, &mut self.last_y,
+            &mut self.camera);
+        if !keep_running { return ControlFlow::Break }
+
+        self.camera.update(self.delta_time); // navigation
+
+        // render
+        unsafe {
+            self.render_timer.start();
+
+            gl::ClearColor(0.1, 0.2, 0.3, 1.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+
+            self.shader.use_program();
+
+            // view/projection transformations
+            // TODO!: only re-compute/set perspective on Zoom changes (also view?)
+            let projection: Matrix4<f32> = perspective(Deg(self.camera.zoom), SCR_WIDTH as f32 / SCR_HEIGHT as f32, 0.01, 1000.0);
+            let view = self.camera.get_view_matrix();
+            self.shader.set_mat4(self.loc_projection, &projection);
+            self.shader.set_mat4(self.loc_view, &view);
+
+            self.scene.draw(&mut self.shader);
+
+            self.render_timer.end();
+        }
+
+        ControlFlow::Continue
+    }
+
+    pub fn screenshot(&mut self, filename: &str) {
+        self.draw();
+
+        // TODO!!: get proper (retina) dimensions from window...
+        let width = SCR_WIDTH * 2;
+        let height = SCR_HEIGHT * 2;
+        let mut img = DynamicImage::new_rgb8(width, height);
+        unsafe {
+            let pixels = img.as_mut_rgb8().unwrap();
+            gl::PixelStorei(gl::PACK_ALIGNMENT, 1);
+            gl::ReadPixels(0, 0, width as i32, height as i32, gl::RGB,
+                gl::UNSIGNED_BYTE, pixels.as_mut_ptr() as *mut c_void);
+        }
+
+        let mut file = File::create(filename).unwrap();
+        if let Err(err) = img.save(&mut file, ImageFormat::PNG) {
+            println!("{}", err);
+        }
+        else {
+            println!("Saved {}x{} screenshot at {}", width, height, filename);
         }
     }
 }

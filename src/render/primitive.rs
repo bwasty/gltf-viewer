@@ -209,9 +209,8 @@ impl Primitive {
         else {
             gl::DrawArrays(gl::TRIANGLES, 0, self.num_vertices as i32)
         }
-        gl::BindVertexArray(0);
 
-        // always good practice to set everything back to defaults once configured.
+        gl::BindVertexArray(0);
         gl::ActiveTexture(gl::TEXTURE0);
     }
 
@@ -228,9 +227,6 @@ impl Primitive {
         gl::BindVertexArray(self.vao);
         // load data into vertex buffers
         gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
-        // A great thing about structs with repr(C) is that their memory layout is sequential for all its items.
-        // The effect is that we can simply pass a pointer to the struct and it translates perfectly to a glm::vec3/2 array which
-        // again translates to 3/2 floats which translates to a byte array.
         let size = (vertices.len() * size_of::<Vertex>()) as isize;
         let data = &vertices[0] as *const Vertex as *const c_void;
         gl::BufferData(gl::ARRAY_BUFFER, size, data, gl::STATIC_DRAW);
