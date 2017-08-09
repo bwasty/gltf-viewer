@@ -32,7 +32,19 @@ cargo install gltf-viewer
 
 ## Usage
 ```shell
-gltf-viewer <filename|URL>
+USAGE:
+    gltf-viewer [OPTIONS] <FILE/URL>
+
+OPTIONS:
+    -s, --screenshot <FILE>    Create screenshot (PNG)
+    -v, --verbose              Enable verbose logging.
+    -w, --width <WIDTH>        Width in pixels [default: 800]
+    -h, --height <HEIGHT>      Height in pixels [default: 600]
+        --help                 Prints help information
+    -V, --version              Prints version information
+
+ARGS:
+    <FILE/URL>    glTF file name or URL
 ```
 Both .gltf and .glb files are supported.
 Navigate the scene with `WASD` + Mouse.
