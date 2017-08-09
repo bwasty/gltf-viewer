@@ -8,9 +8,10 @@
  [![Github All Releases](https://img.shields.io/github/downloads/bwasty/gltf-viewer/total.svg)](https://github.com/bwasty/gltf-viewer/releases)
 
 glTF Viewer written in Rust (WIP).
-Current state: most simple models can be loaded, but there is no lighting/texturing (normals are used as color):
 
-<img width="311" alt="gltf-viewer" src="https://user-images.githubusercontent.com/1647415/27612520-375828ee-5b97-11e7-97b4-90785cdbfe8e.png">
+**Current state** (master): All sample models can be loaded, but there is no lighting yet:
+
+<img width="432" alt="gltf-viewer-fish" src="https://user-images.githubusercontent.com/1647415/29146607-4e8fd2e0-7d62-11e7-902f-18718c140135.png">
 
 ## Installation
 ### Binaries (Win/Linux/macOS)
