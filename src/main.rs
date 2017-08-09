@@ -16,7 +16,6 @@ use glutin::{
     GlContext,
     VirtualKeyCode,
     WindowEvent,
-    ControlFlow,
 };
 
 extern crate gltf;
@@ -41,11 +40,12 @@ mod camera;
 use camera::Camera;
 use camera::CameraMovement::*;
 mod framebuffer;
+use framebuffer::Framebuffer;
 mod macros;
 mod http_source;
 use http_source::HttpSource;
 mod utils;
-use utils::{print_elapsed, FrameTimer};
+use utils::{print_elapsed, FrameTimer, gl_check_error};
 
 mod render;
 use render::*;
@@ -88,14 +88,18 @@ pub fn main() {
     let log_level = if args.is_present("verbose") { LogLevelFilter::Info } else { LogLevelFilter::Warn };
     let _ = TermLogger::init(log_level, Config { time: None, target: None, ..Config::default() });
 
-    let mut viewer = GltfViewer::new(source, width, height);
+    // TODO!!: headless rendering doesn't work (only clearcolor)
+    let mut viewer = GltfViewer::new(source, width, height,
+        // args.is_present("screenshot")
+        false
+    );
 
     if args.is_present("screenshot") {
         let filename = args.value_of("screenshot").unwrap();
         if !filename.to_lowercase().ends_with(".png") {
             warn!("filename should end with .png");
         }
-        viewer.screenshot(filename);
+        viewer.screenshot(filename, width, height);
         return;
     }
 
@@ -110,8 +114,8 @@ struct GltfViewer {
     first_mouse: bool,
     last_x: f32,
     last_y: f32,
-    events_loop: glutin::EventsLoop,
-    gl_window: glutin::GlWindow,
+    events_loop: Option<glutin::EventsLoop>,
+    gl_window: Option<glutin::GlWindow>,
 
     shader: Shader,
     loc_projection: i32,
@@ -126,7 +130,7 @@ struct GltfViewer {
 }
 
 impl GltfViewer {
-    pub fn new(source: &str, width: u32, height: u32) -> GltfViewer {
+    pub fn new(source: &str, width: u32, height: u32, headless: bool) -> GltfViewer {
         let camera = Camera {
             // TODO!: position.z - bounding box length
             position: Point3::new(0.0, 0.0, 2.0),
@@ -138,32 +142,43 @@ impl GltfViewer {
         let last_x: f32 = width as f32 / 2.0;
         let last_y: f32 = height as f32 / 2.0;
 
-        // glutin: initialize and configure
-        let events_loop = glutin::EventsLoop::new();
+        let (events_loop, gl_window) =
+            if headless {
+                let headless_context = glutin::HeadlessRendererBuilder::new(width, height).build().unwrap();
+                unsafe { headless_context.make_current().unwrap() }
+                gl::load_with(|symbol| headless_context.get_proc_address(symbol) as *const _);
+                let framebuffer = Framebuffer::new(width, height);
+                framebuffer.bind();
 
-        // TODO?: hints for 4.1, core profile, forward compat
-        let window = glutin::WindowBuilder::new()
-                .with_title("gltf-viewer")
-                .with_dimensions(width, height);
+                (None, None)
+            }
+            else {
+                // glutin: initialize and configure
+                let events_loop = glutin::EventsLoop::new().into();
 
-        let context = glutin::ContextBuilder::new()
-            .with_vsync(true);
-        let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
+                // TODO?: hints for 4.1, core profile, forward compat
+                let window = glutin::WindowBuilder::new()
+                        .with_title("gltf-viewer")
+                        .with_dimensions(width, height);
 
-        unsafe {
-            gl_window.make_current().unwrap();
-        }
+                let context = glutin::ContextBuilder::new()
+                    .with_vsync(true);
+                let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
 
-        // TODO!: capturing - on click or uncapture somehow?
-        // TODO!: find solution for macOS - see https://github.com/tomaka/glutin/issues/226
-         #[cfg(target_os = "macos")]
-        let _ = gl_window.set_cursor_state(CursorState::Hide);
-         #[cfg(not(target_os = "macos"))]
-        let _ = gl_window.set_cursor_state(CursorState::Grab);
+                unsafe { gl_window.make_current().unwrap(); }
 
+                // TODO!: capturing - on click or uncapture somehow?
+                // TODO!: find solution for macOS - see https://github.com/tomaka/glutin/issues/226
+                #[cfg(target_os = "macos")]
+                let _ = gl_window.set_cursor_state(CursorState::Hide);
+                #[cfg(not(target_os = "macos"))]
+                let _ = gl_window.set_cursor_state(CursorState::Grab);
 
-        // gl: load all OpenGL function pointers
-        gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
+                // gl: load all OpenGL function pointers
+                gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
+
+                (Some(events_loop), Some(gl_window))
+            };
 
         let (shader, loc_projection, loc_view) = unsafe {
             gl::ClearColor(0.0, 1.0, 0.0, 1.0); // green for debugging
@@ -243,32 +258,28 @@ impl GltfViewer {
 
     pub fn start_render_loop(&mut self) {
         loop {
-            let cf = self.draw();
-            match cf {
-                ControlFlow::Break => break,
-                ControlFlow::Continue => ()
-            }
+            // per-frame time logic
+            // NOTE: Deliberately ignoring the seconds of `elapsed()`
+            self.delta_time = (self.last_frame.elapsed().subsec_nanos() as f64) / 1_000_000_000.0;
+            self.last_frame = Instant::now();
 
-            self.gl_window.swap_buffers().unwrap();
+            // events
+            let keep_running = process_events(
+                &mut self.events_loop.as_mut().unwrap(), &self.gl_window.as_mut().unwrap(),
+                &mut self.first_mouse, &mut self.last_x, &mut self.last_y,
+                &mut self.camera, &mut self.width, &mut self.height);
+            if !keep_running { break }
+
+            self.camera.update(self.delta_time); // navigation
+
+            self.draw();
+
+            self.gl_window.as_ref().unwrap().swap_buffers().unwrap();
         }
     }
 
     // Returns whether to keep running
-    pub fn draw(&mut self) -> ControlFlow {
-        // per-frame time logic
-        // NOTE: Deliberately ignoring the seconds of `elapsed()`
-        self.delta_time = (self.last_frame.elapsed().subsec_nanos() as f64) / 1_000_000_000.0;
-        self.last_frame = Instant::now();
-
-        // events
-        let keep_running = process_events(
-            &mut self.events_loop, &self.gl_window,
-            &mut self.first_mouse, &mut self.last_x, &mut self.last_y,
-            &mut self.camera, &mut self.width, &mut self.height);
-        if !keep_running { return ControlFlow::Break }
-
-        self.camera.update(self.delta_time); // navigation
-
+    pub fn draw(&mut self) {
         // render
         unsafe {
             self.render_timer.start();
@@ -289,20 +300,20 @@ impl GltfViewer {
 
             self.render_timer.end();
         }
-
-        ControlFlow::Continue
     }
 
-    pub fn screenshot(&mut self, filename: &str) {
+    pub fn screenshot(&mut self, filename: &str, _width: u32, _height: u32) {
         self.draw();
 
-        let (width, height) = self.gl_window.get_inner_size_pixels().unwrap();
+        // TODO!!: headless case...
+        let (width, height) = self.gl_window.as_ref().unwrap().get_inner_size_pixels().unwrap();
         let mut img = DynamicImage::new_rgb8(width, height);
         unsafe {
             let pixels = img.as_mut_rgb8().unwrap();
             gl::PixelStorei(gl::PACK_ALIGNMENT, 1);
             gl::ReadPixels(0, 0, width as i32, height as i32, gl::RGB,
                 gl::UNSIGNED_BYTE, pixels.as_mut_ptr() as *mut c_void);
+            gl_check_error!();
         }
 
         let mut file = File::create(filename).unwrap();

@@ -41,10 +41,10 @@ impl Framebuffer {
     }
 
     pub fn bind(&self) {
-        unsafe {gl::BindFramebuffer(gl::FRAMEBUFFER, self.id) }
+        unsafe { gl::BindFramebuffer(gl::FRAMEBUFFER, self.id) }
     }
 
     pub fn unbind(&self) {
-        unsafe {gl::BindFramebuffer(gl::FRAMEBUFFER, 0) }
+        unsafe { gl::BindFramebuffer(gl::FRAMEBUFFER, 0) }
     }
 }
