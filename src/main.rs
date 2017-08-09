@@ -88,10 +88,11 @@ pub fn main() {
     let log_level = if args.is_present("verbose") { LogLevelFilter::Info } else { LogLevelFilter::Warn };
     let _ = TermLogger::init(log_level, Config { time: None, target: None, ..Config::default() });
 
-    // TODO!!: headless rendering doesn't work (only clearcolor)
+    // TODO!: headless rendering doesn't work (only clearcolor)
     let mut viewer = GltfViewer::new(source, width, height,
         // args.is_present("screenshot")
-        false
+        false,
+        !args.is_present("screenshot")
     );
 
     if args.is_present("screenshot") {
@@ -130,7 +131,7 @@ struct GltfViewer {
 }
 
 impl GltfViewer {
-    pub fn new(source: &str, width: u32, height: u32, headless: bool) -> GltfViewer {
+    pub fn new(source: &str, width: u32, height: u32, headless: bool, visible: bool) -> GltfViewer {
         let camera = Camera {
             // TODO!: position.z - bounding box length
             position: Point3::new(0.0, 0.0, 2.0),
@@ -159,7 +160,8 @@ impl GltfViewer {
                 // TODO?: hints for 4.1, core profile, forward compat
                 let window = glutin::WindowBuilder::new()
                         .with_title("gltf-viewer")
-                        .with_dimensions(width, height);
+                        .with_dimensions(width, height)
+                        .with_visibility(visible);
 
                 let context = glutin::ContextBuilder::new()
                     .with_vsync(true);
@@ -305,7 +307,7 @@ impl GltfViewer {
     pub fn screenshot(&mut self, filename: &str, _width: u32, _height: u32) {
         self.draw();
 
-        // TODO!!: headless case...
+        // TODO!: headless case...
         let (width, height) = self.gl_window.as_ref().unwrap().get_inner_size_pixels().unwrap();
         let mut img = DynamicImage::new_rgb8(width, height);
         unsafe {
