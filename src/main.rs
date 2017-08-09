@@ -46,9 +46,6 @@ use utils::{print_elapsed, FrameTimer};
 mod render;
 use render::*;
 
-const SCR_WIDTH: u32 = 800;
-const SCR_HEIGHT: u32 = 600;
-
 pub fn main() {
     let args = App::new("gltf-viewer")
         .version(crate_version!())
@@ -67,12 +64,26 @@ pub fn main() {
             .long("verbose")
             .short("-v")
             .help("Enable verbose logging."))
+        .arg(Arg::with_name("WIDTH")
+            .long("width")
+            .short("w")
+            .default_value("800")
+            .help("Width in pixels")
+            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
+        .arg(Arg::with_name("HEIGHT")
+            .long("height")
+            .short("h")
+            .default_value("600")
+            .help("Height in pixels")
+            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
         .get_matches();
     let source = args.value_of("FILE/URL").unwrap();
+    let width: u32 = args.value_of("WIDTH").unwrap().parse().unwrap();
+    let height: u32 = args.value_of("HEIGHT").unwrap().parse().unwrap();
 
     // TODO!!: use "verbose" parameter
 
-    let mut viewer = GltfViewer::new(source);
+    let mut viewer = GltfViewer::new(source, width, height);
 
     if args.is_present("screenshot") {
         let filename = args.value_of("screenshot").unwrap();
@@ -87,6 +98,9 @@ pub fn main() {
 }
 
 struct GltfViewer {
+    width: u32,
+    height: u32,
+
     camera: Camera,
     first_mouse: bool,
     last_x: f32,
@@ -107,7 +121,7 @@ struct GltfViewer {
 }
 
 impl GltfViewer {
-    pub fn new(source: &str) -> GltfViewer {
+    pub fn new(source: &str, width: u32, height: u32) -> GltfViewer {
         let camera = Camera {
             // TODO!: position.z - bounding box length
             position: Point3::new(0.0, 0.0, 2.0),
@@ -116,8 +130,8 @@ impl GltfViewer {
         };
 
         let first_mouse = true;
-        let last_x: f32 = SCR_WIDTH as f32 / 2.0;
-        let last_y: f32 = SCR_HEIGHT as f32 / 2.0;
+        let last_x: f32 = width as f32 / 2.0;
+        let last_y: f32 = height as f32 / 2.0;
 
         // glutin: initialize and configure
         let events_loop = glutin::EventsLoop::new();
@@ -125,8 +139,7 @@ impl GltfViewer {
         // TODO?: hints for 4.1, core profile, forward compat
         let window = glutin::WindowBuilder::new()
                 .with_title("gltf-viewer")
-                // TODO: configurable initial dimensions
-                .with_dimensions(SCR_WIDTH, SCR_HEIGHT);
+                .with_dimensions(width, height);
 
         let context = glutin::ContextBuilder::new()
             .with_vsync(true);
@@ -175,6 +188,9 @@ impl GltfViewer {
         };
 
         GltfViewer {
+            width,
+            height,
+
             camera,
             first_mouse, last_x, last_y,
 
@@ -243,7 +259,7 @@ impl GltfViewer {
         let keep_running = process_events(
             &mut self.events_loop, &self.gl_window,
             &mut self.first_mouse, &mut self.last_x, &mut self.last_y,
-            &mut self.camera);
+            &mut self.camera, &mut self.width, &mut self.height);
         if !keep_running { return ControlFlow::Break }
 
         self.camera.update(self.delta_time); // navigation
@@ -259,7 +275,7 @@ impl GltfViewer {
 
             // view/projection transformations
             // TODO!: only re-compute/set perspective on Zoom changes (also view?)
-            let projection: Matrix4<f32> = perspective(Deg(self.camera.zoom), SCR_WIDTH as f32 / SCR_HEIGHT as f32, 0.01, 1000.0);
+            let projection: Matrix4<f32> = perspective(Deg(self.camera.zoom), self.width as f32 / self.height as f32, 0.01, 1000.0);
             let view = self.camera.get_view_matrix();
             self.shader.set_mat4(self.loc_projection, &projection);
             self.shader.set_mat4(self.loc_view, &view);
@@ -275,9 +291,7 @@ impl GltfViewer {
     pub fn screenshot(&mut self, filename: &str) {
         self.draw();
 
-        // TODO!!: get proper (retina) dimensions from window...
-        let width = SCR_WIDTH * 2;
-        let height = SCR_HEIGHT * 2;
+        let (width, height) = self.gl_window.get_inner_size_pixels().unwrap();
         let mut img = DynamicImage::new_rgb8(width, height);
         unsafe {
             let pixels = img.as_mut_rgb8().unwrap();
@@ -291,7 +305,7 @@ impl GltfViewer {
             println!("{}", err);
         }
         else {
-            println!("Saved {}x{} screenshot at {}", width, height, filename);
+            println!("Saved {}x{} screenshot to {}", width, height, filename);
         }
     }
 }
@@ -312,14 +326,20 @@ fn process_events(
     first_mouse: &mut bool,
     last_x: &mut f32,
     last_y: &mut f32,
-    mut camera: &mut Camera) -> bool
+    mut camera: &mut Camera,
+    width: &mut u32,
+    height: &mut u32) -> bool
 {
     let mut keep_running = true;
     events_loop.poll_events(|event| {
         match event {
             glutin::Event::WindowEvent{ event, .. } => match event {
                 WindowEvent::Closed => keep_running = false,
-                WindowEvent::Resized(w, h) => gl_window.resize(w, h), // TODO!: handle aspect ratio changes
+                WindowEvent::Resized(w, h) => {
+                    gl_window.resize(w, h);
+                    *width = w;
+                    *height = h;
+                },
                 WindowEvent::DroppedFile(_path_buf) => (), // TODO!: drag file in
                 WindowEvent::MouseMoved { position: (xpos, ypos), .. } => {
                     let (xpos, ypos) = (xpos as f32, ypos as f32);
