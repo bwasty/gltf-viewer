@@ -74,7 +74,7 @@ impl Primitive {
     }
 
     pub fn from_gltf(
-        g_primitive: gltf::mesh::Primitive,
+        g_primitive: gltf::Loaded<gltf::Primitive>,
         primitive_index: usize,
         mesh_index: usize,
         scene: &mut Scene) -> Primitive

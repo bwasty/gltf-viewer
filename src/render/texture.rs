@@ -16,7 +16,7 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn from_gltf(g_texture: &gltf::texture::Texture) -> Texture {
+    pub fn from_gltf(g_texture: &gltf::Texture) -> Texture {
         let mut texture_id = 0;
         unsafe {
             gl::GenTextures(1, &mut texture_id);
@@ -27,42 +27,43 @@ impl Texture {
 
         // TODO!: share images via Rc? detect if occurs?
         let img = g_texture.source();
-        let dyn_img = img.data();
 
-        let format = match *dyn_img {
-            ImageLuma8(_) => gl::RED,
-            ImageLumaA8(_) => gl::RG,
-            ImageRgb8(_) => gl::RGB,
-            ImageRgba8(_) => gl::RGBA,
-        };
+        // let dyn_img = img.data();
 
-        // **Non-Power-Of-Two Texture Implementation Note**: glTF does not guarantee that a texture's
-        // dimensions are a power-of-two.  At runtime, if a texture's width or height is not a
-        // power-of-two, the texture needs to be resized so its dimensions are powers-of-two if the
-        // `sampler` the texture references
-        // * Has a wrapping mode (either `wrapS` or `wrapT`) equal to `REPEAT` or `MIRRORED_REPEAT`, or
-        // * Has a minification filter (`minFilter`) that uses mipmapping (`NEAREST_MIPMAP_NEAREST`, \\
-        //   `NEAREST_MIPMAP_LINEAR`, `LINEAR_MIPMAP_NEAREST`, or `LINEAR_MIPMAP_LINEAR`).
-        let (width, height) = dyn_img.dimensions();
-        let (data, width, height) =
-            if needs_power_of_two && (!width.is_power_of_two() || !height.is_power_of_two()) {
-                let nwidth = width.next_power_of_two();
-                let nheight = height.next_power_of_two();
-                let resized = dyn_img.resize(nwidth, nheight, FilterType::Lanczos3);
-                (resized.raw_pixels(), resized.width(), resized.height())
-            }
-            else {
-                (dyn_img.raw_pixels(), dyn_img.width(), dyn_img.height())
-            };
+        // let format = match *dyn_img {
+        //     ImageLuma8(_) => gl::RED,
+        //     ImageLumaA8(_) => gl::RG,
+        //     ImageRgb8(_) => gl::RGB,
+        //     ImageRgba8(_) => gl::RGBA,
+        // };
 
-        unsafe {
-            gl::TexImage2D(gl::TEXTURE_2D, 0, format as i32, width as i32, height as i32,
-                0, format, gl::UNSIGNED_BYTE, &data[0] as *const u8 as *const c_void);
+        // // **Non-Power-Of-Two Texture Implementation Note**: glTF does not guarantee that a texture's
+        // // dimensions are a power-of-two.  At runtime, if a texture's width or height is not a
+        // // power-of-two, the texture needs to be resized so its dimensions are powers-of-two if the
+        // // `sampler` the texture references
+        // // * Has a wrapping mode (either `wrapS` or `wrapT`) equal to `REPEAT` or `MIRRORED_REPEAT`, or
+        // // * Has a minification filter (`minFilter`) that uses mipmapping (`NEAREST_MIPMAP_NEAREST`, \\
+        // //   `NEAREST_MIPMAP_LINEAR`, `LINEAR_MIPMAP_NEAREST`, or `LINEAR_MIPMAP_LINEAR`).
+        // let (width, height) = dyn_img.dimensions();
+        // let (data, width, height) =
+        //     if needs_power_of_two && (!width.is_power_of_two() || !height.is_power_of_two()) {
+        //         let nwidth = width.next_power_of_two();
+        //         let nheight = height.next_power_of_two();
+        //         let resized = dyn_img.resize(nwidth, nheight, FilterType::Lanczos3);
+        //         (resized.raw_pixels(), resized.width(), resized.height())
+        //     }
+        //     else {
+        //         (dyn_img.raw_pixels(), dyn_img.width(), dyn_img.height())
+        //     };
 
-            if generate_mip_maps {
-                gl::GenerateMipmap(gl::TEXTURE_2D);
-            }
-        }
+        // unsafe {
+        //     gl::TexImage2D(gl::TEXTURE_2D, 0, format as i32, width as i32, height as i32,
+        //         0, format, gl::UNSIGNED_BYTE, &data[0] as *const u8 as *const c_void);
+
+        //     if generate_mip_maps {
+        //         gl::GenerateMipmap(gl::TEXTURE_2D);
+        //     }
+        // }
         Texture {
             index: g_texture.index(),
             name: g_texture.name().map(|s| s.into()),

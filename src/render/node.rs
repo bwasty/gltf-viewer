@@ -24,7 +24,7 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn from_gltf(g_node: gltf::scene::Node, scene: &mut Scene) -> Node {
+    pub fn from_gltf(g_node: gltf::Loaded<gltf::Node>, scene: &mut Scene) -> Node {
         // convert matrix in 3 steps due to type system weirdness
         let matrix = &g_node.matrix();
         let matrix: &Matrix4 = matrix.into();

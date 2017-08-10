@@ -14,7 +14,7 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn from_gltf(g_mesh: gltf::mesh::Mesh, scene: &mut Scene) -> Mesh {
+    pub fn from_gltf(g_mesh: gltf::Loaded<gltf::Mesh>, scene: &mut Scene) -> Mesh {
         let primitives = g_mesh.primitives()
             .enumerate()
             .map(|(i, g_prim)| {

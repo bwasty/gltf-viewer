@@ -18,7 +18,7 @@ pub struct Scene {
 }
 
 impl Scene {
-    pub fn from_gltf(g_scene: gltf::scene::Scene) -> Scene {
+    pub fn from_gltf(g_scene: gltf::Loaded<gltf::Scene>) -> Scene {
         let mut scene = Scene {
             name: g_scene.name().map(|s| s.to_owned()),
             ..Default::default()

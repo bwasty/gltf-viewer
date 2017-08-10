@@ -19,6 +19,7 @@ use glutin::{
 };
 
 extern crate gltf;
+extern crate gltf_importer;
 extern crate image;
 use image::{DynamicImage, ImageFormat};
 
@@ -42,8 +43,9 @@ use camera::CameraMovement::*;
 mod framebuffer;
 use framebuffer::Framebuffer;
 mod macros;
-mod http_source;
-use http_source::HttpSource;
+// TODO!!: adapt Source...
+// mod http_source;
+// use http_source::HttpSource;
 mod utils;
 use utils::{print_elapsed, FrameTimer, gl_check_error};
 
@@ -232,18 +234,25 @@ impl GltfViewer {
 
     pub fn load(source: &str) -> Scene {
         let mut start_time = Instant::now();
-        let gltf =
-            if source.starts_with("http") {
-                let http_source = HttpSource::new(source);
-                let import = gltf::Import::custom(http_source, Default::default());
-                let gltf = import_gltf(import);
-                println!(); // to end the "progress dots"
-                gltf
-            }
-            else {
-                let import = gltf::Import::from_path(source);
-                import_gltf(import)
-            };
+        // TODO!!: http source
+        // let gltf =
+        //     if source.starts_with("http") {
+        //         unimplemented!()
+        //         // let http_source = HttpSource::new(source);
+        //         // let import = gltf::Import::custom(http_source, Default::default());
+        //         // let gltf = import_gltf(import);
+        //         // println!(); // to end the "progress dots"
+        //         // gltf
+        //     }
+        //     else {
+        let mut importer = gltf_importer::Importer::new(source);
+        let gltf = match importer.import() {
+            Ok(gltf) => gltf,
+            Err(err) => {
+                error!("glTF import failed: {}", err);
+                std::process::exit(1);
+            },
+        };
 
         print_elapsed("Imported glTF in ", &start_time);
         start_time = Instant::now();
@@ -328,15 +337,16 @@ impl GltfViewer {
     }
 }
 
-fn import_gltf<S: gltf::import::Source>(import: gltf::Import<S>) -> gltf::Gltf {
-    match import.sync() {
-        Ok(gltf) => gltf,
-        Err(err) => {
-            error!("glTF import failed: {:?}", err);
-            std::process::exit(1);
-        }
-    }
-}
+// TODO!!:?
+// fn import_gltf<S: gltf::import::Source>(import: gltf::Import<S>) -> gltf::Gltf {
+//     match import.sync() {
+//         Ok(gltf) => gltf,
+//         Err(err) => {
+//             error!("glTF import failed: {:?}", err);
+//             std::process::exit(1);
+//         }
+//     }
+// }
 
 fn process_events(
     events_loop: &mut glutin::EventsLoop,
