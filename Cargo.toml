@@ -34,7 +34,7 @@ log = "0.3"
 simplelog = "0.4.2"
 
 [dependencies.gltf]
-version = "0.8.2"
+version = "0.8.4"
 # git = "https://github.com/alteous/gltf"
 # branch = "incoming"
 features = ["names"]
