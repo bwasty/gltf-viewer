@@ -28,12 +28,12 @@ impl Scene {
             .collect();
 
         // propagate transforms
-        let start_time = Instant::now();
+        // let start_time = Instant::now();
         let root_transform = Matrix4::identity();
         for node in &mut scene.nodes {
             node.update_transform(&root_transform);
         }
-        print_elapsed("propagate transforms", &start_time);
+        // print_elapsed("propagate transforms", &start_time);
 
         scene
     }

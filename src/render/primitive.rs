@@ -98,7 +98,7 @@ impl Primitive {
             }
         }
         else {
-            warn!("found no NORMALs for primitive {} of mesh {} \
+            info!("Found no NORMALs for primitive {} of mesh {} \
                    (flat normal calculation not implemented yet)", primitive_index, mesh_index);
         }
 
@@ -107,6 +107,10 @@ impl Primitive {
             for (i, tangent) in tangents.enumerate() {
                 vertices[i].tangent = Vector4::from(tangent);
             }
+        }
+        else {
+            info!("Found no TANGENTS for primitive {} of mesh {} \
+                   (tangent calculation not implemented yet)", primitive_index, mesh_index);
         }
 
         // texture coordinates
