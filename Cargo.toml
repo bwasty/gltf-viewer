@@ -32,10 +32,10 @@ image = "0.14.0"
 reqwest = "0.7.2"
 log = "0.3"
 simplelog = "0.4.2"
-gltf-importer = "0.1.1"
+gltf-importer = "0.8.0"
 
 [dependencies.gltf]
-version = "0.8.4"
+version = "0.8.5"
 # git = "https://github.com/alteous/gltf"
 # branch = "incoming"
 features = ["names"]

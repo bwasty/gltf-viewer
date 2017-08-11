@@ -327,6 +327,8 @@ impl GltfViewer {
             gl_check_error!();
         }
 
+        let img = img.flipv();
+
         let mut file = File::create(filename).unwrap();
         if let Err(err) = img.save(&mut file, ImageFormat::PNG) {
             error!("{}", err);
