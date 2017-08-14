@@ -36,6 +36,7 @@ impl Node {
         let rotation = Quaternion::new(r[3], r[0], r[1], r[2]); // NOTE: different element order!
 
         let mut mesh = None;
+        // TODO!!!: need to apply transformation matrix to bounds???
         let mut bounds = None;
         if let Some(g_mesh) = g_node.mesh() {
             if let Some(existing_mesh) = scene.meshes.iter().find(|mesh| (***mesh).index == g_mesh.index()) {

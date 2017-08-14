@@ -1,8 +1,10 @@
 #!/bin/bash
+# Loads all sample models and generates screenshots
 # NOTE: should be called from crate root!
+# Parameters:
+mode=${1:-release} # pass `debug` instead to test a debug build
 
 set -e
-mode=${1:-release} # pass `debug` instead to test a debug build
 
 mkdir -p target/screenshots
 export CARGO_INCREMENTAL=1

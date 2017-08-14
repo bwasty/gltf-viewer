@@ -236,14 +236,14 @@ impl GltfViewer {
         let mut start_time = Instant::now();
         // TODO!!: http source
         // let gltf =
-        //     if source.starts_with("http") {
-        //         unimplemented!()
-        //         // let http_source = HttpSource::new(source);
-        //         // let import = gltf::Import::custom(http_source, Default::default());
-        //         // let gltf = import_gltf(import);
-        //         // println!(); // to end the "progress dots"
-        //         // gltf
-        //     }
+        if source.starts_with("http") {
+            unimplemented!("HTTP support temporarily removed.")
+            // let http_source = HttpSource::new(source);
+            // let import = gltf::Import::custom(http_source, Default::default());
+            // let gltf = import_gltf(import);
+            // println!(); // to end the "progress dots"
+            // gltf
+        }
         //     else {
         let mut importer = gltf_importer::Importer::new(source);
         let gltf = match importer.import() {

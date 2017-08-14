@@ -15,6 +15,7 @@ pub struct Bounds {
     pub max: Vector3,
 }
 
+// TODO!?: +- Infinity instead (three...)
 impl Default for Bounds {
     fn default() -> Self {
         Self {
@@ -39,6 +40,8 @@ impl Bounds {
             ),
         }
     }
+
+    // TODO!!: intersectsPlane?, applyMatrix4! (three)
 }
 
 use std::convert::From;
