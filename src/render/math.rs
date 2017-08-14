@@ -9,7 +9,7 @@ pub type Vector4 = cgmath::Vector4<f32>;
 pub type Matrix4 = cgmath::Matrix4<f32>;
 pub type Quaternion = cgmath::Quaternion<f32>;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Bounds {
     pub min: Vector3,
     pub max: Vector3,

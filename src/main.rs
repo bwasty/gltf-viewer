@@ -262,7 +262,7 @@ impl GltfViewer {
             warn!("Found more than 1 scene, can only load first at the moment.")
         }
         let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap());
-        print_elapsed(&format!("Loaded scene with {:<2} nodes {:<2} meshes in",
+        print_elapsed(&format!("Loaded scene with {} nodes, {} meshes in ",
                 gltf.nodes().count(), scene.meshes.len()), &start_time);
 
         scene

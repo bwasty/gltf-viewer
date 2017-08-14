@@ -53,8 +53,22 @@ impl Node {
                 .map(|g_node| Node::from_gltf(g_node, scene))
                 .collect();
 
-        let mut bounds = if let Some(bounds) = bounds { bounds } else { children[0].bounds.clone() };
-        bounds = children.iter().skip(1).fold(bounds, |bounds, ref node| node.bounds.union(&bounds));
+        let bounds =
+            if children.is_empty() {
+                // TODO!: else case happens (only?) for camera - treat specially?
+                bounds.unwrap_or_else(|| Bounds::default())
+            }
+            else {
+                let bounds =
+                    if let Some(bounds) = bounds {
+                        bounds.union(&children[0].bounds)
+                    } else {
+                        children[0].bounds.clone()
+                    };
+                children.iter()
+                    .skip(1)
+                    .fold(bounds, |bounds, ref node| node.bounds.union(&bounds))
+            };
 
         Node {
             children,

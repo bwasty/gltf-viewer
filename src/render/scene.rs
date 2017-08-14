@@ -29,7 +29,6 @@ impl Scene {
             .map(|g_node| Node::from_gltf(g_node, &mut scene))
             .collect();
 
-        // TODO!: test bounds (visualize?)
         let bounds = scene.nodes[0].bounds.clone();
         scene.bounds = scene.nodes.iter()
             .skip(1)
