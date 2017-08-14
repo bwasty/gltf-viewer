@@ -5,7 +5,7 @@ use std::rc::Rc;
 
 use gl;
 use gltf;
-use gltf::mesh::{ Indices, TexCoords, Colors };
+use gltf::mesh::{Colors};
 use gltf::json::mesh::Mode;
 
 use render::math::*;
@@ -47,6 +47,8 @@ pub struct Texture {
 }
 
 pub struct Primitive {
+    pub bounds: Bounds,
+
     vao: u32,
     vbo: u32,
     num_vertices: u32,
@@ -59,9 +61,10 @@ pub struct Primitive {
 }
 
 impl Primitive {
-    pub fn new(vertices: Vec<Vertex>, indices: Option<Vec<u32>>, material: Rc<Material>) -> Primitive {
+    pub fn new(bounds: Bounds, vertices: Vec<Vertex>, indices: Option<Vec<u32>>, material: Rc<Material>) -> Primitive {
         let num_indices = indices.as_ref().map(|i| i.len()).unwrap_or(0);
         let mut prim = Primitive {
+            bounds,
             num_vertices: vertices.len() as u32,
             num_indices: num_indices as u32,
             vao: 0, vbo: 0, ebo: None,
@@ -79,6 +82,10 @@ impl Primitive {
         mesh_index: usize,
         scene: &mut Scene) -> Primitive
     {
+        let bounds = g_primitive.bounds()
+            .expect(&format!("primitives must have the POSITION attribute (mesh: {}, primitive: {})",
+                mesh_index, primitive_index));
+
         // positions
         let positions = g_primitive.positions()
             .expect(&format!("primitives must have the POSITION attribute (mesh: {}, primitive: {})",
@@ -176,7 +183,7 @@ impl Primitive {
             material = mat.into();
         };
 
-        Primitive::new(vertices, indices, material.unwrap())
+        Primitive::new(bounds.into(), vertices, indices, material.unwrap())
     }
 
     /// render the mesh

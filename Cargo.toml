@@ -35,13 +35,14 @@ simplelog = "0.4.2"
 gltf-importer = "0.8.0"
 
 [dependencies.gltf]
-version = "0.8.5"
-# git = "https://github.com/alteous/gltf"
-# branch = "incoming"
+# version = "0.8.5"
+git = "https://github.com/bwasty/gltf"
+branch = "bounds"
 features = ["names"]
 
-# [patch.crates-io]
-# gltf = { path = "../gltf"}
+[patch.crates-io]
+gltf = { git = "https://github.com/bwasty/gltf", branch = "bounds"}
+gltf-json = { git = "https://github.com/bwasty/gltf", branch = "bounds"}
 
 # [profile.dev]
 # opt-level = 2

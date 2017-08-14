@@ -1,12 +1,12 @@
 use std::rc::Rc;
-use std::time::Instant;
+// use std::time::Instant;
 
 use gltf;
 
 use render::{Mesh, Node, Texture, Material};
 use render::math::*;
 use shader::Shader;
-use utils::print_elapsed;
+// use utils::print_elapsed;
 
 #[derive(Default)]
 pub struct Scene {
@@ -15,6 +15,8 @@ pub struct Scene {
     pub meshes: Vec<Rc<Mesh>>,
     pub textures: Vec<Rc<Texture>>,
     pub materials: Vec<Rc<Material>>,
+
+    bounds: Bounds,
 }
 
 impl Scene {
@@ -26,6 +28,12 @@ impl Scene {
         scene.nodes = g_scene.nodes()
             .map(|g_node| Node::from_gltf(g_node, &mut scene))
             .collect();
+
+        // TODO!: test bounds (visualize?)
+        let bounds = scene.nodes[0].bounds.clone();
+        scene.bounds = scene.nodes.iter()
+            .skip(1)
+            .fold(bounds, |bounds, ref node| node.bounds.union(&bounds));
 
         // propagate transforms
         // let start_time = Instant::now();

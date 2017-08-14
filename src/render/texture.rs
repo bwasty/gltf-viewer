@@ -1,12 +1,12 @@
-use std::os::raw::c_void;
+// use std::os::raw::c_void;
 
 use gl;
 use gltf;
 use gltf::json::texture::MinFilter;
 
-use image::DynamicImage::*;
-use image::GenericImage;
-use image::FilterType;
+// use image::DynamicImage::*;
+// use image::GenericImage;
+// use image::FilterType;
 
 pub struct Texture {
     pub index: usize, // glTF index
@@ -22,11 +22,11 @@ impl Texture {
             gl::GenTextures(1, &mut texture_id);
             gl::BindTexture(gl::TEXTURE_2D, texture_id);
         }
-        let (needs_power_of_two, generate_mip_maps) =
+        let (_needs_power_of_two, _generate_mip_maps) =
             unsafe { Self::set_sampler_params(g_texture.sampler()) };
 
         // TODO!: share images via Rc? detect if occurs?
-        let img = g_texture.source();
+        // let img = g_texture.source();
 
         // let dyn_img = img.data();
 
