@@ -23,6 +23,8 @@ extern crate gltf_importer;
 extern crate image;
 use image::{DynamicImage, ImageFormat};
 
+extern crate itertools;
+
 extern crate futures;
 
 use clap::{Arg, App, AppSettings};

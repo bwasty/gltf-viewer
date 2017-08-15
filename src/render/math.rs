@@ -1,3 +1,5 @@
+use std::f32;
+
 use cgmath;
 pub use cgmath::prelude::*;
 pub use cgmath::vec3;
@@ -9,18 +11,18 @@ pub type Vector4 = cgmath::Vector4<f32>;
 pub type Matrix4 = cgmath::Matrix4<f32>;
 pub type Quaternion = cgmath::Quaternion<f32>;
 
+/// Axis-aligned Bounding Box
 #[derive(Clone, Debug)]
 pub struct Bounds {
     pub min: Vector3,
     pub max: Vector3,
 }
 
-// TODO!?: +- Infinity instead (three...)
 impl Default for Bounds {
     fn default() -> Self {
         Self {
-            min: Vector3::zero(),
-            max: Vector3::zero()
+            min: Vector3::from_value(f32::INFINITY),
+            max: Vector3::from_value(f32::NEG_INFINITY),
         }
     }
 }
@@ -41,7 +43,36 @@ impl Bounds {
         }
     }
 
-    // TODO!!: intersectsPlane?, applyMatrix4! (three)
+    /// Generate 8 points representing the corners of the box
+    fn points(&self) -> [Vector3; 8] {
+        // 2^3 combinations
+        [
+			vec3(self.min.x, self.min.y, self.min.z), // 000
+			vec3(self.min.x, self.min.y, self.max.z), // 001
+			vec3(self.min.x, self.max.y, self.min.z), // 010
+			vec3(self.min.x, self.max.y, self.max.z), // 011
+			vec3(self.max.x, self.min.y, self.min.z), // 100
+			vec3(self.max.x, self.min.y, self.max.z), // 101
+			vec3(self.max.x, self.max.y, self.min.z), // 110
+			vec3(self.max.x, self.max.y, self.max.z), // 111
+        ]
+    }
+
+    // TODO!: unit test?
+    pub fn transform(&self, matrix: &Matrix4) -> Bounds {
+        let transformed: Vec<_> = self.points().iter()
+            .map(|p| matrix.transform_vector(*p))
+            .collect(); // TODO: need transform_point??
+
+        let mut bounds = Bounds::default();
+        for point in transformed {
+            bounds = bounds.union(&Bounds {min: point, max: point})
+        }
+
+        bounds
+    }
+
+    // TODO!: intersectsPlane? (three)
 }
 
 use std::convert::From;

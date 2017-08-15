@@ -33,6 +33,7 @@ reqwest = "0.7.2"
 log = "0.3"
 simplelog = "0.4.2"
 gltf-importer = "0.8.0"
+itertools = "0.6.1"
 
 [dependencies.gltf]
 # version = "0.8.5"

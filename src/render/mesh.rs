@@ -24,8 +24,9 @@ impl Mesh {
                 Primitive::from_gltf(g_prim, i, g_mesh.index(), scene)
             })
             .collect();
-        let mut bounds = primitives[0].bounds.clone();
-        bounds = primitives.iter().skip(1).fold(bounds, |bounds, ref prim| prim.bounds.union(&bounds));
+
+        let bounds = primitives.iter()
+            .fold(Bounds::default(), |bounds, ref prim| prim.bounds.union(&bounds));
         Mesh {
             index: g_mesh.index(),
             primitives: primitives,
