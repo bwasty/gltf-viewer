@@ -28,6 +28,7 @@ impl Default for Bounds {
 }
 
 impl Bounds {
+    // TODO!!: make self-mutating?
     pub fn union(&self, other: &Self) -> Bounds {
         Bounds {
             min: vec3(
@@ -72,7 +73,23 @@ impl Bounds {
         bounds
     }
 
+    /// diagonal vector of this AABB
+    pub fn size(&self) -> Vector3 {
+        self.max - self.min
+    }
+
+    pub fn center(&self) -> Vector3 {
+        (self.min + self.max) / 2.0
+    }
+
     // TODO!: intersectsPlane? (three)
+
+    /// Check if max >= min. Note: default bounds are not valid.
+    pub fn is_valid(&self) -> bool {
+        self.max.x >= self.min.x &&
+        self.max.y >= self.min.y &&
+        self.max.z >= self.min.z
+    }
 }
 
 use std::convert::From;

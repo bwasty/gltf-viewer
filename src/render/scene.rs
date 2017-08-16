@@ -16,7 +16,7 @@ pub struct Scene {
     pub textures: Vec<Rc<Texture>>,
     pub materials: Vec<Rc<Material>>,
 
-    bounds: Bounds,
+    pub bounds: Bounds,
 }
 
 impl Scene {
@@ -29,18 +29,17 @@ impl Scene {
             .map(|g_node| Node::from_gltf(g_node, &mut scene))
             .collect();
 
-        let bounds = scene.nodes[0].bounds.clone();
-        scene.bounds = scene.nodes.iter()
-            .skip(1)
-            .fold(bounds, |bounds, ref node| node.bounds.union(&bounds));
-
         // propagate transforms
         // let start_time = Instant::now();
         let root_transform = Matrix4::identity();
         for node in &mut scene.nodes {
             node.update_transform(&root_transform);
+            node.update_bounds();
+            // TODO!: visualize final bounds
+            scene.bounds = scene.bounds.union(&node.bounds);
         }
         // print_elapsed("propagate transforms", &start_time);
+        println!("Scene: {:?}", scene.bounds);
 
         scene
     }

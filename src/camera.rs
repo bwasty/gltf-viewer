@@ -29,7 +29,12 @@ const MAZ_ZOOM: f32 = 90.0;
 pub struct Camera {
     // Camera Attributes
     pub position: Point3,
+
+    /// mutually exlusive: if center is set, it is used
+    // TODO!!!: consider this (center) for navigation
     pub front: Vector3,
+    pub center: Option<Point3>,
+
     pub up: Vector3,
     pub right: Vector3,
     pub world_up: Vector3,
@@ -54,6 +59,7 @@ impl Default for Camera {
         let mut camera = Camera {
             position: Point3::new(0.0, 0.0, 0.0),
             front: vec3(0.0, 0.0, -1.0),
+            center: None,
             up: Vector3::zero(), // initialized later
             right: Vector3::zero(), // initialized later
             world_up: Vector3::unit_y(),
@@ -78,7 +84,13 @@ impl Default for Camera {
 impl Camera {
     /// Returns the view matrix calculated using Eular Angles and the LookAt Matrix
     pub fn get_view_matrix(&self) -> Matrix4 {
-        Matrix4::look_at(self.position, self.position + self.front, self.up)
+        // TODO!: cache? doesn't change every frame...
+        if let Some(center) = self.center {
+            Matrix4::look_at(self.position, center, self.up)
+        }
+        else {
+            Matrix4::look_at(self.position, self.position + self.front, self.up)
+        }
     }
 
     pub fn update(&mut self, delta_time: f64) {

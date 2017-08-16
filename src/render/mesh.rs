@@ -27,6 +27,7 @@ impl Mesh {
 
         let bounds = primitives.iter()
             .fold(Bounds::default(), |bounds, ref prim| prim.bounds.union(&bounds));
+
         Mesh {
             index: g_mesh.index(),
             primitives: primitives,

@@ -53,6 +53,7 @@ use utils::{print_elapsed, FrameTimer, gl_check_error};
 
 mod render;
 use render::*;
+use render::math::*;
 
 pub fn main() {
     let args = App::new("gltf-viewer")
@@ -213,7 +214,7 @@ impl GltfViewer {
             (shader, loc_projection, loc_view)
         };
 
-        GltfViewer {
+        let mut viewer = GltfViewer {
             width,
             height,
 
@@ -231,7 +232,9 @@ impl GltfViewer {
             last_frame: Instant::now(),
 
             render_timer: FrameTimer::new("rendering", 300),
-        }
+        };
+        viewer.set_camera_from_bounds();
+        viewer
     }
 
     pub fn load(source: &str) -> Scene {
@@ -268,6 +271,29 @@ impl GltfViewer {
                 gltf.nodes().count(), scene.meshes.len()), &start_time);
 
         scene
+    }
+
+    /// determine "nice" camera perspective from bounding box. Inspired by donmccurdy/three-gltf-viewer
+    fn set_camera_from_bounds(&mut self) {
+        let bounds = &self.scene.bounds;
+        let size = bounds.size().magnitude();
+        let center = bounds.center();
+
+        // TODO!: move cam instead?
+        let _obj_pos_modifier = -center;
+
+        let _max_distance = size * 10.0;
+        let cam_pos = Point3::new(
+            center.x + size / 2.0,
+            center.y + size / 5.0,
+            center.z + size / 2.0,
+        );
+        let _near = size / 100.0;
+        let _far = size * 100.0;
+
+        self.camera.position = cam_pos;
+        self.camera.center = Some(Point3::from_vec(center));
+        // TODO!!: set near, far, max_distance, obj_pos_modifier...
     }
 
     pub fn start_render_loop(&mut self) {

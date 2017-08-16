@@ -36,8 +36,6 @@ impl Node {
         let rotation = Quaternion::new(r[3], r[0], r[1], r[2]); // NOTE: different element order!
 
         let mut mesh = None;
-        // TODO!!!: need to apply transformation matrix to bounds???
-        let mut bounds = None;
         if let Some(g_mesh) = g_node.mesh() {
             if let Some(existing_mesh) = scene.meshes.iter().find(|mesh| (***mesh).index == g_mesh.index()) {
                 mesh = Some(existing_mesh.clone());
@@ -47,29 +45,10 @@ impl Node {
                 mesh = Some(Rc::new(Mesh::from_gltf(g_mesh, scene)));
                 scene.meshes.push(mesh.clone().unwrap());
             }
-
-            bounds = mesh.as_ref().unwrap().bounds.clone().into();
         }
         let children: Vec<_> = g_node.children()
                 .map(|g_node| Node::from_gltf(g_node, scene))
                 .collect();
-
-        let bounds =
-            if children.is_empty() {
-                // TODO!: else case happens (only?) for camera - treat specially?
-                bounds.unwrap_or_else(|| Bounds::default())
-            }
-            else {
-                let bounds =
-                    if let Some(bounds) = bounds {
-                        bounds.union(&children[0].bounds)
-                    } else {
-                        children[0].bounds.clone()
-                    };
-                children.iter()
-                    .skip(1)
-                    .fold(bounds, |bounds, ref node| node.bounds.union(&bounds))
-            };
 
         Node {
             children,
@@ -83,7 +62,7 @@ impl Node {
             final_transform: Matrix4::identity(),
             model_loc: None,
 
-            bounds,
+            bounds: Bounds::default(),
         }
     }
 
@@ -106,9 +85,25 @@ impl Node {
         }
     }
 
+    /// Should be called after update_transforms
     pub fn update_bounds(&mut self) {
-        // TODO: implement for/after animation
-        unimplemented!()
+        self.bounds = Default::default();
+        if let Some(ref mesh) = self.mesh {
+            self.bounds = mesh.bounds
+                .transform(&self.final_transform); // TODO!!!: need to transform inner nodes too...
+        }
+        else if self.children.is_empty() {
+            // Cameras (others?) have neither mesh nor children. Their position is the origin
+            // TODO!: are there other cases? Do bounds matter for cameras?
+            self.bounds = Bounds { min: Vector3::zero(), max: Vector3::zero() };
+            self.bounds = self.bounds.transform(&self.final_transform);
+        }
+        else {
+            for node in &mut self.children {
+                node.update_bounds();
+                self.bounds = self.bounds.union(&node.bounds);
+            }
+        }
     }
 
     pub fn draw(&mut self, shader: &mut Shader) {
