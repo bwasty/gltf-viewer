@@ -7,8 +7,9 @@ dependencies = [
  "futures 0.1.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures-cpupool 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "gl 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "gltf 0.8.5 (git+https://github.com/bwasty/gltf?branch=bounds)",
- "gltf-importer 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gltf 0.9.0 (git+https://github.com/alteous/gltf?branch=simplify)",
+ "gltf-importer 0.9.0 (git+https://github.com/alteous/gltf?branch=simplify)",
+ "gltf-utils 0.9.0 (git+https://github.com/alteous/gltf?branch=simplify)",
  "glutin 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -367,17 +368,17 @@ dependencies = [
 
 [[package]]
 name = "gltf"
-version = "0.8.5"
-source = "git+https://github.com/bwasty/gltf?branch=bounds#cac4f53287a10e51175c333a48ffe21725e1b03c"
+version = "0.9.0"
+source = "git+https://github.com/alteous/gltf?branch=simplify#49c2a7dc37cfc7ad2901199a637f171c69b12eae"
 dependencies = [
- "gltf-json 0.1.0 (git+https://github.com/bwasty/gltf?branch=bounds)",
+ "gltf-json 0.9.0 (git+https://github.com/alteous/gltf?branch=simplify)",
  "lazy_static 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "gltf-derive"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+version = "0.9.0"
+source = "git+https://github.com/alteous/gltf?branch=simplify#49c2a7dc37cfc7ad2901199a637f171c69b12eae"
 dependencies = [
  "inflections 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -386,21 +387,30 @@ dependencies = [
 
 [[package]]
 name = "gltf-importer"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+version = "0.9.0"
+source = "git+https://github.com/alteous/gltf?branch=simplify#49c2a7dc37cfc7ad2901199a637f171c69b12eae"
 dependencies = [
- "gltf 0.8.5 (git+https://github.com/bwasty/gltf?branch=bounds)",
+ "gltf 0.9.0 (git+https://github.com/alteous/gltf?branch=simplify)",
+ "gltf-utils 0.9.0 (git+https://github.com/alteous/gltf?branch=simplify)",
 ]
 
 [[package]]
 name = "gltf-json"
-version = "0.1.0"
-source = "git+https://github.com/bwasty/gltf?branch=bounds#cac4f53287a10e51175c333a48ffe21725e1b03c"
+version = "0.9.0"
+source = "git+https://github.com/alteous/gltf?branch=simplify#49c2a7dc37cfc7ad2901199a637f171c69b12eae"
 dependencies = [
- "gltf-derive 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gltf-derive 0.9.0 (git+https://github.com/alteous/gltf?branch=simplify)",
  "serde 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "gltf-utils"
+version = "0.9.0"
+source = "git+https://github.com/alteous/gltf?branch=simplify#49c2a7dc37cfc7ad2901199a637f171c69b12eae"
+dependencies = [
+ "gltf 0.9.0 (git+https://github.com/alteous/gltf?branch=simplify)",
 ]
 
 [[package]]
@@ -1462,10 +1472,11 @@ dependencies = [
 "checksum gl 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)" = "97543cffb3e39377ecb7156651d906f8284f459a460aef973936412364a4202b"
 "checksum gl_generator 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)" = "e7acbf2ba3d52e9e1ad96a84362129e9c1aa0af55ebfc86a91004e1b83eca61c"
 "checksum gleam 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)" = "bf887141f0c2a83eae026cbf3fba74f0a5cb0f01d20e5cdfcd8c4ad39295be1e"
-"checksum gltf 0.8.5 (git+https://github.com/bwasty/gltf?branch=bounds)" = "<none>"
-"checksum gltf-derive 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "3fdc52e75baf221b694980fa2eafeaa212e25146911215becc6e0899916b50ab"
-"checksum gltf-importer 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5c38d346f6fe0338fd28494ddb6349500ec8abbc37b548a1e9527c52ecd53081"
-"checksum gltf-json 0.1.0 (git+https://github.com/bwasty/gltf?branch=bounds)" = "<none>"
+"checksum gltf 0.9.0 (git+https://github.com/alteous/gltf?branch=simplify)" = "<none>"
+"checksum gltf-derive 0.9.0 (git+https://github.com/alteous/gltf?branch=simplify)" = "<none>"
+"checksum gltf-importer 0.9.0 (git+https://github.com/alteous/gltf?branch=simplify)" = "<none>"
+"checksum gltf-json 0.9.0 (git+https://github.com/alteous/gltf?branch=simplify)" = "<none>"
+"checksum gltf-utils 0.9.0 (git+https://github.com/alteous/gltf?branch=simplify)" = "<none>"
 "checksum glutin 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)" = "3cee1543cf7efce742534d31c024d8dd1aa0e8944d36ebdd7dfccdb80b84700d"
 "checksum httparse 1.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "af2f2dd97457e8fb1ae7c5a420db346af389926e36f43768b96f101546b04a07"
 "checksum hyper 0.11.2 (registry+https://github.com/rust-lang/crates.io-index)" = "641abc3e3fcf0de41165595f801376e01106bca1fd876dda937730e477ca004c"

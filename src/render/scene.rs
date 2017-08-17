@@ -2,6 +2,7 @@ use std::rc::Rc;
 // use std::time::Instant;
 
 use gltf;
+use gltf_importer;
 
 use render::{Mesh, Node, Texture, Material};
 use render::math::*;
@@ -20,13 +21,13 @@ pub struct Scene {
 }
 
 impl Scene {
-    pub fn from_gltf(g_scene: gltf::Loaded<gltf::Scene>) -> Scene {
+    pub fn from_gltf(g_scene: gltf::Scene, buffers: &gltf_importer::Buffers) -> Scene {
         let mut scene = Scene {
             name: g_scene.name().map(|s| s.to_owned()),
             ..Default::default()
         };
         scene.nodes = g_scene.nodes()
-            .map(|g_node| Node::from_gltf(g_node, &mut scene))
+            .map(|g_node| Node::from_gltf(g_node, &mut scene, buffers))
             .collect();
 
         // propagate transforms

@@ -1,6 +1,7 @@
 // use std::rc::Rc;
 
 use gltf;
+use gltf_importer;
 
 use shader::Shader;
 use render::math::*;
@@ -17,11 +18,11 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn from_gltf(g_mesh: gltf::Loaded<gltf::Mesh>, scene: &mut Scene) -> Mesh {
+    pub fn from_gltf(g_mesh: gltf::Mesh, scene: &mut Scene, buffers: &gltf_importer::Buffers) -> Mesh {
         let primitives: Vec<Primitive> = g_mesh.primitives()
             .enumerate()
             .map(|(i, g_prim)| {
-                Primitive::from_gltf(g_prim, i, g_mesh.index(), scene)
+                Primitive::from_gltf(g_prim, i, g_mesh.index(), scene, buffers)
             })
             .collect();
 

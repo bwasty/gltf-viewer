@@ -5,8 +5,9 @@ use std::rc::Rc;
 
 use gl;
 use gltf;
-use gltf::mesh::{Colors};
 use gltf::json::mesh::Mode;
+use gltf_importer;
+use gltf_utils::PrimitiveIterators;
 
 use render::math::*;
 use render::{Material, Scene};
@@ -77,19 +78,19 @@ impl Primitive {
     }
 
     pub fn from_gltf(
-        g_primitive: gltf::Loaded<gltf::Primitive>,
+        g_primitive: gltf::Primitive,
         primitive_index: usize,
         mesh_index: usize,
-        scene: &mut Scene) -> Primitive
+        scene: &mut Scene,
+        buffers: &gltf_importer::Buffers) -> Primitive
     {
-        let bounds = g_primitive.bounds()
+        // positions
+        let positions = g_primitive.positions(buffers)
             .expect(&format!("primitives must have the POSITION attribute (mesh: {}, primitive: {})",
                 mesh_index, primitive_index));
 
-        // positions
-        let positions = g_primitive.positions()
-            .expect(&format!("primitives must have the POSITION attribute (mesh: {}, primitive: {})",
-                mesh_index, primitive_index));
+        let (min, max) = positions.bounds();
+        let bounds = Bounds {min: min.into(), max: max.into()};
         let mut vertices: Vec<Vertex> = positions
             .map(|position| {
                 Vertex {
@@ -99,7 +100,7 @@ impl Primitive {
             }).collect();
 
         // normals
-        if let Some(normals) = g_primitive.normals() {
+        if let Some(normals) = g_primitive.normals(buffers) {
             for (i, normal) in normals.enumerate() {
                 vertices[i].normal = Vector3::from(normal);
             }
@@ -110,7 +111,7 @@ impl Primitive {
         }
 
         // tangents
-        if let Some(tangents) = g_primitive.tangents() {
+        if let Some(tangents) = g_primitive.tangents(buffers) {
             for (i, tangent) in tangents.enumerate() {
                 vertices[i].tangent = Vector4::from(tangent);
             }
@@ -122,7 +123,7 @@ impl Primitive {
 
         // texture coordinates
         let mut tex_coord_set = 0;
-        while let Some(tex_coords) = g_primitive.tex_coords_f32(tex_coord_set) {
+        while let Some(tex_coords) = g_primitive.tex_coords_f32(buffers, tex_coord_set) {
             if tex_coord_set > 1 {
                 warn!("Ignoring texture coordinate set {}, \
                         only supporting 2 sets at the moment. (mesh: {}, primitive: {})",
@@ -142,7 +143,7 @@ impl Primitive {
 
         // colors
         let mut color_set = 0;
-        while let Some(colors) = g_primitive.colors(color_set) {
+        while let Some(colors) = g_primitive.colors_rgba_f32(buffers, color_set, 1.0) {
             if color_set > 0 {
                 warn!("Ignoring color set {}, \
                        only supporting 1 set at the moment. (mesh: {}, primitive: {})",
@@ -150,23 +151,14 @@ impl Primitive {
                 color_set += 1;
                 continue;
             }
-            let colors = match colors {
-                // TODO!: support other color formats
-                // Colors::RgbU8(Iter<'a, [u8; 3]>),
-                // Colors::RgbaU8(Iter<'a, [u8; 4]>),
-                // Colors::RgbU16(Iter<'a, [u16; 3]>),
-                // Colors::RgbaU16(Iter<'a, [u16; 4]>),
-                Colors::RgbF32(c) => c,
-                // Colors::RgbaF32(c),
-                _ => unimplemented!()
-            };
-            for (i, color) in colors.enumerate() {
-                vertices[i].color_0 = Vector3::from(color);
+            // TODO!!: alpha
+            for (i, c) in colors.enumerate() {
+                vertices[i].color_0 = vec3(c[0], c[1], c[2]);
             }
             color_set += 1;
         }
 
-        let indices: Option<Vec<u32>> = g_primitive.indices_u32().map(|indices| indices.collect());
+        let indices: Option<Vec<u32>> = g_primitive.indices_u32(buffers).map(|indices| indices.collect());
 
         assert_eq!(g_primitive.mode(), Mode::Triangles, "not yet implemented: primitive mode must be Triangles.");
 

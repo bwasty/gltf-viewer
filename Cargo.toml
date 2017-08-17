@@ -32,18 +32,24 @@ image = "0.14.0"
 reqwest = "0.7.2"
 log = "0.3"
 simplelog = "0.4.2"
-gltf-importer = "0.8.0"
 itertools = "0.6.1"
 
 [dependencies.gltf]
-# version = "0.8.5"
-git = "https://github.com/bwasty/gltf"
-branch = "bounds"
+git = "https://github.com/alteous/gltf"
+branch = "simplify"
 features = ["names"]
 
-[patch.crates-io]
-gltf = { git = "https://github.com/bwasty/gltf", branch = "bounds"}
-gltf-json = { git = "https://github.com/bwasty/gltf", branch = "bounds"}
+[dependencies.gltf-importer]
+git = "https://github.com/alteous/gltf"
+branch = "simplify"
+
+[dependencies.gltf-utils]
+git = "https://github.com/alteous/gltf"
+branch = "simplify"
+
+# [patch.crates-io]
+# gltf = { git = "https://github.com/bwasty/gltf", branch = "bounds"}
+# gltf-json = { git = "https://github.com/bwasty/gltf", branch = "bounds"}
 
 # [profile.dev]
 # opt-level = 2

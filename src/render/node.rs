@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
 use gltf;
+use gltf_importer;
 
 use render::math::*;
 use render::mesh::Mesh;
@@ -26,7 +27,7 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn from_gltf(g_node: gltf::Loaded<gltf::Node>, scene: &mut Scene) -> Node {
+    pub fn from_gltf(g_node: gltf::Node, scene: &mut Scene, buffers: &gltf_importer::Buffers) -> Node {
         // convert matrix in 3 steps due to type system weirdness
         let matrix = &g_node.matrix();
         let matrix: &Matrix4 = matrix.into();
@@ -42,12 +43,12 @@ impl Node {
             }
 
             if mesh.is_none() { // not using else due to borrow-checking madness
-                mesh = Some(Rc::new(Mesh::from_gltf(g_mesh, scene)));
+                mesh = Some(Rc::new(Mesh::from_gltf(g_mesh, scene, buffers)));
                 scene.meshes.push(mesh.clone().unwrap());
             }
         }
         let children: Vec<_> = g_node.children()
-                .map(|g_node| Node::from_gltf(g_node, scene))
+                .map(|g_node| Node::from_gltf(g_node, scene, buffers))
                 .collect();
 
         Node {

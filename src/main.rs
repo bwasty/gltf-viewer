@@ -20,6 +20,7 @@ use glutin::{
 
 extern crate gltf;
 extern crate gltf_importer;
+extern crate gltf_utils;
 extern crate image;
 use image::{DynamicImage, ImageFormat};
 
@@ -250,9 +251,8 @@ impl GltfViewer {
             // gltf
         }
         //     else {
-        let mut importer = gltf_importer::Importer::new(source);
-        let gltf = match importer.import() {
-            Ok(gltf) => gltf,
+        let (gltf, buffers) = match gltf_importer::import(source) {
+            Ok((gltf, buffers)) => (gltf, buffers),
             Err(err) => {
                 error!("glTF import failed: {}", err);
                 std::process::exit(1);
@@ -266,7 +266,7 @@ impl GltfViewer {
         if gltf.scenes().len() > 1 {
             warn!("Found more than 1 scene, can only load first at the moment.")
         }
-        let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap());
+        let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap(), &buffers);
         print_elapsed(&format!("Loaded scene with {} nodes, {} meshes in ",
                 gltf.nodes().count(), scene.meshes.len()), &start_time);
 
@@ -367,17 +367,6 @@ impl GltfViewer {
         }
     }
 }
-
-// TODO!!:?
-// fn import_gltf<S: gltf::import::Source>(import: gltf::Import<S>) -> gltf::Gltf {
-//     match import.sync() {
-//         Ok(gltf) => gltf,
-//         Err(err) => {
-//             error!("glTF import failed: {:?}", err);
-//             std::process::exit(1);
-//         }
-//     }
-// }
 
 fn process_events(
     events_loop: &mut glutin::EventsLoop,
