@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::ffi::CString;
 use std::fs::File;
 use std::io::Read;
-use std::iter;
 use std::ptr;
 use std::str;
 
@@ -18,7 +17,7 @@ pub struct Shader {
 }
 
 impl Shader {
-    pub fn new(vertex_path: &str, fragment_path: &str) -> Shader {
+    pub fn new(vertex_path: &str, fragment_path: &str, defines: &[&'static str]) -> Shader {
         // 1. retrieve the vertex/fragment source code from filesystem
         let mut v_shader_file = File::open(vertex_path).expect(&format!("Failed to open {}", vertex_path));
         let mut f_shader_file = File::open(fragment_path).expect(&format!("Failed to open {}", fragment_path));
@@ -31,13 +30,18 @@ impl Shader {
             .read_to_string(&mut fragment_code)
             .expect("Failed to read fragment shader");
 
-        Self::from_source(&vertex_code, &fragment_code)
+        Self::from_source(&vertex_code, &fragment_code, defines)
     }
 
-    pub fn from_source(vertex_code: &str, fragment_code: &str) -> Shader {
-        let mut shader = Shader { id: 0, uniform_location_cache: HashMap::new() };
+    pub fn from_source(vertex_code: &str, fragment_code: &str, defines: &[&'static str]) -> Shader {
+        let mut shader = Shader {
+            id: 0,
+            uniform_location_cache: HashMap::new()
+        };
 
+        let vertex_code = Self::add_defines(vertex_code, defines);
         let v_shader_code = CString::new(vertex_code.as_bytes()).unwrap();
+        let fragment_code = Self::add_defines(fragment_code, defines);
         let f_shader_code = CString::new(fragment_code.as_bytes()).unwrap();
 
         // 2. compile shaders
@@ -68,11 +72,20 @@ impl Shader {
     }
 
     fn add_defines(source: &str, defines: &[&'static str]) -> String {
-        defines.iter()
+        // insert preprocessor defines after #version if exists
+        // (#version must occur before any other statement in the program)
+        let defines = defines.iter()
             .map(|define| format!("#define {}", define))
-            .chain(iter::once(source.into()))
             .collect::<Vec<_>>()
-            .join("\n")
+            .join("\n");
+        let mut lines: Vec<_> = source.lines().collect();
+        if let Some(version_line) = lines.iter().position(|l| l.starts_with("#version")) {
+            lines.insert(version_line+1, &defines);
+        }
+        else {
+            lines.insert(0, &defines);
+        }
+        lines.join("\n")
     }
 
     /// activate the shader
