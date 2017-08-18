@@ -19,10 +19,11 @@ pub struct Texture {
     pub name: Option<String>,
 
     pub id: u32, // OpenGL id
+    pub tex_coord: u32, // the tex coord set to use
 }
 
 impl Texture {
-    pub fn from_gltf(g_texture: &gltf::Texture, buffers: &gltf_importer::Buffers, base_path: &Path) -> Texture {
+    pub fn from_gltf(g_texture: &gltf::Texture, tex_coord: u32, buffers: &gltf_importer::Buffers, base_path: &Path) -> Texture {
         let mut texture_id = 0;
         unsafe {
             gl::GenTextures(1, &mut texture_id);
@@ -104,6 +105,7 @@ impl Texture {
             index: g_texture.index(),
             name: g_texture.name().map(|s| s.into()),
             id: texture_id,
+            tex_coord: tex_coord,
         }
     }
 

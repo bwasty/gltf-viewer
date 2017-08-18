@@ -108,7 +108,7 @@ impl Primitive {
             }
         }
         else {
-            info!("Found no NORMALs for primitive {} of mesh {} \
+            debug!("Found no NORMALs for primitive {} of mesh {} \
                    (flat normal calculation not implemented yet)", primitive_index, mesh_index);
         }
 
@@ -119,7 +119,7 @@ impl Primitive {
             }
         }
         else {
-            info!("Found no TANGENTS for primitive {} of mesh {} \
+            debug!("Found no TANGENTS for primitive {} of mesh {} \
                    (tangent calculation not implemented yet)", primitive_index, mesh_index);
         }
 

@@ -20,6 +20,8 @@ pub struct Material {
     pub metallic_roughness_texture: Option<Rc<Texture>>,
 
     pub normal_texture: Option<Rc<Texture>>,
+    pub normal_scale: Option<f32>,
+
     pub occlusion_texture: Option<Rc<Texture>>,
     pub emissive_factor: Vector3,
     pub emissive_texture: Option<Rc<Texture>>,
@@ -50,6 +52,8 @@ impl Material {
             metallic_roughness_texture: None,
 
             normal_texture: None,
+            normal_scale: None,
+
             occlusion_texture: None,
             emissive_factor: g_material.emissive_factor().into(),
             emissive_texture: None,
@@ -61,21 +65,25 @@ impl Material {
         };
 
         if let Some(color_info) = pbr.base_color_texture() {
-            material.base_color_texture = Some(load_texture(color_info, scene, buffers, base_path));
+            material.base_color_texture = Some(
+                load_texture(color_info.texture(), color_info.tex_coord(), scene, buffers, base_path));
         }
         if let Some(mr_info) = pbr.metallic_roughness_texture() {
-            material.metallic_roughness_texture = Some(load_texture(mr_info, scene, buffers, base_path));
+            material.metallic_roughness_texture = Some(
+                load_texture(mr_info.texture(), mr_info.tex_coord(), scene, buffers, base_path));
         }
-
-        // TODO!!!: handle normal/occlusion structs...
-        // if let Some(normal_info) = g_material.normal_texture() {
-        //     material.metallic_roughness_texture = Some(load_texture(normal_info, scene, buffers, base_path));
-        // }
-        // if let Some(occ_info) = g_material.occlusion_texture() {
-        //     material.metallic_roughness_texture = Some(load_texture(occ_info, scene, buffers, base_path));
-        // }
+        if let Some(normal_texture) = g_material.normal_texture() {
+            material.normal_texture = Some(
+                load_texture(normal_texture.texture(), normal_texture.tex_coord(), scene, buffers, base_path));
+            material.normal_scale = Some(normal_texture.scale());
+        }
+        if let Some(occ_texture) = g_material.occlusion_texture() {
+            material.occlusion_texture = Some(
+                load_texture(occ_texture.texture(), occ_texture.tex_coord(), scene, buffers, base_path));
+        }
         if let Some(em_info) = g_material.emissive_texture() {
-            material.metallic_roughness_texture = Some(load_texture(em_info, scene, buffers, base_path));
+            material.emissive_texture = Some(
+                load_texture(em_info.texture(), em_info.tex_coord(), scene, buffers, base_path));
         }
 
         material
@@ -83,20 +91,20 @@ impl Material {
 }
 
 fn load_texture(
-    info: gltf::texture::Info, scene:
-    &mut Scene, buffers:
-    &gltf_importer::Buffers,
+    g_texture: gltf::texture::Texture,
+    tex_coord: u32,
+    scene: &mut Scene,
+    buffers: &gltf_importer::Buffers,
     base_path: &Path) -> Rc<Texture>
 {
-    // TODO!!: save tex coord set from info
-    assert_eq!(info.tex_coord(), 0, "not yet implemented: tex coord set must be 0 (Material::from_gltf)");
+    // TODO!!: handle tex coord set in shaders
+    assert_eq!(tex_coord, 0, "not yet implemented: tex coord set must be 0 (Material::from_gltf)");
 
-    let g_texture = info.texture();
     if let Some(tex) = scene.textures.iter().find(|tex| (***tex).index == g_texture.index()) {
         return tex.clone()
     }
 
-    let texture = Rc::new(Texture::from_gltf(&g_texture, buffers, base_path));
+    let texture = Rc::new(Texture::from_gltf(&g_texture, tex_coord, buffers, base_path));
     scene.textures.push(texture.clone());
     texture
 }
