@@ -244,7 +244,7 @@ impl GltfViewer {
         // TODO!!: http source
         // let gltf =
         if source.starts_with("http") {
-            unimplemented!("HTTP support temporarily removed.")
+            panic!("not implemented: HTTP support temporarily removed.")
             // let http_source = HttpSource::new(source);
             // let import = gltf::Import::custom(http_source, Default::default());
             // let gltf = import_gltf(import);
