@@ -1,4 +1,5 @@
 // use std::rc::Rc;
+use std::path::Path;
 
 use gltf;
 use gltf_importer;
@@ -18,11 +19,16 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn from_gltf(g_mesh: gltf::Mesh, scene: &mut Scene, buffers: &gltf_importer::Buffers) -> Mesh {
+    pub fn from_gltf(
+        g_mesh: gltf::Mesh,
+        scene: &mut Scene,
+        buffers: &gltf_importer::Buffers,
+        base_path: &Path,
+    ) -> Mesh {
         let primitives: Vec<Primitive> = g_mesh.primitives()
             .enumerate()
             .map(|(i, g_prim)| {
-                Primitive::from_gltf(g_prim, i, g_mesh.index(), scene, buffers)
+                Primitive::from_gltf(g_prim, i, g_mesh.index(), scene, buffers, base_path)
             })
             .collect();
 

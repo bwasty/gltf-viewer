@@ -1,5 +1,6 @@
 use std::mem::size_of;
 use std::os::raw::c_void;
+use std::path::Path;
 use std::ptr;
 use std::rc::Rc;
 
@@ -82,7 +83,8 @@ impl Primitive {
         primitive_index: usize,
         mesh_index: usize,
         scene: &mut Scene,
-        buffers: &gltf_importer::Buffers) -> Primitive
+        buffers: &gltf_importer::Buffers,
+        base_path: &Path) -> Primitive
     {
         // positions
         let positions = g_primitive.positions(buffers)
@@ -170,7 +172,7 @@ impl Primitive {
         }
 
         if material.is_none() { // no else due to borrow checker madness
-            let mat = Rc::new(Material::from_gltf(&g_material, scene));
+            let mat = Rc::new(Material::from_gltf(&g_material, scene, buffers, base_path));
             scene.materials.push(mat.clone());
             material = mat.into();
         };

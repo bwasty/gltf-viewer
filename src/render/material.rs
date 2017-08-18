@@ -1,6 +1,8 @@
 use std::rc::Rc;
+use std::path::Path;
 
 use gltf;
+use gltf_importer;
 
 use render::math::*;
 use render::Scene;
@@ -17,7 +19,10 @@ pub struct Material {
 }
 
 impl Material {
-    pub fn from_gltf(g_material: &gltf::material::Material, scene: &mut Scene) -> Material {
+    pub fn from_gltf(
+        g_material: &gltf::material::Material,
+        scene: &mut Scene, buffers: &gltf_importer::Buffers, base_path: &Path
+    ) -> Material {
         let pbr = g_material.pbr_metallic_roughness();
 
         let mut texture = None;
@@ -30,7 +35,7 @@ impl Material {
             }
 
             if texture.is_none() { // not using else due to borrow-checking madness
-                texture = Some(Rc::new(Texture::from_gltf(&g_texture)));
+                texture = Some(Rc::new(Texture::from_gltf(&g_texture, buffers, base_path)));
                 scene.textures.push(texture.clone().unwrap());
             }
         }

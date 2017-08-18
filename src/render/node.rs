@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::path::Path;
 
 use gltf;
 use gltf_importer;
@@ -27,7 +28,12 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn from_gltf(g_node: gltf::Node, scene: &mut Scene, buffers: &gltf_importer::Buffers) -> Node {
+    pub fn from_gltf(
+        g_node: gltf::Node,
+        scene: &mut Scene,
+        buffers: &gltf_importer::Buffers,
+        base_path: &Path
+    ) -> Node {
         // convert matrix in 3 steps due to type system weirdness
         let matrix = &g_node.matrix();
         let matrix: &Matrix4 = matrix.into();
@@ -43,12 +49,12 @@ impl Node {
             }
 
             if mesh.is_none() { // not using else due to borrow-checking madness
-                mesh = Some(Rc::new(Mesh::from_gltf(g_mesh, scene, buffers)));
+                mesh = Some(Rc::new(Mesh::from_gltf(g_mesh, scene, buffers, base_path)));
                 scene.meshes.push(mesh.clone().unwrap());
             }
         }
         let children: Vec<_> = g_node.children()
-                .map(|g_node| Node::from_gltf(g_node, scene, buffers))
+                .map(|g_node| Node::from_gltf(g_node, scene, buffers, base_path))
                 .collect();
 
         Node {

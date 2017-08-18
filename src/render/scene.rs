@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::path::Path;
 // use std::time::Instant;
 
 use gltf;
@@ -21,13 +22,13 @@ pub struct Scene {
 }
 
 impl Scene {
-    pub fn from_gltf(g_scene: gltf::Scene, buffers: &gltf_importer::Buffers) -> Scene {
+    pub fn from_gltf(g_scene: gltf::Scene, buffers: &gltf_importer::Buffers, base_path: &Path) -> Scene {
         let mut scene = Scene {
             name: g_scene.name().map(|s| s.to_owned()),
             ..Default::default()
         };
         scene.nodes = g_scene.nodes()
-            .map(|g_node| Node::from_gltf(g_node, &mut scene, buffers))
+            .map(|g_node| Node::from_gltf(g_node, &mut scene, buffers, base_path))
             .collect();
 
         // propagate transforms
@@ -40,7 +41,7 @@ impl Scene {
             scene.bounds = scene.bounds.union(&node.bounds);
         }
         // print_elapsed("propagate transforms", &start_time);
-        println!("Scene: {:?}", scene.bounds);
+        // println!("Scene: {:?}", scene.bounds);
 
         scene
     }

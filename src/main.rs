@@ -33,6 +33,7 @@ use clap::{Arg, App, AppSettings};
 use std::fs::File;
 use std::time::Instant;
 use std::os::raw::c_void;
+use std::path::Path;
 
 #[macro_use]extern crate log;
 extern crate simplelog;
@@ -266,7 +267,8 @@ impl GltfViewer {
         if gltf.scenes().len() > 1 {
             warn!("Found more than 1 scene, can only load first at the moment.")
         }
-        let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap(), &buffers);
+        let base_path = Path::new(source);
+        let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap(), &buffers, &base_path);
         print_elapsed(&format!("Loaded scene with {} nodes, {} meshes in ",
                 gltf.nodes().count(), scene.meshes.len()), &start_time);
 
