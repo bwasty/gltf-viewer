@@ -36,7 +36,7 @@ impl Texture {
         let g_img = g_texture.source();
         let img = match g_img.data() {
             Data::View { view, mime_type } => {
-                let data = buffers.view(&view).unwrap();
+                let data = buffers.view(&view).expect("Failed to get buffer view for image");
                 match mime_type {
                     "image/jpeg" => image::load_from_memory_with_format(data, JPEG),
                     "image/png" => image::load_from_memory_with_format(data, PNG),
@@ -64,7 +64,7 @@ impl Texture {
         };
 
         // TODO: handle I/O problems
-        let dyn_img = img.unwrap();
+        let dyn_img = img.expect("Image loading failed.");
 
         let format = match dyn_img {
             ImageLuma8(_) => gl::RED,
