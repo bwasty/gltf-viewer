@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::ffi::CString;
 use std::fs::File;
 use std::io::Read;
+use std::iter;
 use std::ptr;
 use std::str;
 
@@ -64,6 +65,14 @@ impl Shader {
         }
 
         shader
+    }
+
+    fn add_defines(source: &str, defines: &[&'static str]) -> String {
+        defines.iter()
+            .map(|define| format!("#define {}", define))
+            .chain(iter::once(source.into()))
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 
     /// activate the shader
