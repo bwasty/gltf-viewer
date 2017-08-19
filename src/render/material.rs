@@ -6,7 +6,7 @@ use gltf_importer;
 
 use render::math::*;
 use render::{ Scene, Texture };
-use render::primitive::*;
+use shader::*;
 
 pub struct Material {
     pub index: Option<usize>, /// glTF index
@@ -66,24 +66,24 @@ impl Material {
 
         if let Some(color_info) = pbr.base_color_texture() {
             material.base_color_texture = Some(
-                load_texture(color_info.texture(), color_info.tex_coord(), scene, buffers, base_path));
+                load_texture(&color_info.texture(), color_info.tex_coord(), scene, buffers, base_path));
         }
         if let Some(mr_info) = pbr.metallic_roughness_texture() {
             material.metallic_roughness_texture = Some(
-                load_texture(mr_info.texture(), mr_info.tex_coord(), scene, buffers, base_path));
+                load_texture(&mr_info.texture(), mr_info.tex_coord(), scene, buffers, base_path));
         }
         if let Some(normal_texture) = g_material.normal_texture() {
             material.normal_texture = Some(
-                load_texture(normal_texture.texture(), normal_texture.tex_coord(), scene, buffers, base_path));
+                load_texture(&normal_texture.texture(), normal_texture.tex_coord(), scene, buffers, base_path));
             material.normal_scale = Some(normal_texture.scale());
         }
         if let Some(occ_texture) = g_material.occlusion_texture() {
             material.occlusion_texture = Some(
-                load_texture(occ_texture.texture(), occ_texture.tex_coord(), scene, buffers, base_path));
+                load_texture(&occ_texture.texture(), occ_texture.tex_coord(), scene, buffers, base_path));
         }
         if let Some(em_info) = g_material.emissive_texture() {
             material.emissive_texture = Some(
-                load_texture(em_info.texture(), em_info.tex_coord(), scene, buffers, base_path));
+                load_texture(&em_info.texture(), em_info.tex_coord(), scene, buffers, base_path));
         }
 
         material
@@ -112,7 +112,7 @@ impl Material {
 }
 
 fn load_texture(
-    g_texture: gltf::texture::Texture,
+    g_texture: &gltf::texture::Texture,
     tex_coord: u32,
     scene: &mut Scene,
     buffers: &gltf_importer::Buffers,
@@ -125,7 +125,7 @@ fn load_texture(
         return tex.clone()
     }
 
-    let texture = Rc::new(Texture::from_gltf(&g_texture, tex_coord, buffers, base_path));
+    let texture = Rc::new(Texture::from_gltf(g_texture, tex_coord, buffers, base_path));
     scene.textures.push(texture.clone());
     texture
 }

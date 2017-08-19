@@ -76,6 +76,7 @@ pub fn main() {
             .long("verbose")
             .short("-v")
             .help("Enable verbose logging."))
+        // TODO!!: -vv for debug!
         .arg(Arg::with_name("WIDTH")
             .long("width")
             .short("w")
@@ -271,7 +272,7 @@ impl GltfViewer {
             warn!("Found more than 1 scene, can only load first at the moment.")
         }
         let base_path = Path::new(source);
-        let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap(), &buffers, &base_path);
+        let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap(), &buffers, base_path);
         print_elapsed(&format!("Loaded scene with {} nodes, {} meshes in ",
                 gltf.nodes().count(), scene.meshes.len()), &start_time);
 
@@ -310,7 +311,7 @@ impl GltfViewer {
 
             // events
             let keep_running = process_events(
-                &mut self.events_loop.as_mut().unwrap(), &self.gl_window.as_mut().unwrap(),
+                &mut self.events_loop.as_mut().unwrap(), self.gl_window.as_mut().unwrap(),
                 &mut self.first_mouse, &mut self.last_x, &mut self.last_y,
                 &mut self.camera, &mut self.width, &mut self.height);
             if !keep_running { break }

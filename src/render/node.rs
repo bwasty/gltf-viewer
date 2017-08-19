@@ -97,7 +97,7 @@ impl Node {
         self.bounds = Default::default();
         if let Some(ref mesh) = self.mesh {
             self.bounds = mesh.bounds
-                .transform(&self.final_transform); // TODO!!!: need to transform inner nodes too...
+                .transform(&self.final_transform);
         }
         else if self.children.is_empty() {
             // Cameras (others?) have neither mesh nor children. Their position is the origin

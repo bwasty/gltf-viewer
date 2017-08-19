@@ -12,7 +12,7 @@ use gltf_utils::PrimitiveIterators;
 
 use render::math::*;
 use render::{Material, Scene};
-use shader::Shader;
+use shader::*;
 
 #[derive(Debug)]
 pub struct Vertex {
@@ -47,26 +47,6 @@ pub struct Texture {
     pub path: String,
 }
 
-bitflags! {
-    /// Flags matching the defines in the PBR shader
-    pub struct ShaderFlags: u16 {
-        // vertex shader + fragment shader
-        const HAS_NORMALS           = 1 << 0;
-        const HAS_TANGENTS          = 1 << 1;
-        const HAS_UV                = 1 << 2;
-        // TODO!: the shader doesn't have colors yet
-        const HAS_COLORS            = 1 << 3;
-
-        // fragment shader only
-        const USE_IBL               = 1 << 4;
-        const HAS_BASECOLORMAP      = 1 << 5;
-        const HAS_NORMALMAP         = 1 << 6;
-        const HAS_EMISSIVEMAP       = 1 << 7;
-        const HAS_METALROUGHNESSMAP = 1 << 8;
-        const HAS_OCCLUSIONMAP      = 1 << 9;
-    }
-}
-
 pub struct Primitive {
     pub bounds: Bounds,
 
@@ -78,11 +58,20 @@ pub struct Primitive {
     num_indices: u32,
 
     material: Rc<Material>,
+
+    shader: Rc<PbrShader>,
+
     // TODO!: mode, targets
 }
 
 impl Primitive {
-    pub fn new(bounds: Bounds, vertices: Vec<Vertex>, indices: Option<Vec<u32>>, material: Rc<Material>) -> Primitive {
+    pub fn new(
+        bounds: Bounds,
+        vertices: Vec<Vertex>,
+        indices: Option<Vec<u32>>,
+        material: Rc<Material>,
+        shader: Rc<PbrShader>,
+    ) -> Primitive {
         let num_indices = indices.as_ref().map(|i| i.len()).unwrap_or(0);
         let mut prim = Primitive {
             bounds,
@@ -90,6 +79,7 @@ impl Primitive {
             num_indices: num_indices as u32,
             vao: 0, vbo: 0, ebo: None,
             material,
+            shader: shader,
         };
 
         // now that we have all the required data, set the vertex buffers and its attribute pointers.
@@ -202,8 +192,17 @@ impl Primitive {
             material = Some(mat);
         };
         let material = material.unwrap();
-        shader_flags |= material.shader_flags(); // TODO!!!: use shader flags
-        Primitive::new(bounds.into(), vertices, indices, material)
+        shader_flags |= material.shader_flags();
+
+        let shader =
+            if let Some(shader) = scene.shaders.get(&shader_flags) {
+                shader.clone()
+            }
+            else {
+                PbrShader::new(shader_flags).into()
+                // TODO!!!: save in scene + actually use for rendering
+            };
+        Primitive::new(bounds.into(), vertices, indices, material, shader)
     }
 
     /// render the mesh

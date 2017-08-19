@@ -47,7 +47,7 @@ impl Texture {
             },
             Data::Uri { uri, mime_type } => {
                 if let Some(mime_type) = mime_type {
-                    let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
+                    let path = base_path.parent().unwrap_or_else(|| Path::new("./")).join(uri);
                     let file = fs::File::open(path).unwrap();
                     let reader = io::BufReader::new(file);
                     match mime_type {
@@ -58,7 +58,7 @@ impl Texture {
                     }
                 }
                 else {
-                    let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
+                    let path = base_path.parent().unwrap_or_else(||Path::new("./")).join(uri);
                     image::open(path)
                 }
             }

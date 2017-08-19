@@ -17,7 +17,7 @@ pub struct Shader {
 }
 
 impl Shader {
-    pub fn new(vertex_path: &str, fragment_path: &str, defines: &[&'static str]) -> Shader {
+    pub fn new(vertex_path: &str, fragment_path: &str, defines: &[String]) -> Shader {
         // 1. retrieve the vertex/fragment source code from filesystem
         let mut v_shader_file = File::open(vertex_path).expect(&format!("Failed to open {}", vertex_path));
         let mut f_shader_file = File::open(fragment_path).expect(&format!("Failed to open {}", fragment_path));
@@ -33,7 +33,7 @@ impl Shader {
         Self::from_source(&vertex_code, &fragment_code, defines)
     }
 
-    pub fn from_source(vertex_code: &str, fragment_code: &str, defines: &[&'static str]) -> Shader {
+    pub fn from_source(vertex_code: &str, fragment_code: &str, defines: &[String]) -> Shader {
         let mut shader = Shader {
             id: 0,
             uniform_location_cache: HashMap::new()
@@ -71,7 +71,7 @@ impl Shader {
         shader
     }
 
-    fn add_defines(source: &str, defines: &[&'static str]) -> String {
+    fn add_defines(source: &str, defines: &[String]) -> String {
         // insert preprocessor defines after #version if exists
         // (#version must occur before any other statement in the program)
         let defines = defines.iter()
@@ -169,5 +169,59 @@ impl Shader {
                       str::from_utf8(&info_log[0..length as usize]).unwrap());
         }
 
+    }
+}
+
+bitflags! {
+    /// Flags matching the defines in the PBR shader
+    pub struct ShaderFlags: u16 {
+        // vertex shader + fragment shader
+        const HAS_NORMALS           = 1;
+        const HAS_TANGENTS          = 1 << 1;
+        const HAS_UV                = 1 << 2;
+        // TODO!: the shader doesn't have colors yet
+        const HAS_COLORS            = 1 << 3;
+
+        // fragment shader only
+        const USE_IBL               = 1 << 4;
+        const HAS_BASECOLORMAP      = 1 << 5;
+        const HAS_NORMALMAP         = 1 << 6;
+        const HAS_EMISSIVEMAP       = 1 << 7;
+        const HAS_METALROUGHNESSMAP = 1 << 8;
+        const HAS_OCCLUSIONMAP      = 1 << 9;
+        const USE_TEX_LOD           = 1 << 10;
+    }
+}
+
+impl ShaderFlags {
+    pub fn as_strings(&self) -> Vec<String> {
+        (0..15)
+            .map(|i| 1u16 << i)
+            .filter(|i| self.bits & i != 0)
+            .map(|i| format!("{:?}", ShaderFlags::from_bits_truncate(i)))
+            .collect()
+    }
+}
+
+pub struct PbrShader {
+    shader: Shader,
+    flags: ShaderFlags,
+}
+
+impl PbrShader {
+    pub fn new(flags: ShaderFlags) -> Self {
+        // TODO!!!: switch before release! + find better way...
+        // let mut shader = Shader::from_source(
+        //     include_str!("shaders/pbr-vert.glsl"),
+        //     include_str!("shaders/pbr-frag.glsl")
+        //     &flags.as_strings());
+
+        // NOTE: shader debug version
+        let shader = Shader::new(
+            "src/shaders/pbr-vert.glsl",
+            "src/shaders/pbr-frag.glsl",
+            &flags.as_strings());
+
+        Self { shader, flags }
     }
 }

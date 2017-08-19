@@ -1,14 +1,13 @@
 use std::rc::Rc;
 use std::path::Path;
-// use std::time::Instant;
+use std::collections::HashMap;
 
 use gltf;
 use gltf_importer;
 
 use render::{Mesh, Node, Texture, Material};
 use render::math::*;
-use shader::Shader;
-// use utils::print_elapsed;
+use shader::*;
 
 #[derive(Default)]
 pub struct Scene {
@@ -17,6 +16,7 @@ pub struct Scene {
     pub meshes: Vec<Rc<Mesh>>,
     pub textures: Vec<Rc<Texture>>,
     pub materials: Vec<Rc<Material>>,
+    pub shaders: HashMap<ShaderFlags, Rc<PbrShader>>,
 
     pub bounds: Bounds,
 }
@@ -32,7 +32,6 @@ impl Scene {
             .collect();
 
         // propagate transforms
-        // let start_time = Instant::now();
         let root_transform = Matrix4::identity();
         for node in &mut scene.nodes {
             node.update_transform(&root_transform);
@@ -40,8 +39,6 @@ impl Scene {
             // TODO!: visualize final bounds
             scene.bounds = scene.bounds.union(&node.bounds);
         }
-        // print_elapsed("propagate transforms", &start_time);
-        // println!("Scene: {:?}", scene.bounds);
 
         scene
     }
