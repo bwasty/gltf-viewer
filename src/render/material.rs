@@ -5,8 +5,8 @@ use gltf;
 use gltf_importer;
 
 use render::math::*;
-use render::Scene;
-use render::Texture;
+use render::{ Scene, Texture };
+use render::primitive::*;
 
 pub struct Material {
     pub index: Option<usize>, /// glTF index
@@ -88,6 +88,27 @@ impl Material {
 
         material
     }
+
+    pub fn shader_flags(&self) -> ShaderFlags {
+        let mut flags = ShaderFlags::empty();
+        if self.base_color_texture.is_some() {
+            flags |= HAS_BASECOLORMAP;
+        }
+        if self.normal_texture.is_some() {
+            flags |= HAS_NORMALMAP;
+        }
+        if self.emissive_texture.is_some() {
+            flags |= HAS_EMISSIVEMAP;
+        }
+        if self.metallic_roughness_texture.is_some() {
+            flags |= HAS_METALROUGHNESSMAP;
+        }
+        if self.occlusion_texture.is_some() {
+            flags |= HAS_OCCLUSIONMAP;
+        }
+        flags
+    }
+
 }
 
 fn load_texture(

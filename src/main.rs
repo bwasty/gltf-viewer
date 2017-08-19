@@ -24,8 +24,9 @@ extern crate gltf_utils;
 extern crate image;
 use image::{DynamicImage, ImageFormat};
 
+#[macro_use]
+extern crate bitflags;
 extern crate itertools;
-
 extern crate futures;
 
 use clap::{Arg, App, AppSettings};

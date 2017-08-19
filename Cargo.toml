@@ -22,6 +22,7 @@ branch = "master"
 repository = "bwasty/gltf-viewer"
 
 [dependencies]
+bitflags = "0.9.1"
 cgmath = "0.14.1"
 clap = "2.25.1"
 futures = "0.1.14"

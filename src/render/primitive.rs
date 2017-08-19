@@ -14,7 +14,6 @@ use render::math::*;
 use render::{Material, Scene};
 use shader::Shader;
 
-#[repr(C)]
 #[derive(Debug)]
 pub struct Vertex {
     pub position: Vector3,
@@ -46,6 +45,26 @@ pub struct Texture {
     pub id: u32,
     pub type_: String,
     pub path: String,
+}
+
+bitflags! {
+    /// Flags matching the defines in the PBR shader
+    pub struct ShaderFlags: u16 {
+        // vertex shader + fragment shader
+        const HAS_NORMALS           = 1 << 0;
+        const HAS_TANGENTS          = 1 << 1;
+        const HAS_UV                = 1 << 2;
+        // TODO!: the shader doesn't have colors yet
+        const HAS_COLORS            = 1 << 3;
+
+        // fragment shader only
+        const USE_IBL               = 1 << 4;
+        const HAS_BASECOLORMAP      = 1 << 5;
+        const HAS_NORMALMAP         = 1 << 6;
+        const HAS_EMISSIVEMAP       = 1 << 7;
+        const HAS_METALROUGHNESSMAP = 1 << 8;
+        const HAS_OCCLUSIONMAP      = 1 << 9;
+    }
 }
 
 pub struct Primitive {
@@ -101,11 +120,14 @@ impl Primitive {
                 }
             }).collect();
 
+        let mut shader_flags = ShaderFlags::empty();
+
         // normals
         if let Some(normals) = g_primitive.normals(buffers) {
             for (i, normal) in normals.enumerate() {
                 vertices[i].normal = Vector3::from(normal);
             }
+            shader_flags |= HAS_NORMALS;
         }
         else {
             debug!("Found no NORMALs for primitive {} of mesh {} \
@@ -117,6 +139,7 @@ impl Primitive {
             for (i, tangent) in tangents.enumerate() {
                 vertices[i].tangent = Vector4::from(tangent);
             }
+            shader_flags |= HAS_TANGENTS;
         }
         else {
             debug!("Found no TANGENTS for primitive {} of mesh {} \
@@ -140,6 +163,7 @@ impl Primitive {
                     _ => unreachable!()
                 }
             }
+            shader_flags |= HAS_UV;
             tex_coord_set += 1;
         }
 
@@ -157,6 +181,7 @@ impl Primitive {
             for (i, c) in colors.enumerate() {
                 vertices[i].color_0 = vec3(c[0], c[1], c[2]);
             }
+            shader_flags |= HAS_COLORS;
             color_set += 1;
         }
 
@@ -174,10 +199,11 @@ impl Primitive {
         if material.is_none() { // no else due to borrow checker madness
             let mat = Rc::new(Material::from_gltf(&g_material, scene, buffers, base_path));
             scene.materials.push(mat.clone());
-            material = mat.into();
+            material = Some(mat);
         };
-
-        Primitive::new(bounds.into(), vertices, indices, material.unwrap())
+        let material = material.unwrap();
+        shader_flags |= material.shader_flags(); // TODO!!!: use shader flags
+        Primitive::new(bounds.into(), vertices, indices, material)
     }
 
     /// render the mesh
