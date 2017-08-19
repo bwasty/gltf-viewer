@@ -203,8 +203,8 @@ impl GltfViewer {
 
             // NOTE: shader debug version
             let mut shader = Shader::new(
-                "src/shaders/simple.vs",
-                "src/shaders/simple.fs",
+                "src/shaders/simple-vert.glsl",
+                "src/shaders/simple-frag.glsl",
                 &[]);
 
             shader.use_program();
