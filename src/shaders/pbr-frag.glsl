@@ -13,8 +13,10 @@
 //     https://github.com/KhronosGroup/glTF-WebGL-PBR/#environment-maps
 // [4] "An Inexpensive BRDF Model for Physically based Rendering" by Christophe Schlick
 //     https://www.cs.virginia.edu/~jdl/bib/appearance/analytic%20models/schlick94b.pdf
-#extension GL_EXT_shader_texture_lod: enable
-#extension GL_OES_standard_derivatives : enable
+#version 330 core
+// TODO!?: warning - extension not supported
+// #extension GL_EXT_shader_texture_lod: enable
+// #extension GL_OES_standard_derivatives : enable
 
 precision highp float;
 
@@ -56,17 +58,19 @@ uniform vec4 u_ScaleDiffBaseMR;
 uniform vec4 u_ScaleFGDSpec;
 uniform vec4 u_ScaleIBLAmbient;
 
-varying vec3 v_Position;
+in vec3 v_Position;
 
-varying vec2 v_UV;
+in vec2 v_UV;
 
 #ifdef HAS_NORMALS
 #ifdef HAS_TANGENTS
-varying mat3 v_TBN;
+in mat3 v_TBN;
 #else
-varying vec3 v_Normal;
+in vec3 v_Normal;
 #endif
 #endif
+
+out vec4 FragColor;
 
 // Encapsulate the various inputs used by the various functions in the shading equation
 // We store values in this struct to simplify the integration of alternative implementations
@@ -116,7 +120,7 @@ vec3 getNormal()
 #endif
 
 #ifdef HAS_NORMALMAP
-    vec3 n = texture2D(u_NormalSampler, v_UV).rgb;
+    vec3 n = texture(u_NormalSampler, v_UV).rgb;
     n = normalize(tbn * ((2.0 * n - 1.0) * vec3(u_NormalScale, u_NormalScale, 1.0)));
 #else
     vec3 n = tbn[2].xyz;
@@ -125,6 +129,7 @@ vec3 getNormal()
     return n;
 }
 
+#ifdef USE_IBL
 // Calculation of the lighting contribution from an optional Image Based Light source.
 // Precomputed Environment Maps are required uniform inputs and are computed as outlined in [1].
 // See our README.md on Environment Maps [3] for additional discussion.
@@ -133,7 +138,7 @@ vec3 getIBLContribution(PBRInfo pbrInputs, vec3 n, vec3 reflection)
     float mipCount = 9.0; // resolution of 512x512
     float lod = (pbrInputs.perceptualRoughness * mipCount);
     // retrieve a scale and bias to F0. See [1], Figure 3
-    vec3 brdf = texture2D(u_brdfLUT, vec2(pbrInputs.NdotV, 1.0 - pbrInputs.perceptualRoughness)).rgb;
+    vec3 brdf = texture(u_brdfLUT, vec2(pbrInputs.NdotV, 1.0 - pbrInputs.perceptualRoughness)).rgb;
     vec3 diffuseLight = textureCube(u_DiffuseEnvSampler, n).rgb;
 
 #ifdef USE_TEX_LOD
@@ -151,6 +156,7 @@ vec3 getIBLContribution(PBRInfo pbrInputs, vec3 n, vec3 reflection)
 
     return diffuse + specular;
 }
+#endif
 
 // Basic Lambertian diffuse
 // Implementation from Lambert's Photometria https://archive.org/details/lambertsphotome00lambgoog
@@ -202,7 +208,7 @@ void main()
 #ifdef HAS_METALROUGHNESSMAP
     // Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel.
     // This layout intentionally reserves the 'r' channel for (optional) occlusion map data
-    vec4 mrSample = texture2D(u_MetallicRoughnessSampler, v_UV);
+    vec4 mrSample = texture(u_MetallicRoughnessSampler, v_UV);
     perceptualRoughness = mrSample.g * perceptualRoughness;
     metallic = mrSample.b * metallic;
 #endif
@@ -214,7 +220,7 @@ void main()
 
     // The albedo may be defined from a base texture or a flat color
 #ifdef HAS_BASECOLORMAP
-    vec4 baseColor = texture2D(u_BaseColorSampler, v_UV) * u_BaseColorFactor;
+    vec4 baseColor = texture(u_BaseColorSampler, v_UV) * u_BaseColorFactor;
 #else
     vec4 baseColor = u_BaseColorFactor;
 #endif
@@ -277,12 +283,12 @@ void main()
 
     // Apply optional PBR terms for additional (optional) shading
 #ifdef HAS_OCCLUSIONMAP
-    float ao = texture2D(u_OcclusionSampler, v_UV).r;
+    float ao = texture(u_OcclusionSampler, v_UV).r;
     color = mix(color, color * ao, u_OcclusionStrength);
 #endif
 
 #ifdef HAS_EMISSIVEMAP
-    vec3 emissive = texture2D(u_EmissiveSampler, v_UV).rgb * u_EmissiveFactor;
+    vec3 emissive = texture(u_EmissiveSampler, v_UV).rgb * u_EmissiveFactor;
     color += emissive;
 #endif
 
@@ -298,5 +304,5 @@ void main()
     color = mix(color, vec3(metallic), u_ScaleDiffBaseMR.z);
     color = mix(color, vec3(perceptualRoughness), u_ScaleDiffBaseMR.w);
 
-    gl_FragColor = vec4(color, baseColor.a);
+    FragColor = vec4(color, baseColor.a);
 }
