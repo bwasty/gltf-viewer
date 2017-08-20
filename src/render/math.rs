@@ -11,6 +11,7 @@ pub type Vector4 = cgmath::Vector4<f32>;
 pub type Matrix4 = cgmath::Matrix4<f32>;
 pub type Quaternion = cgmath::Quaternion<f32>;
 
+// TODO!!: replace bounds with collision-rs AAbb3?
 /// Axis-aligned Bounding Box
 #[derive(Clone, Debug)]
 pub struct Bounds {

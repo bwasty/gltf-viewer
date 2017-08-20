@@ -344,6 +344,7 @@ impl GltfViewer {
 
             // view/projection transformations
             // TODO!: only re-compute/set perspective on Zoom changes (also view?)
+            // TODO!!!: move to camera class...
             let projection: Matrix4<f32> = perspective(Deg(self.camera.zoom), self.width as f32 / self.height as f32, 0.01, 1000.0);
             let view = self.camera.get_view_matrix();
             self.shader.set_mat4(self.loc_projection, &projection);

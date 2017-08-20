@@ -10,6 +10,7 @@ use gltf::json::mesh::Mode;
 use gltf_importer;
 use gltf_utils::PrimitiveIterators;
 
+use camera::Camera;
 use render::math::*;
 use render::{Material, Scene};
 use shader::*;
@@ -59,7 +60,7 @@ pub struct Primitive {
 
     material: Rc<Material>,
 
-    shader: Rc<PbrShader>,
+    pbr_shader: Rc<PbrShader>,
 
     // TODO!: mode, targets
 }
@@ -79,7 +80,7 @@ impl Primitive {
             num_indices: num_indices as u32,
             vao: 0, vbo: 0, ebo: None,
             material,
-            shader: shader,
+            pbr_shader: shader,
         };
 
         // now that we have all the required data, set the vertex buffers and its attribute pointers.
@@ -207,15 +208,19 @@ impl Primitive {
 
     /// render the mesh
     pub unsafe fn draw(&self, shader: &mut Shader) {
-        // TODO: fully cache uniform locations
-        let loc = shader.uniform_location("base_color_factor");
-        shader.set_vector4(loc, &self.material.base_color_factor);
-        if let Some(ref base_color_texture) = self.material.base_color_texture {
-            let loc = shader.uniform_location("base_color_texture");
-            shader.set_int(loc, 0);
-            gl::ActiveTexture(gl::TEXTURE0);
-            gl::BindTexture(gl::TEXTURE_2D, base_color_texture.id);
-        }
+        // TODO!!: shader overriding
+        // TODO!!!: determine if shader+material already active...
+
+        // // TODO: fully cache uniform locations
+        // let loc = shader.uniform_location("base_color_factor");
+        // shader.set_vector4(loc, &self.material.base_color_factor);
+        // if let Some(ref base_color_texture) = self.material.base_color_texture {
+        //     let loc = shader.uniform_location("base_color_texture");
+        //     shader.set_int(loc, 0);
+        //     gl::ActiveTexture(gl::TEXTURE0);
+        //     gl::BindTexture(gl::TEXTURE_2D, base_color_texture.id);
+        // }
+        self.configure_shader();
 
         // draw mesh
         gl::BindVertexArray(self.vao);
@@ -228,6 +233,23 @@ impl Primitive {
 
         gl::BindVertexArray(0);
         gl::ActiveTexture(gl::TEXTURE0);
+    }
+
+    unsafe fn configure_shader(&self, /*camera: &Camera*/) {
+        // let pbr_shader = &Rc::get_mut(&mut self.pbr_shader).unwrap();
+        let shader = &self.pbr_shader.shader;
+        let uniforms = &self.pbr_shader.uniforms;
+        self.pbr_shader.shader.use_program();
+
+        shader.set_vector4(uniforms.u_BaseColorFactor, &self.material.base_color_factor);
+        if let Some(ref base_color_texture) = self.material.base_color_texture {
+            // TODO!!!: do already in PbrShader constructor?
+            shader.set_int(uniforms.u_BaseColorSampler, 0);
+            gl::ActiveTexture(gl::TEXTURE0);
+            gl::BindTexture(gl::TEXTURE_2D, base_color_texture.id);
+        }
+
+        // TODO!!!: set all uniforms, esp. camera
     }
 
     unsafe fn setup_primitive(&mut self, vertices: Vec<Vertex>, indices: Option<Vec<u32>>) {

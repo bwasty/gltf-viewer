@@ -94,34 +94,33 @@ impl Shader {
         gl::UseProgram(self.id)
     }
 
-    // TODO: add variants that take a loc directly?
     /// utility uniform functions
     /// ------------------------------------------------------------------------
-    pub unsafe fn set_bool(&mut self, location: i32, value: bool) {
+    pub unsafe fn set_bool(&self, location: i32, value: bool) {
         gl::Uniform1i(location, value as i32);
     }
     /// ------------------------------------------------------------------------
-    pub unsafe fn set_int(&mut self, location: i32, value: i32) {
+    pub unsafe fn set_int(&self, location: i32, value: i32) {
         gl::Uniform1i(location, value);
     }
     /// ------------------------------------------------------------------------
-    pub unsafe fn set_float(&mut self, location: i32, value: f32) {
+    pub unsafe fn set_float(&self, location: i32, value: f32) {
         gl::Uniform1f(location, value);
     }
     /// ------------------------------------------------------------------------
-    pub unsafe fn set_vector3(&mut self, location: i32, value: &Vector3<f32>) {
+    pub unsafe fn set_vector3(&self, location: i32, value: &Vector3<f32>) {
         gl::Uniform3fv(location, 1, value.as_ptr());
     }
     /// ------------------------------------------------------------------------
-    pub unsafe fn set_vector4(&mut self, location: i32, value: &Vector4<f32>) {
+    pub unsafe fn set_vector4(&self, location: i32, value: &Vector4<f32>) {
         gl::Uniform4fv(location, 1, value.as_ptr());
     }
     /// ------------------------------------------------------------------------
-    pub unsafe fn set_vec3(&mut self, location: i32, x: f32, y: f32, z: f32) {
+    pub unsafe fn set_vec3(&self, location: i32, x: f32, y: f32, z: f32) {
         gl::Uniform3f(location, x, y, z);
     }
     /// ------------------------------------------------------------------------
-    pub unsafe fn set_mat4(&mut self, location: i32, mat: &Matrix4<f32>) {
+    pub unsafe fn set_mat4(&self, location: i32, mat: &Matrix4<f32>) {
         gl::UniformMatrix4fv(location, 1, gl::FALSE, mat.as_ptr());
     }
 
