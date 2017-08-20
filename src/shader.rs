@@ -134,7 +134,7 @@ impl Shader {
         let c_name = CString::new(name).unwrap();
         let loc = gl::GetUniformLocation(self.id, c_name.as_ptr());
         if loc == -1 {
-            warn!("uniform '{}' unknown for shader {}", name, self.id);
+            info!("uniform '{}' unknown for shader {}", name, self.id);
         }
         self.uniform_location_cache.insert(name, loc);
         loc
@@ -203,25 +203,100 @@ impl ShaderFlags {
     }
 }
 
+#[allow(non_snake_case)]
+pub struct PbrUniformLocations {
+    // uniform locations
+    // TODO!: UBO for matrices, camera, light(s)?
+    pub u_MVPMatrix: i32,
+    pub u_ModelMatrix: i32,
+    pub u_Camera: i32,
+
+    pub u_LightDirection: i32,
+    pub u_LightColor: i32,
+
+    pub u_DiffuseEnvSampler: i32,
+    pub u_SpecularEnvSampler: i32,
+    pub u_brdfLUT: i32,
+
+    pub u_BaseColorSampler: i32,
+    pub u_BaseColorFactor: i32,
+
+    pub u_NormalSampler: i32,
+    pub u_NormalScale: i32,
+
+    pub u_EmissiveSampler: i32,
+    pub u_EmissiveFactor: i32,
+
+    pub u_MetallicRoughnessSampler: i32,
+    pub u_MetallicRoughnessValues: i32,
+
+    pub u_OcclusionSampler: i32,
+    pub u_OcclusionStrength: i32,
+
+    // debugging flags used for shader output of intermediate PBR variables
+    pub u_ScaleDiffBaseMR: i32,
+    pub u_ScaleFGDSpec: i32,
+    pub u_ScaleIBLAmbient: i32,
+}
+
 pub struct PbrShader {
-    shader: Shader,
-    flags: ShaderFlags,
+    pub shader: Shader,
+    pub flags: ShaderFlags,
+    pub uniforms: PbrUniformLocations,
 }
 
 impl PbrShader {
     pub fn new(flags: ShaderFlags) -> Self {
-        // TODO!!!: switch before release! + find better way...
+        // TODO!!!: switch before release! + find better way...override?
         // let mut shader = Shader::from_source(
         //     include_str!("shaders/pbr-vert.glsl"),
         //     include_str!("shaders/pbr-frag.glsl")
         //     &flags.as_strings());
 
         // NOTE: shader debug version
-        let shader = Shader::new(
+        let mut shader = Shader::new(
             "src/shaders/pbr-vert.glsl",
             "src/shaders/pbr-frag.glsl",
             &flags.as_strings());
 
-        Self { shader, flags }
+        let uniforms = unsafe {
+            PbrUniformLocations {
+                u_MVPMatrix: shader.uniform_location("u_MVPMatrix"),
+                u_ModelMatrix: shader.uniform_location("u_ModelMatrix"),
+                u_Camera: shader.uniform_location("u_Camera"),
+
+                u_LightDirection: shader.uniform_location("u_LightDirection"),
+                u_LightColor: shader.uniform_location("u_LightColor"),
+
+                u_DiffuseEnvSampler: shader.uniform_location("u_DiffuseEnvSampler"),
+                u_SpecularEnvSampler: shader.uniform_location("u_SpecularEnvSampler"),
+                u_brdfLUT: shader.uniform_location("u_brdfLUT"),
+
+                u_BaseColorSampler: shader.uniform_location("u_BaseColorSampler"),
+                u_BaseColorFactor: shader.uniform_location("u_BaseColorFactor"),
+
+                u_NormalSampler: shader.uniform_location("u_NormalSampler"),
+                u_NormalScale: shader.uniform_location("u_NormalScale"),
+
+                u_EmissiveSampler: shader.uniform_location("u_EmissiveSampler"),
+                u_EmissiveFactor: shader.uniform_location("u_EmissiveFactor"),
+
+                u_MetallicRoughnessSampler: shader.uniform_location("u_MetallicRoughnessSampler"),
+                u_MetallicRoughnessValues: shader.uniform_location("u_MetallicRoughnessValues"),
+
+                u_OcclusionSampler: shader.uniform_location("u_OcclusionSampler"),
+                u_OcclusionStrength: shader.uniform_location("u_OcclusionStrength"),
+
+                u_ScaleDiffBaseMR: shader.uniform_location("u_ScaleDiffBaseMR"),
+                u_ScaleFGDSpec: shader.uniform_location("u_ScaleFGDSpec"),
+                u_ScaleIBLAmbient: shader.uniform_location("u_ScaleIBLAmbient"),
+            }
+        };
+
+        Self {
+            shader,
+            flags,
+            uniforms
+        }
     }
 }

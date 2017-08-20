@@ -53,6 +53,7 @@ uniform vec4 u_BaseColorFactor;
 
 uniform vec3 u_Camera;
 
+// TODO!: remove or ifdef?
 // debugging flags used for shader output of intermediate PBR variables
 uniform vec4 u_ScaleDiffBaseMR;
 uniform vec4 u_ScaleFGDSpec;

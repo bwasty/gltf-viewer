@@ -2,16 +2,17 @@
 // Commit a94655275e5e4e8ae580b1d95ce678b74ab87426
 
 #version 330 core
-in vec4 a_Position;
+layout (location = 0) in vec4 a_Position;
 #ifdef HAS_NORMALS
-in vec4 a_Normal;
+layout (location = 1) in vec4 a_Normal;
 #endif
 #ifdef HAS_TANGENTS
-in vec4 a_Tangent;
+layout (location = 2) in vec4 a_Tangent;
 #endif
 #ifdef HAS_UV
-in vec2 a_UV;
+layout (location = 4) in vec2 a_UV;
 #endif
+// TODO!: tex_coord_1, color_0
 
 uniform mat4 u_MVPMatrix;
 uniform mat4 u_ModelMatrix;
