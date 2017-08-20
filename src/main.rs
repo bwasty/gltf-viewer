@@ -74,9 +74,9 @@ pub fn main() {
             .help("Create screenshot (PNG)"))
         .arg(Arg::with_name("verbose")
             .long("verbose")
-            .short("-v")
-            .help("Enable verbose logging."))
-        // TODO!!: -vv for debug!
+            .short("v")
+            .multiple(true)
+            .help("Enable verbose logging (log level INFO). Can be repeated multiple times to increase to log level DEBUG/TRACE)"))
         .arg(Arg::with_name("WIDTH")
             .long("width")
             .short("w")
@@ -94,7 +94,13 @@ pub fn main() {
     let width: u32 = args.value_of("WIDTH").unwrap().parse().unwrap();
     let height: u32 = args.value_of("HEIGHT").unwrap().parse().unwrap();
 
-    let log_level = if args.is_present("verbose") { LogLevelFilter::Info } else { LogLevelFilter::Warn };
+    let log_level = match args.occurrences_of("verbose") {
+        0 => LogLevelFilter::Warn,
+        1 => LogLevelFilter::Info,
+        2 => LogLevelFilter::Debug,
+        _ => LogLevelFilter::Trace
+    };
+
     let _ = TermLogger::init(log_level, Config { time: None, target: None, ..Config::default() });
 
     // TODO!: headless rendering doesn't work (only clearcolor)
@@ -239,6 +245,7 @@ impl GltfViewer {
 
             render_timer: FrameTimer::new("rendering", 300),
         };
+        unsafe { gl_check_error!(); }
         viewer.set_camera_from_bounds();
         viewer
     }
@@ -359,7 +366,6 @@ impl GltfViewer {
             gl::PixelStorei(gl::PACK_ALIGNMENT, 1);
             gl::ReadPixels(0, 0, width as i32, height as i32, gl::RGB,
                 gl::UNSIGNED_BYTE, pixels.as_mut_ptr() as *mut c_void);
-            gl_check_error!();
         }
 
         let img = img.flipv();
