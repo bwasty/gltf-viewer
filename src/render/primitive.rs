@@ -10,7 +10,7 @@ use gltf::json::mesh::Mode;
 use gltf_importer;
 use gltf_utils::PrimitiveIterators;
 
-use camera::Camera;
+// use camera::Camera;
 use render::math::*;
 use render::{Material, Scene};
 use shader::*;
@@ -212,15 +212,15 @@ impl Primitive {
         // TODO!!!: determine if shader+material already active...
 
         // // TODO: fully cache uniform locations
-        // let loc = shader.uniform_location("base_color_factor");
-        // shader.set_vector4(loc, &self.material.base_color_factor);
-        // if let Some(ref base_color_texture) = self.material.base_color_texture {
-        //     let loc = shader.uniform_location("base_color_texture");
-        //     shader.set_int(loc, 0);
-        //     gl::ActiveTexture(gl::TEXTURE0);
-        //     gl::BindTexture(gl::TEXTURE_2D, base_color_texture.id);
-        // }
-        self.configure_shader();
+        let loc = shader.uniform_location("base_color_factor");
+        shader.set_vector4(loc, &self.material.base_color_factor);
+        if let Some(ref base_color_texture) = self.material.base_color_texture {
+            let loc = shader.uniform_location("base_color_texture");
+            shader.set_int(loc, 0);
+            gl::ActiveTexture(gl::TEXTURE0);
+            gl::BindTexture(gl::TEXTURE_2D, base_color_texture.id);
+        }
+        // self.configure_shader();
 
         // draw mesh
         gl::BindVertexArray(self.vao);
