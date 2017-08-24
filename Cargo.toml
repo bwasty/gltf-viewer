@@ -37,16 +37,16 @@ itertools = "0.6.1"
 
 [dependencies.gltf]
 git = "https://github.com/alteous/gltf"
-branch = "simplify"
+branch = "incoming"
 features = ["names"]
 
 [dependencies.gltf-importer]
 git = "https://github.com/alteous/gltf"
-branch = "simplify"
+branch = "incoming"
 
 [dependencies.gltf-utils]
 git = "https://github.com/alteous/gltf"
-branch = "simplify"
+branch = "incoming"
 
 # [patch.crates-io]
 # gltf = { git = "https://github.com/bwasty/gltf", branch = "bounds"}
