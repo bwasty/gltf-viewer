@@ -20,6 +20,8 @@ use glutin::{
 
 extern crate gltf;
 extern crate gltf_importer;
+use gltf_importer::Config;
+use gltf_importer::config::ValidationStrategy;
 extern crate gltf_utils;
 extern crate image;
 use image::{DynamicImage, ImageFormat};
@@ -38,7 +40,7 @@ use std::path::Path;
 
 #[macro_use]extern crate log;
 extern crate simplelog;
-use simplelog::{TermLogger, LogLevelFilter, Config};
+use simplelog::{TermLogger, LogLevelFilter, Config as LogConfig};
 
 mod shader;
 use shader::Shader;
@@ -101,7 +103,7 @@ pub fn main() {
         _ => LogLevelFilter::Trace
     };
 
-    let _ = TermLogger::init(log_level, Config { time: None, target: None, ..Config::default() });
+    let _ = TermLogger::init(log_level, LogConfig { time: None, target: None, ..LogConfig::default() });
 
     // TODO!: headless rendering doesn't work (only clearcolor)
     let mut viewer = GltfViewer::new(source, width, height,
@@ -263,7 +265,8 @@ impl GltfViewer {
             // gltf
         }
         //     else {
-        let (gltf, buffers) = match gltf_importer::import(source) {
+        let config = Config { validation_strategy: ValidationStrategy::Complete };
+        let (gltf, buffers) = match gltf_importer::import_with_config(source, config) {
             Ok((gltf, buffers)) => (gltf, buffers),
             Err(err) => {
                 error!("glTF import failed: {}", err);
@@ -346,7 +349,7 @@ impl GltfViewer {
             // TODO!: only re-compute/set perspective on Zoom changes (also view?)
             // TODO!!!: move to camera class...
             let projection: Matrix4<f32> = perspective(Deg(self.camera.zoom), self.width as f32 / self.height as f32, 0.01, 1000.0);
-            let view = self.camera.get_view_matrix();
+            let view = self.camera.view_matrix();
             self.shader.set_mat4(self.loc_projection, &projection);
             self.shader.set_mat4(self.loc_view, &view);
 
