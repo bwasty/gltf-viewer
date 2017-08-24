@@ -93,13 +93,13 @@ impl Bounds {
     }
 }
 
-// use std::convert::From;
-// use gltf;
-// impl From<gltf::mesh::Bounds> for Bounds {
-//     fn from(bounds: gltf::mesh::Bounds) -> Self {
-//         Bounds {
-//             min: bounds.min.into(),
-//             max: bounds.max.into()
-//         }
-//     }
-// }
+use std::convert::From;
+use gltf;
+impl From<gltf::mesh::Bounds<[f32; 3]>> for Bounds {
+    fn from(bounds: gltf::mesh::Bounds<[f32; 3]>) -> Self {
+        Bounds {
+            min: bounds.min.into(),
+            max: bounds.max.into()
+        }
+    }
+}

@@ -101,8 +101,8 @@ impl Primitive {
             .expect(&format!("primitives must have the POSITION attribute (mesh: {}, primitive: {})",
                 mesh_index, primitive_index));
 
-        let (min, max) = positions.bounds();
-        let bounds = Bounds {min: min.into(), max: max.into()};
+        let bounds = g_primitive.position_bounds()
+            .unwrap(); // can't fail if validated "minimally"
         let mut vertices: Vec<Vertex> = positions
             .map(|position| {
                 Vertex {
