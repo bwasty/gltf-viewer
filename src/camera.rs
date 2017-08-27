@@ -1,5 +1,5 @@
 use cgmath;
-use cgmath::vec3;
+use cgmath::{vec3, Deg, perspective};
 use cgmath::prelude::*;
 
 type Point3 = cgmath::Point3<f32>;
@@ -45,6 +45,7 @@ pub struct Camera {
     pub movement_speed: f32,
     pub mouse_sensitivity: f32,
     pub zoom: f32,
+    pub aspect_ratio: f32,
 
     // pub moving_up: bool,
     pub moving_left: bool,
@@ -68,6 +69,7 @@ impl Default for Camera {
             movement_speed: SPEED,
             mouse_sensitivity: SENSITIVTY,
             zoom: ZOOM,
+            aspect_ratio: 1.0,
 
             // moving_up: false,
             moving_left: false,
@@ -76,21 +78,26 @@ impl Default for Camera {
             moving_forward: false,
             moving_backward: false,
         };
+        // TODO!!!: overriding default order...? -> NO!
         camera.update_camera_vectors();
         camera
     }
 }
 
 impl Camera {
+    // TODO!: cache matrices? doesn't change every frame...
     /// Returns the view matrix calculated using Eular Angles and the LookAt Matrix
-    pub fn get_view_matrix(&self) -> Matrix4 {
-        // TODO!: cache? doesn't change every frame...
+    pub fn view_matrix(&self) -> Matrix4 {
         if let Some(center) = self.center {
             Matrix4::look_at(self.position, center, self.up)
         }
         else {
             Matrix4::look_at(self.position, self.position + self.front, self.up)
         }
+    }
+
+    pub fn projection_matrix(&self) -> Matrix4 {
+        perspective(Deg(self.zoom), self.aspect_ratio, 0.01, 1000.0)
     }
 
     pub fn update(&mut self, delta_time: f64) {
@@ -156,6 +163,10 @@ impl Camera {
 
     /// Calculates the front vector from the Camera's (updated) Eular Angles
     fn update_camera_vectors(&mut self) {
+        if let Some(center) = self.center {
+            self.front = center - self.position; // TODO!!!: overwritten again immediately...
+            self.center = None;
+        }
         // Calculate the new front vector
         let front = Vector3 {
             x: self.yaw.to_radians().cos() * self.pitch.to_radians().cos(),

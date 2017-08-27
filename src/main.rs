@@ -150,9 +150,9 @@ struct GltfViewer {
 impl GltfViewer {
     pub fn new(source: &str, width: u32, height: u32, headless: bool, visible: bool) -> GltfViewer {
         let camera = Camera {
-            // TODO!: position.z - bounding box length
             position: Point3::new(0.0, 0.0, 2.0),
             zoom: 60.0,
+            aspect_ratio: width as f32 / height as f32,
             ..Camera::default()
         };
 
@@ -403,6 +403,7 @@ fn process_events(
                     gl_window.resize(w, h);
                     *width = w;
                     *height = h;
+                    // TODO!!!: update camera aspect?
                 },
                 WindowEvent::DroppedFile(_path_buf) => (), // TODO!: drag file in
                 WindowEvent::MouseMoved { position: (xpos, ypos), .. } => {
