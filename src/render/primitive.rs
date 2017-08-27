@@ -139,7 +139,7 @@ impl Primitive {
 
         // texture coordinates
         let mut tex_coord_set = 0;
-        while let Some(tex_coords) = g_primitive.tex_coords_f32(buffers, tex_coord_set) {
+        while let Some(tex_coords) = g_primitive.tex_coords_f32(tex_coord_set, buffers) {
             if tex_coord_set > 1 {
                 warn!("Ignoring texture coordinate set {}, \
                         only supporting 2 sets at the moment. (mesh: {}, primitive: {})",
@@ -160,7 +160,7 @@ impl Primitive {
 
         // colors
         let mut color_set = 0;
-        while let Some(colors) = g_primitive.colors_rgba_f32(buffers, color_set, 1.0) {
+        while let Some(colors) = g_primitive.colors_rgba_f32(color_set, 1.0, buffers) {
             if color_set > 0 {
                 warn!("Ignoring color set {}, \
                        only supporting 1 set at the moment. (mesh: {}, primitive: {})",
