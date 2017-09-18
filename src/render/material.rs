@@ -23,6 +23,7 @@ pub struct Material {
     pub normal_scale: Option<f32>,
 
     pub occlusion_texture: Option<Rc<Texture>>,
+    pub occlusion_strength: f32,
     pub emissive_factor: Vector3,
     pub emissive_texture: Option<Rc<Texture>>,
 
@@ -55,6 +56,8 @@ impl Material {
             normal_scale: None,
 
             occlusion_texture: None,
+            occlusion_strength: 0.0,
+
             emissive_factor: g_material.emissive_factor().into(),
             emissive_texture: None,
 
@@ -80,6 +83,7 @@ impl Material {
         if let Some(occ_texture) = g_material.occlusion_texture() {
             material.occlusion_texture = Some(
                 load_texture(&occ_texture.texture(), occ_texture.tex_coord(), scene, buffers, base_path));
+            material.occlusion_strength = occ_texture.strength();
         }
         if let Some(em_info) = g_material.emissive_texture() {
             material.emissive_texture = Some(

@@ -237,16 +237,38 @@ impl Primitive {
 
     unsafe fn configure_shader(&self, /*camera: &Camera*/) {
         // let pbr_shader = &Rc::get_mut(&mut self.pbr_shader).unwrap();
+        let mat = &self.material;
         let shader = &self.pbr_shader.shader;
         let uniforms = &self.pbr_shader.uniforms;
         self.pbr_shader.shader.use_program();
 
-        shader.set_vector4(uniforms.u_BaseColorFactor, &self.material.base_color_factor);
-        if let Some(ref base_color_texture) = self.material.base_color_texture {
-            // TODO!!!: do already in PbrShader constructor?
-            shader.set_int(uniforms.u_BaseColorSampler, 0);
+        // NOTE: for sampler numbers, see also PbrShader constructor
+        shader.set_vector4(uniforms.u_BaseColorFactor, &mat.base_color_factor);
+        if let Some(ref base_color_texture) = mat.base_color_texture {
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, base_color_texture.id);
+        }
+        if let Some(ref normal_texture) = mat.normal_texture {
+            gl::ActiveTexture(gl::TEXTURE1);
+            gl::BindTexture(gl::TEXTURE_2D, normal_texture.id);
+        }
+        if let Some(ref emissive_texture) = mat.emissive_texture {
+            gl::ActiveTexture(gl::TEXTURE2);
+            gl::BindTexture(gl::TEXTURE_2D, emissive_texture.id);
+        }
+
+        if let Some(ref mr_texture) = mat.metallic_roughness_texture {
+            gl::ActiveTexture(gl::TEXTURE3);
+            gl::BindTexture(gl::TEXTURE_2D, mr_texture.id);
+        }
+        shader.set_vec2(uniforms.u_MetallicRoughnessValues,
+            mat.metallic_factor, mat.roughness_factor);
+
+        if let Some(ref occlusion_texture) = mat.occlusion_texture {
+            gl::ActiveTexture(gl::TEXTURE4);
+            gl::BindTexture(gl::TEXTURE_2D, occlusion_texture.id);
+
+            shader.set_float(uniforms.u_OcclusionSampler, mat.occlusion_strength);
         }
 
         // TODO!!!: set all uniforms, esp. camera
