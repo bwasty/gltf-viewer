@@ -43,9 +43,11 @@ impl Mesh {
         }
     }
 
-    pub fn draw(&self, shader: &mut Shader) {
+    pub fn draw(&self, shader: &mut Shader,
+        model_matrix: &Matrix4, mvp_matrix: &Matrix4, camera_position: &Vector3)
+    {
         for primitive in &self.primitives {
-            unsafe { primitive.draw(shader) }
+            unsafe { primitive.draw(shader, model_matrix, mvp_matrix, camera_position) }
         }
     }
 }

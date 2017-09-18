@@ -4,6 +4,7 @@ use std::path::Path;
 use gltf;
 use gltf_importer;
 
+use camera::Camera;
 use render::math::*;
 use render::mesh::Mesh;
 use render::scene::Scene;
@@ -113,8 +114,10 @@ impl Node {
         }
     }
 
-    pub fn draw(&mut self, shader: &mut Shader) {
+    pub fn draw(&mut self, shader: &mut Shader, camera: &Camera) {
         if let Some(ref mesh) = self.mesh {
+
+            // TODO!!!: OLD SHADER BLOCK - remove
             unsafe {
                 if self.model_loc.is_none() {
                     self.model_loc = Some(shader.uniform_location("model"));
@@ -122,10 +125,12 @@ impl Node {
                 shader.set_mat4(self.model_loc.unwrap(), &self.final_transform);
             }
 
-            (*mesh).draw(shader);
+            let mvp_matrix = camera.projection_matrix() * camera.view_matrix() * self.final_transform;
+
+            (*mesh).draw(shader, &self.final_transform, &mvp_matrix, &camera.position.to_vec());
         }
         for node in &mut self.children {
-            node.draw(shader);
+            node.draw(shader, camera);
         }
     }
 }

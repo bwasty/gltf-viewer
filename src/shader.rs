@@ -299,11 +299,15 @@ impl PbrShader {
                 u_ScaleIBLAmbient: shader.uniform_location("u_ScaleIBLAmbient"),
             };
 
+            shader.use_program();
             shader.set_int(uniforms.u_BaseColorSampler, 0);
             shader.set_int(uniforms.u_NormalSampler, 1);
             shader.set_int(uniforms.u_EmissiveSampler, 2);
             shader.set_int(uniforms.u_MetallicRoughnessSampler, 3);
             shader.set_int(uniforms.u_OcclusionSampler, 4);
+
+            shader.set_vec3(uniforms.u_LightColor, 1.0, 1.0, 1.0);
+            shader.set_vec3(uniforms.u_LightDirection, 0.0, 0.5, -0.5);
 
             uniforms
         };

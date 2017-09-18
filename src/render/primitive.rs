@@ -207,11 +207,15 @@ impl Primitive {
     }
 
     /// render the mesh
-    pub unsafe fn draw(&self, shader: &mut Shader) {
+    pub unsafe fn draw(&self, shader: &mut Shader,
+        model_matrix: &Matrix4, mvp_matrix: &Matrix4, camera_position: &Vector3)
+    {
         // TODO!!: shader overriding
         // TODO!!!: determine if shader+material already active...
 
         // // TODO: fully cache uniform locations
+
+        // TODO!!!: OLD SHADER BLOCK
         let loc = shader.uniform_location("base_color_factor");
         shader.set_vector4(loc, &self.material.base_color_factor);
         if let Some(ref base_color_texture) = self.material.base_color_texture {
@@ -220,7 +224,8 @@ impl Primitive {
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, base_color_texture.id);
         }
-        // self.configure_shader();
+
+        self.configure_shader(model_matrix, mvp_matrix, camera_position);
 
         // draw mesh
         gl::BindVertexArray(self.vao);
@@ -235,12 +240,19 @@ impl Primitive {
         gl::ActiveTexture(gl::TEXTURE0);
     }
 
-    unsafe fn configure_shader(&self, /*camera: &Camera*/) {
+    unsafe fn configure_shader(&self, model_matrix: &Matrix4,
+        mvp_matrix: &Matrix4, camera_position: &Vector3)
+    {
         // let pbr_shader = &Rc::get_mut(&mut self.pbr_shader).unwrap();
         let mat = &self.material;
         let shader = &self.pbr_shader.shader;
         let uniforms = &self.pbr_shader.uniforms;
         self.pbr_shader.shader.use_program();
+
+        // camera params
+        shader.set_mat4(uniforms.u_ModelMatrix, model_matrix);
+        shader.set_mat4(uniforms.u_MVPMatrix, mvp_matrix);
+        shader.set_vector3(uniforms.u_Camera, camera_position);
 
         // NOTE: for sampler numbers, see also PbrShader constructor
         shader.set_vector4(uniforms.u_BaseColorFactor, &mat.base_color_factor);
@@ -255,6 +267,8 @@ impl Primitive {
         if let Some(ref emissive_texture) = mat.emissive_texture {
             gl::ActiveTexture(gl::TEXTURE2);
             gl::BindTexture(gl::TEXTURE_2D, emissive_texture.id);
+
+            shader.set_vector3(uniforms.u_EmissiveFactor, &mat.emissive_factor);
         }
 
         if let Some(ref mr_texture) = mat.metallic_roughness_texture {
@@ -270,8 +284,6 @@ impl Primitive {
 
             shader.set_float(uniforms.u_OcclusionSampler, mat.occlusion_strength);
         }
-
-        // TODO!!!: set all uniforms, esp. camera
     }
 
     unsafe fn setup_primitive(&mut self, vertices: Vec<Vertex>, indices: Option<Vec<u32>>) {

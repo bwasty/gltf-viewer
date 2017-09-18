@@ -28,8 +28,6 @@ use image::{DynamicImage, ImageFormat};
 
 #[macro_use]
 extern crate bitflags;
-extern crate itertools;
-extern crate futures;
 
 use clap::{Arg, App, AppSettings};
 
@@ -353,7 +351,7 @@ impl GltfViewer {
             self.shader.set_mat4(self.loc_projection, &projection);
             self.shader.set_mat4(self.loc_view, &view);
 
-            self.scene.draw(&mut self.shader);
+            self.scene.draw(&mut self.shader, &self.camera);
 
             self.render_timer.end();
         }

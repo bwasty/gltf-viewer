@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use gltf;
 use gltf_importer;
 
+use camera::Camera;
 use render::{Mesh, Node, Texture, Material};
 use render::math::*;
 use shader::*;
@@ -44,9 +45,9 @@ impl Scene {
     }
 
     // TODO: flatten draw call hierarchy (global Vec<SPrimitive>?)
-    pub fn draw(&mut self, shader: &mut Shader) {
+    pub fn draw(&mut self, shader: &mut Shader, camera: &Camera) {
         for node in &mut self.nodes {
-            node.draw(shader);
+            node.draw(shader, camera);
         }
     }
 }
