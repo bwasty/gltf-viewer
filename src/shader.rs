@@ -306,8 +306,8 @@ impl PbrShader {
             shader.set_int(uniforms.u_MetallicRoughnessSampler, 3);
             shader.set_int(uniforms.u_OcclusionSampler, 4);
 
-            shader.set_vec3(uniforms.u_LightColor, 1.0, 1.0, 1.0);
-            shader.set_vec3(uniforms.u_LightDirection, 0.0, 0.5, -0.5);
+            shader.set_vec3(uniforms.u_LightColor, 5.0, 5.0, 5.0);
+            shader.set_vec3(uniforms.u_LightDirection, 0.0, 0.5, 0.5);
 
             uniforms
         };
