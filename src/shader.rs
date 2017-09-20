@@ -255,16 +255,16 @@ pub struct PbrShader {
 impl PbrShader {
     pub fn new(flags: ShaderFlags) -> Self {
         // TODO!!!: switch before release! + find better way...override?
-        // let mut shader = Shader::from_source(
-        //     include_str!("shaders/pbr-vert.glsl"),
-        //     include_str!("shaders/pbr-frag.glsl")
-        //     &flags.as_strings());
+        let mut shader = Shader::from_source(
+            include_str!("shaders/pbr-vert.glsl"),
+            include_str!("shaders/pbr-frag.glsl"),
+            &flags.as_strings());
 
         // NOTE: shader debug version
-        let mut shader = Shader::new(
-            "src/shaders/pbr-vert.glsl",
-            "src/shaders/pbr-frag.glsl",
-            &flags.as_strings());
+        // let mut shader = Shader::new(
+        //     "src/shaders/pbr-vert.glsl",
+        //     "src/shaders/pbr-frag.glsl",
+        //     &flags.as_strings());
 
         let uniforms = unsafe {
             let uniforms = PbrUniformLocations {
