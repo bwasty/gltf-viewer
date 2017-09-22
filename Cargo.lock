@@ -1,6 +1,6 @@
 [root]
 name = "gltf-viewer"
-version = "0.0.4-pre"
+version = "0.1.0-pre"
 dependencies = [
  "bitflags 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cgmath 0.14.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -8,9 +8,9 @@ dependencies = [
  "futures 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures-cpupool 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "gl 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "gltf 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "gltf-importer 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "gltf-utils 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gltf 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gltf-importer 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gltf-utils 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "glutin 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -113,6 +113,16 @@ dependencies = [
 [[package]]
 name = "cgmath"
 version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "approx 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-traits 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.3.16 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "cgmath"
+version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "approx 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -369,16 +379,18 @@ dependencies = [
 
 [[package]]
 name = "gltf"
-version = "0.9.0"
+version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "gltf-json 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "approx 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cgmath 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gltf-json 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "gltf-derive"
-version = "0.9.0"
+version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "inflections 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -388,20 +400,20 @@ dependencies = [
 
 [[package]]
 name = "gltf-importer"
-version = "0.9.0"
+version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "base64 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "gltf 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "gltf-utils 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gltf 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gltf-utils 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "gltf-json"
-version = "0.9.0"
+version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "gltf-derive 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gltf-derive 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -409,10 +421,10 @@ dependencies = [
 
 [[package]]
 name = "gltf-utils"
-version = "0.1.0"
+version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "gltf 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gltf 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1463,6 +1475,7 @@ dependencies = [
 "checksum cfg-if 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "d4c819a1287eb618df47cc647173c5c4c66ba19d888a6e50d605672aed3140de"
 "checksum cgl 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "86765cb42c2a2c497e142af72517c1b4d7ae5bb2f25dfa77a5c69642f2342d89"
 "checksum cgmath 0.14.1 (registry+https://github.com/rust-lang/crates.io-index)" = "87f025a17ad3f30d49015c787903976d5f9cd6115ece1eb7f4d6ffe06b8c4080"
+"checksum cgmath 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d2372c02a7cfabf871ec42ecc968406a7b5916bcfd51defc6a0498fcb19fa2e5"
 "checksum clap 2.26.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2267a8fdd4dce6956ba6649e130f62fb279026e5e84b92aa939ac8f85ce3f9f0"
 "checksum coco 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c06169f5beb7e31c7c67ebf5540b8b472d23e3eade3b2ec7d1f5b504a85f91bd"
 "checksum cocoa 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)" = "4047fed6536f40cc2ae5e7834fb38e382c788270191c4cd69196f89686d076ce"
@@ -1493,11 +1506,11 @@ dependencies = [
 "checksum gl 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)" = "97543cffb3e39377ecb7156651d906f8284f459a460aef973936412364a4202b"
 "checksum gl_generator 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)" = "e7acbf2ba3d52e9e1ad96a84362129e9c1aa0af55ebfc86a91004e1b83eca61c"
 "checksum gleam 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)" = "bf887141f0c2a83eae026cbf3fba74f0a5cb0f01d20e5cdfcd8c4ad39295be1e"
-"checksum gltf 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c5eddb91a8c0497397a1aeed63a0a31f03b71308e9b595d510d75b6db6425dc4"
-"checksum gltf-derive 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c6ef6b45551dd5f751847a0d83dc34cc78e6a042989f8aad16879943509ffa86"
-"checksum gltf-importer 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "003a9e86e7233ba2615c32c807679cf0a4217bc1599d840c93a722937cfd6269"
-"checksum gltf-json 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "cca12d2dcbf65da8ea5774308e288f15f61378141e37e133b4302fda89763244"
-"checksum gltf-utils 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2d7dda04ba9af422327ca0145ce7dda0246e593576b1d16226249fe36339e370"
+"checksum gltf 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)" = "024a308b8483a092c443580096c9a7df939001022dc13878ba8e0ab39a6c3017"
+"checksum gltf-derive 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)" = "22b0e05dead688d7a9a74e29f9359e196c5b5f24e963d68fd3490a7a9734db43"
+"checksum gltf-importer 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)" = "3fb6463bc363fee5ec5ffb768bf14b8f23454dbc9273b6687add1582451acb43"
+"checksum gltf-json 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)" = "0a5ce13359b5237dafa31c50c90aedb1235c54056945262c1a526d22d29d13db"
+"checksum gltf-utils 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)" = "d3098f4637551a18a59de0eb955dfb2aae89f660504b007f6a8cd9a56ceed006"
 "checksum glutin 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)" = "3cee1543cf7efce742534d31c024d8dd1aa0e8944d36ebdd7dfccdb80b84700d"
 "checksum httparse 1.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "af2f2dd97457e8fb1ae7c5a420db346af389926e36f43768b96f101546b04a07"
 "checksum hyper 0.11.2 (registry+https://github.com/rust-lang/crates.io-index)" = "641abc3e3fcf0de41165595f801376e01106bca1fd876dda937730e477ca004c"

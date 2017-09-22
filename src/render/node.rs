@@ -4,13 +4,13 @@ use std::path::Path;
 use gltf;
 use gltf_importer;
 
+use camera::Camera;
 use render::math::*;
 use render::mesh::Mesh;
 use render::scene::Scene;
-use shader::Shader;
 
 pub struct Node {
-    // TODO!!: camera?
+    // TODO!!: handle camera in Node
     pub children: Vec<Node>,
     pub matrix: Matrix4,
     pub mesh: Option<Rc<Mesh>>,
@@ -62,6 +62,7 @@ impl Node {
             matrix,
             mesh,
             rotation,
+            // TODO!!: use of deprecated item: Use `transform().decomposed()` instead.
             scale: g_node.scale().into(),
             translation: g_node.translation().into(),
             name: g_node.name().map(|s| s.into()),
@@ -113,19 +114,14 @@ impl Node {
         }
     }
 
-    pub fn draw(&mut self, shader: &mut Shader) {
+    pub fn draw(&mut self, camera: &Camera) {
         if let Some(ref mesh) = self.mesh {
-            unsafe {
-                if self.model_loc.is_none() {
-                    self.model_loc = Some(shader.uniform_location("model"));
-                }
-                shader.set_mat4(self.model_loc.unwrap(), &self.final_transform);
-            }
+            let mvp_matrix = camera.projection_matrix() * camera.view_matrix() * self.final_transform;
 
-            (*mesh).draw(shader);
+            (*mesh).draw(&self.final_transform, &mvp_matrix, &camera.position.to_vec());
         }
         for node in &mut self.children {
-            node.draw(shader);
+            node.draw(camera);
         }
     }
 }

@@ -4,7 +4,6 @@ use std::path::Path;
 use gltf;
 use gltf_importer;
 
-use shader::Shader;
 use render::math::*;
 use render::{Primitive, Scene};
 
@@ -43,9 +42,9 @@ impl Mesh {
         }
     }
 
-    pub fn draw(&self, shader: &mut Shader) {
+    pub fn draw(&self, model_matrix: &Matrix4, mvp_matrix: &Matrix4, camera_position: &Vector3) {
         for primitive in &self.primitives {
-            unsafe { primitive.draw(shader) }
+            unsafe { primitive.draw(model_matrix, mvp_matrix, camera_position) }
         }
     }
 }

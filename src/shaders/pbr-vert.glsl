@@ -10,7 +10,7 @@ layout (location = 1) in vec4 a_Normal;
 layout (location = 2) in vec4 a_Tangent;
 #endif
 #ifdef HAS_UV
-layout (location = 4) in vec2 a_UV;
+layout (location = 3) in vec2 a_UV;
 #endif
 // TODO!: tex_coord_1, color_0
 

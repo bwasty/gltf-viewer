@@ -116,6 +116,10 @@ impl Shader {
         gl::Uniform4fv(location, 1, value.as_ptr());
     }
     /// ------------------------------------------------------------------------
+    pub unsafe fn set_vec2(&self, location: i32, x: f32, y: f32) {
+        gl::Uniform2f(location, x, y);
+    }
+    /// ------------------------------------------------------------------------
     pub unsafe fn set_vec3(&self, location: i32, x: f32, y: f32, z: f32) {
         gl::Uniform3f(location, x, y, z);
     }
@@ -213,9 +217,12 @@ pub struct PbrUniformLocations {
     pub u_LightDirection: i32,
     pub u_LightColor: i32,
 
+    // TODO!: set when integrating IBL (unused now)
     pub u_DiffuseEnvSampler: i32,
     pub u_SpecularEnvSampler: i32,
     pub u_brdfLUT: i32,
+
+    ///
 
     pub u_BaseColorSampler: i32,
     pub u_BaseColorFactor: i32,
@@ -232,6 +239,7 @@ pub struct PbrUniformLocations {
     pub u_OcclusionSampler: i32,
     pub u_OcclusionStrength: i32,
 
+    // TODO!: use/remove debugging uniforms
     // debugging flags used for shader output of intermediate PBR variables
     pub u_ScaleDiffBaseMR: i32,
     pub u_ScaleFGDSpec: i32,
@@ -246,20 +254,20 @@ pub struct PbrShader {
 
 impl PbrShader {
     pub fn new(flags: ShaderFlags) -> Self {
-        // TODO!!!: switch before release! + find better way...override?
-        // let mut shader = Shader::from_source(
-        //     include_str!("shaders/pbr-vert.glsl"),
-        //     include_str!("shaders/pbr-frag.glsl")
-        //     &flags.as_strings());
-
-        // NOTE: shader debug version
-        let mut shader = Shader::new(
-            "src/shaders/pbr-vert.glsl",
-            "src/shaders/pbr-frag.glsl",
+        // TODO!!: switch before/after release! + find better way...override?
+        let mut shader = Shader::from_source(
+            include_str!("shaders/pbr-vert.glsl"),
+            include_str!("shaders/pbr-frag.glsl"),
             &flags.as_strings());
 
+        // NOTE: shader debug version
+        // let mut shader = Shader::new(
+        //     "src/shaders/pbr-vert.glsl",
+        //     "src/shaders/pbr-frag.glsl",
+        //     &flags.as_strings());
+
         let uniforms = unsafe {
-            PbrUniformLocations {
+            let uniforms = PbrUniformLocations {
                 u_MVPMatrix: shader.uniform_location("u_MVPMatrix"),
                 u_ModelMatrix: shader.uniform_location("u_ModelMatrix"),
                 u_Camera: shader.uniform_location("u_Camera"),
@@ -289,7 +297,19 @@ impl PbrShader {
                 u_ScaleDiffBaseMR: shader.uniform_location("u_ScaleDiffBaseMR"),
                 u_ScaleFGDSpec: shader.uniform_location("u_ScaleFGDSpec"),
                 u_ScaleIBLAmbient: shader.uniform_location("u_ScaleIBLAmbient"),
-            }
+            };
+
+            shader.use_program();
+            shader.set_int(uniforms.u_BaseColorSampler, 0);
+            shader.set_int(uniforms.u_NormalSampler, 1);
+            shader.set_int(uniforms.u_EmissiveSampler, 2);
+            shader.set_int(uniforms.u_MetallicRoughnessSampler, 3);
+            shader.set_int(uniforms.u_OcclusionSampler, 4);
+
+            shader.set_vec3(uniforms.u_LightColor, 5.0, 5.0, 5.0);
+            shader.set_vec3(uniforms.u_LightDirection, 0.0, 0.5, 0.5);
+
+            uniforms
         };
 
         Self {

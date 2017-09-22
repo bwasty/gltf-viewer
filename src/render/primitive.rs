@@ -168,7 +168,7 @@ impl Primitive {
                 color_set += 1;
                 continue;
             }
-            // TODO!!: alpha
+            // TODO!!: alpha (color attribute)
             for (i, c) in colors.enumerate() {
                 vertices[i].color_0 = vec3(c[0], c[1], c[2]);
             }
@@ -195,32 +195,28 @@ impl Primitive {
         let material = material.unwrap();
         shader_flags |= material.shader_flags();
 
+        let mut new_shader = false; // borrow checker workaround
         let shader =
             if let Some(shader) = scene.shaders.get(&shader_flags) {
                 shader.clone()
             }
             else {
+                new_shader = true;
                 PbrShader::new(shader_flags).into()
-                // TODO!!!: save in scene + actually use for rendering
+
             };
+        if new_shader {
+            scene.shaders.insert(shader_flags, shader.clone());
+        }
+
         Primitive::new(bounds.into(), vertices, indices, material, shader)
     }
 
     /// render the mesh
-    pub unsafe fn draw(&self, shader: &mut Shader) {
-        // TODO!!: shader overriding
-        // TODO!!!: determine if shader+material already active...
+    pub unsafe fn draw(&self, model_matrix: &Matrix4, mvp_matrix: &Matrix4, camera_position: &Vector3) {
+        // TODO!!: determine if shader+material already active to reduce work...
 
-        // // TODO: fully cache uniform locations
-        let loc = shader.uniform_location("base_color_factor");
-        shader.set_vector4(loc, &self.material.base_color_factor);
-        if let Some(ref base_color_texture) = self.material.base_color_texture {
-            let loc = shader.uniform_location("base_color_texture");
-            shader.set_int(loc, 0);
-            gl::ActiveTexture(gl::TEXTURE0);
-            gl::BindTexture(gl::TEXTURE_2D, base_color_texture.id);
-        }
-        // self.configure_shader();
+        self.configure_shader(model_matrix, mvp_matrix, camera_position);
 
         // draw mesh
         gl::BindVertexArray(self.vao);
@@ -235,21 +231,50 @@ impl Primitive {
         gl::ActiveTexture(gl::TEXTURE0);
     }
 
-    unsafe fn configure_shader(&self, /*camera: &Camera*/) {
+    unsafe fn configure_shader(&self, model_matrix: &Matrix4,
+        mvp_matrix: &Matrix4, camera_position: &Vector3)
+    {
         // let pbr_shader = &Rc::get_mut(&mut self.pbr_shader).unwrap();
+        let mat = &self.material;
         let shader = &self.pbr_shader.shader;
         let uniforms = &self.pbr_shader.uniforms;
         self.pbr_shader.shader.use_program();
 
-        shader.set_vector4(uniforms.u_BaseColorFactor, &self.material.base_color_factor);
-        if let Some(ref base_color_texture) = self.material.base_color_texture {
-            // TODO!!!: do already in PbrShader constructor?
-            shader.set_int(uniforms.u_BaseColorSampler, 0);
+        // camera params
+        shader.set_mat4(uniforms.u_ModelMatrix, model_matrix);
+        shader.set_mat4(uniforms.u_MVPMatrix, mvp_matrix);
+        shader.set_vector3(uniforms.u_Camera, camera_position);
+
+        // NOTE: for sampler numbers, see also PbrShader constructor
+        shader.set_vector4(uniforms.u_BaseColorFactor, &mat.base_color_factor);
+        if let Some(ref base_color_texture) = mat.base_color_texture {
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, base_color_texture.id);
         }
+        if let Some(ref normal_texture) = mat.normal_texture {
+            gl::ActiveTexture(gl::TEXTURE1);
+            gl::BindTexture(gl::TEXTURE_2D, normal_texture.id);
+        }
+        if let Some(ref emissive_texture) = mat.emissive_texture {
+            gl::ActiveTexture(gl::TEXTURE2);
+            gl::BindTexture(gl::TEXTURE_2D, emissive_texture.id);
 
-        // TODO!!!: set all uniforms, esp. camera
+            shader.set_vector3(uniforms.u_EmissiveFactor, &mat.emissive_factor);
+        }
+
+        if let Some(ref mr_texture) = mat.metallic_roughness_texture {
+            gl::ActiveTexture(gl::TEXTURE3);
+            gl::BindTexture(gl::TEXTURE_2D, mr_texture.id);
+        }
+        shader.set_vec2(uniforms.u_MetallicRoughnessValues,
+            mat.metallic_factor, mat.roughness_factor);
+
+        if let Some(ref occlusion_texture) = mat.occlusion_texture {
+            gl::ActiveTexture(gl::TEXTURE4);
+            gl::BindTexture(gl::TEXTURE_2D, occlusion_texture.id);
+
+            shader.set_float(uniforms.u_OcclusionSampler, mat.occlusion_strength);
+        }
     }
 
     unsafe fn setup_primitive(&mut self, vertices: Vec<Vertex>, indices: Option<Vec<u32>>) {

@@ -29,7 +29,7 @@ impl Default for Bounds {
 }
 
 impl Bounds {
-    // TODO!!: make self-mutating?
+    // TODO: make self-mutating? (if not switching to collision-rs)
     pub fn union(&self, other: &Self) -> Bounds {
         Bounds {
             min: vec3(
