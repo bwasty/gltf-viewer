@@ -168,7 +168,7 @@ impl Primitive {
                 color_set += 1;
                 continue;
             }
-            // TODO!!: alpha
+            // TODO!!: alpha (color attribute)
             for (i, c) in colors.enumerate() {
                 vertices[i].color_0 = vec3(c[0], c[1], c[2]);
             }
@@ -195,35 +195,26 @@ impl Primitive {
         let material = material.unwrap();
         shader_flags |= material.shader_flags();
 
+        let mut new_shader = false; // borrow checker workaround
         let shader =
             if let Some(shader) = scene.shaders.get(&shader_flags) {
                 shader.clone()
             }
             else {
+                new_shader = true;
                 PbrShader::new(shader_flags).into()
-                // TODO!!!: save in scene + actually use for rendering
+
             };
+        if new_shader {
+            scene.shaders.insert(shader_flags, shader.clone());
+        }
+
         Primitive::new(bounds.into(), vertices, indices, material, shader)
     }
 
     /// render the mesh
-    pub unsafe fn draw(&self, shader: &mut Shader,
-        model_matrix: &Matrix4, mvp_matrix: &Matrix4, camera_position: &Vector3)
-    {
-        // TODO!!: shader overriding
-        // TODO!!!: determine if shader+material already active...
-
-        // // TODO: fully cache uniform locations
-
-        // TODO!!!: OLD SHADER BLOCK
-        let loc = shader.uniform_location("base_color_factor");
-        shader.set_vector4(loc, &self.material.base_color_factor);
-        if let Some(ref base_color_texture) = self.material.base_color_texture {
-            let loc = shader.uniform_location("base_color_texture");
-            shader.set_int(loc, 0);
-            gl::ActiveTexture(gl::TEXTURE0);
-            gl::BindTexture(gl::TEXTURE_2D, base_color_texture.id);
-        }
+    pub unsafe fn draw(&self, model_matrix: &Matrix4, mvp_matrix: &Matrix4, camera_position: &Vector3) {
+        // TODO!!: determine if shader+material already active to reduce work...
 
         self.configure_shader(model_matrix, mvp_matrix, camera_position);
 

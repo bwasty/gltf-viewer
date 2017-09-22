@@ -3,7 +3,7 @@
 // #![feature(test)]
 #[macro_use] extern crate clap;
 extern crate cgmath;
-use cgmath::{Matrix4, Point3, Deg, perspective};
+use cgmath::{ Point3 };
 // use cgmath::prelude::*;
 
 extern crate gl;
@@ -41,14 +41,13 @@ extern crate simplelog;
 use simplelog::{TermLogger, LogLevelFilter, Config as LogConfig};
 
 mod shader;
-use shader::Shader;
 mod camera;
 use camera::Camera;
 use camera::CameraMovement::*;
 mod framebuffer;
 use framebuffer::Framebuffer;
 mod macros;
-// TODO!!: adapt Source...
+// TODO!: adapt Source...
 // mod http_source;
 // use http_source::HttpSource;
 mod utils;
@@ -122,6 +121,12 @@ pub fn main() {
     viewer.start_render_loop();
 }
 
+// TODO!: complete and pass through draw calls? or get rid of multiple shaders?
+// How about state ordering anyway?
+// struct DrawState {
+//     current_shader: ShaderFlags,
+// }
+
 struct GltfViewer {
     width: u32,
     height: u32,
@@ -133,10 +138,6 @@ struct GltfViewer {
     events_loop: Option<glutin::EventsLoop>,
     gl_window: Option<glutin::GlWindow>,
 
-    shader: Shader,
-    loc_projection: i32,
-    loc_view: i32,
-
     scene: Scene,
 
     delta_time: f64, // seconds
@@ -145,6 +146,7 @@ struct GltfViewer {
     render_timer: FrameTimer,
 }
 
+// TODO!: move to separate file
 impl GltfViewer {
     pub fn new(source: &str, width: u32, height: u32, headless: bool, visible: bool) -> GltfViewer {
         let camera = Camera {
@@ -197,33 +199,15 @@ impl GltfViewer {
                 (Some(events_loop), Some(gl_window))
             };
 
-        let (shader, loc_projection, loc_view) = unsafe {
+        unsafe {
             gl::ClearColor(0.0, 1.0, 0.0, 1.0); // green for debugging
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             gl::Enable(gl::DEPTH_TEST);
 
-            // TODO!!!: switch again before release!
-            // let mut shader = Shader::from_source(
-            //     include_str!("shaders/simple.vs"),
-            //     include_str!("shaders/simple.fs")
-            //     &[]);
-
-            // NOTE: shader debug version
-            let mut shader = Shader::new(
-                "src/shaders/simple-vert.glsl",
-                "src/shaders/simple-frag.glsl",
-                &[]);
-
-            shader.use_program();
-            let loc_projection = shader.uniform_location("projection");
-            let loc_view = shader.uniform_location("view");
-
             // TODO: keyboard switch?
             // draw in wireframe
             // gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
-
-            (shader, loc_projection, loc_view)
         };
 
         let mut viewer = GltfViewer {
@@ -235,8 +219,6 @@ impl GltfViewer {
 
             events_loop,
             gl_window,
-
-            shader, loc_projection, loc_view,
 
             scene: Self::load(source),
 
@@ -252,7 +234,7 @@ impl GltfViewer {
 
     pub fn load(source: &str) -> Scene {
         let mut start_time = Instant::now();
-        // TODO!!: http source
+        // TODO!: http source
         // let gltf =
         if source.starts_with("http") {
             panic!("not implemented: HTTP support temporarily removed.")
@@ -289,6 +271,7 @@ impl GltfViewer {
 
     /// determine "nice" camera perspective from bounding box. Inspired by donmccurdy/three-gltf-viewer
     fn set_camera_from_bounds(&mut self) {
+        // TODO!!: fix bounds/camera computation (many models NOT centered)
         let bounds = &self.scene.bounds;
         let size = bounds.size().magnitude();
         let center = bounds.center();
@@ -307,7 +290,7 @@ impl GltfViewer {
 
         self.camera.position = cam_pos;
         self.camera.center = Some(Point3::from_vec(center));
-        // TODO!!: set near, far, max_distance, obj_pos_modifier...
+        // TODO!: set near, far, max_distance, obj_pos_modifier...
     }
 
     pub fn start_render_loop(&mut self) {
@@ -341,17 +324,7 @@ impl GltfViewer {
             gl::ClearColor(0.1, 0.2, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-            self.shader.use_program();
-
-            // view/projection transformations
-            // TODO!: only re-compute/set perspective on Zoom changes (also view?)
-            // TODO!!!: move to camera class...
-            let projection: Matrix4<f32> = perspective(Deg(self.camera.zoom), self.width as f32 / self.height as f32, 0.01, 1000.0);
-            let view = self.camera.view_matrix();
-            self.shader.set_mat4(self.loc_projection, &projection);
-            self.shader.set_mat4(self.loc_view, &view);
-
-            self.scene.draw(&mut self.shader, &self.camera);
+            self.scene.draw(&self.camera);
 
             self.render_timer.end();
         }
@@ -401,9 +374,9 @@ fn process_events(
                     gl_window.resize(w, h);
                     *width = w;
                     *height = h;
-                    // TODO!!!: update camera aspect?
+                    // TODO!: update camera aspect?
                 },
-                WindowEvent::DroppedFile(_path_buf) => (), // TODO!: drag file in
+                WindowEvent::DroppedFile(_path_buf) => (), // TODO: drag file in
                 WindowEvent::MouseMoved { position: (xpos, ypos), .. } => {
                     let (xpos, ypos) = (xpos as f32, ypos as f32);
                     if *first_mouse {

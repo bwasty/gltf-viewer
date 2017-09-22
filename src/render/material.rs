@@ -122,7 +122,7 @@ fn load_texture(
     buffers: &gltf_importer::Buffers,
     base_path: &Path) -> Rc<Texture>
 {
-    // TODO!!: handle tex coord set in shaders
+    // TODO!: handle tex coord set in shaders
     assert_eq!(tex_coord, 0, "not yet implemented: tex coord set must be 0 (Material::from_gltf)");
 
     if let Some(tex) = scene.textures.iter().find(|tex| (***tex).index == g_texture.index()) {

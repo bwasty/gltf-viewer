@@ -217,7 +217,7 @@ pub struct PbrUniformLocations {
     pub u_LightDirection: i32,
     pub u_LightColor: i32,
 
-    // TODO!: set when integrating PBR (unused now)
+    // TODO!: set when integrating IBL (unused now)
     pub u_DiffuseEnvSampler: i32,
     pub u_SpecularEnvSampler: i32,
     pub u_brdfLUT: i32,
@@ -239,7 +239,7 @@ pub struct PbrUniformLocations {
     pub u_OcclusionSampler: i32,
     pub u_OcclusionStrength: i32,
 
-    // TODO!? set (should be "off" without)
+    // TODO!: use/remove debugging uniforms
     // debugging flags used for shader output of intermediate PBR variables
     pub u_ScaleDiffBaseMR: i32,
     pub u_ScaleFGDSpec: i32,
@@ -254,7 +254,7 @@ pub struct PbrShader {
 
 impl PbrShader {
     pub fn new(flags: ShaderFlags) -> Self {
-        // TODO!!!: switch before release! + find better way...override?
+        // TODO!!: switch before/after release! + find better way...override?
         let mut shader = Shader::from_source(
             include_str!("shaders/pbr-vert.glsl"),
             include_str!("shaders/pbr-frag.glsl"),

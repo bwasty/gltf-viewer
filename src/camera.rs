@@ -31,7 +31,6 @@ pub struct Camera {
     pub position: Point3,
 
     /// mutually exlusive: if center is set, it is used
-    // TODO!!!: consider this (center) for navigation
     pub front: Vector3,
     pub center: Option<Point3>,
 
@@ -78,7 +77,7 @@ impl Default for Camera {
             moving_forward: false,
             moving_backward: false,
         };
-        // TODO!!!: overriding default order...? -> NO!
+        // TODO!!: overriding default order...? -> NO!
         camera.update_camera_vectors();
         camera
     }
@@ -96,6 +95,7 @@ impl Camera {
         }
     }
 
+    // TODO!!: cache + avoid repeatedly setting same uniform
     pub fn projection_matrix(&self) -> Matrix4 {
         perspective(Deg(self.zoom), self.aspect_ratio, 0.01, 1000.0)
     }

@@ -274,7 +274,6 @@ void main()
 
     // Calculation of analytical lighting contribution
     vec3 diffuseContrib = (1.0 - F) * diffuse(pbrInputs);
-
     vec3 specContrib = F * G * D / (4.0 * NdotL * NdotV);
     vec3 color = NdotL * u_LightColor * (diffuseContrib + specContrib);
 
