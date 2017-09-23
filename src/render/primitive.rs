@@ -184,12 +184,12 @@ impl Primitive {
 
         let mut material = None;
         if let Some(mat) = scene.materials.iter().find(|m| (***m).index == g_material.index()) {
-            material = mat.clone().into()
+            material = Rc::clone(mat).into()
         }
 
         if material.is_none() { // no else due to borrow checker madness
             let mat = Rc::new(Material::from_gltf(&g_material, scene, buffers, base_path));
-            scene.materials.push(mat.clone());
+            scene.materials.push(Rc::clone(&mat));
             material = Some(mat);
         };
         let material = material.unwrap();
@@ -198,7 +198,7 @@ impl Primitive {
         let mut new_shader = false; // borrow checker workaround
         let shader =
             if let Some(shader) = scene.shaders.get(&shader_flags) {
-                shader.clone()
+                Rc::clone(shader)
             }
             else {
                 new_shader = true;
@@ -206,7 +206,7 @@ impl Primitive {
 
             };
         if new_shader {
-            scene.shaders.insert(shader_flags, shader.clone());
+            scene.shaders.insert(shader_flags, Rc::clone(&shader));
         }
 
         Primitive::new(bounds.into(), vertices, indices, material, shader)

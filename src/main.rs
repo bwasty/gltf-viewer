@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![allow(unknown_lints)]
 // #![allow(unused_features)]
 // #![feature(test)]
 #[macro_use] extern crate clap;
@@ -62,10 +63,10 @@ pub fn main() {
         .version(crate_version!())
         .setting(AppSettings::UnifiedHelpMessage)
         .setting(AppSettings::DeriveDisplayOrder)
-        .arg(Arg::with_name("FILE/URL")
+        .arg(Arg::with_name("FILE") // TODO!: re-add URL when fixed...
             .required(true)
             .takes_value(true)
-            .help("glTF file name or URL"))
+            .help("glTF file name"))
         .arg(Arg::with_name("screenshot")
             .long("screenshot")
             .short("s")
@@ -75,7 +76,7 @@ pub fn main() {
             .long("verbose")
             .short("v")
             .multiple(true)
-            .help("Enable verbose logging (log level INFO). Can be repeated multiple times to increase to log level DEBUG/TRACE)"))
+            .help("Enable verbose logging (log level INFO). Can be repeated multiple times to increase log level to DEBUG/TRACE)"))
         .arg(Arg::with_name("WIDTH")
             .long("width")
             .short("w")
@@ -89,7 +90,7 @@ pub fn main() {
             .help("Height in pixels")
             .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
         .get_matches();
-    let source = args.value_of("FILE/URL").unwrap();
+    let source = args.value_of("FILE").unwrap();
     let width: u32 = args.value_of("WIDTH").unwrap().parse().unwrap();
     let height: u32 = args.value_of("HEIGHT").unwrap().parse().unwrap();
 
@@ -249,8 +250,11 @@ impl GltfViewer {
         let (gltf, buffers) = match gltf_importer::import_with_config(source, config) {
             Ok((gltf, buffers)) => (gltf, buffers),
             Err(err) => {
-                error!("glTF import failed: {}", err);
-                std::process::exit(1);
+                error!("glTF import failed: {:?}", err);
+                if let gltf_importer::Error::Io(_) = err {
+                    error!("Hint: Are the .bin file(s) referenced by the .gltf file available?")
+                }
+                std::process::exit(1)
             },
         };
 
@@ -297,7 +301,7 @@ impl GltfViewer {
         loop {
             // per-frame time logic
             // NOTE: Deliberately ignoring the seconds of `elapsed()`
-            self.delta_time = (self.last_frame.elapsed().subsec_nanos() as f64) / 1_000_000_000.0;
+            self.delta_time = f64::from(self.last_frame.elapsed().subsec_nanos()) / 1_000_000_000.0;
             self.last_frame = Instant::now();
 
             // events
@@ -355,6 +359,7 @@ impl GltfViewer {
     }
 }
 
+#[allow(too_many_arguments)]
 fn process_events(
     events_loop: &mut glutin::EventsLoop,
     gl_window: &glutin::GlWindow,
@@ -366,6 +371,7 @@ fn process_events(
     height: &mut u32) -> bool
 {
     let mut keep_running = true;
+    #[allow(single_match)]
     events_loop.poll_events(|event| {
         match event {
             glutin::Event::WindowEvent{ event, .. } => match event {

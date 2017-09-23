@@ -27,7 +27,10 @@ pub struct Node {
     pub bounds: Bounds,
 }
 
+
 impl Node {
+    // TODO!: refactor transformations using mint and non-deprecated functions
+    #[allow(deprecated)]
     pub fn from_gltf(
         g_node: gltf::Node,
         scene: &mut Scene,
@@ -45,7 +48,7 @@ impl Node {
         let mut mesh = None;
         if let Some(g_mesh) = g_node.mesh() {
             if let Some(existing_mesh) = scene.meshes.iter().find(|mesh| (***mesh).index == g_mesh.index()) {
-                mesh = Some(existing_mesh.clone());
+                mesh = Some(Rc::clone(existing_mesh));
             }
 
             if mesh.is_none() { // not using else due to borrow-checking madness
@@ -62,7 +65,6 @@ impl Node {
             matrix,
             mesh,
             rotation,
-            // TODO!!: use of deprecated item: Use `transform().decomposed()` instead.
             scale: g_node.scale().into(),
             translation: g_node.translation().into(),
             name: g_node.name().map(|s| s.into()),

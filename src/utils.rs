@@ -12,7 +12,7 @@ pub fn elapsed(start_time: &Instant) -> String {
 fn format_duration(duration: Duration) -> String {
     let secs = duration.as_secs();
     let nanos = duration.subsec_nanos();
-    let ms =  nanos as f64 / 1_000_000.0;
+    let ms = f64::from(nanos) / 1_000_000.0;
     if secs > 0 {
         let secs = secs as f64 + ms / 1000.0;
         format!("{:<4.*} s", 1, secs)
@@ -22,7 +22,7 @@ fn format_duration(duration: Duration) -> String {
             if ms >= 20.0      { 0 }
             else if ms >= 1.0  { 1 }
             else {
-                let micros = nanos as f64 / 1000.0;
+                let micros = f64::from(nanos) / 1000.0;
                 let places = if micros >= 10.0 { 0 } else { 2 };
                 return format!("{:>3.*} µs", places, micros)
             };
