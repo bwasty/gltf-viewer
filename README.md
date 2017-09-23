@@ -1,4 +1,4 @@
-# gltf-viewer
+# gltf-viewer ![status](https://img.shields.io/badge/glTF-2%2E0-green.svg?style=flat)
 [![crates.io](https://img.shields.io/crates/v/gltf-viewer.svg)](https://crates.io/crates/gltf-viewer)
 [![GitHub release](https://img.shields.io/github/release/bwasty/gltf-viewer.svg)](https://github.com/bwasty/gltf-viewer/releases/latest)
  [![](https://tokei.rs/b1/github/bwasty/gltf-viewer)](https://github.com/Aaronepower/tokei)
@@ -9,13 +9,11 @@
  [![Github All Releases](https://img.shields.io/github/downloads/bwasty/gltf-viewer/total.svg)](https://github.com/bwasty/gltf-viewer/releases)
 -->
 
-[glTF](https://github.com/KhronosGroup/glTF) 2.0 Viewer written in Rust.
+Rust [glTF 2.0](https://github.com/KhronosGroup/glTF) viewer, written using the [gltf](https://github.com/gltf-rs/gltf) crate and plain OpenGL.
 
-**Current state** : All sample models can be loaded:
-
-<img width="412" alt="gltf-viewer-0.1" src="https://user-images.githubusercontent.com/1647415/30771307-d70dbd26-a044-11e7-9ed1-b0e2ba80198c.png">
-
-Some glTF features are not implemented yet, most notably animations. See [#3](https://github.com/bwasty/gltf-viewer/issues/3) for details.
+**Current state** : All [official sample modles](https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0) can be loaded and are rendered with the [reference PBR shader](https://github.com/KhronosGroup/glTF-WebGL-PBR). Example: <br>
+<img width="412" alt="SciFiHelmet" title="SciFiHelmet" src="https://user-images.githubusercontent.com/1647415/30771307-d70dbd26-a044-11e7-9ed1-b0e2ba80198c.png"><br>
+Some glTF features are not yet implemented, most notably **animations**. See [#3](https://github.com/bwasty/gltf-viewer/issues/3) for details.
 
 ## Installation
 ### Binaries (Win/Linux/macOS)
@@ -34,9 +32,8 @@ cargo install gltf-viewer
 #### Additional dependencies (Ubuntu)
 `sudo apt-get install libssl-dev`
 -->
-
 ## Usage
-```shell
+```
 USAGE:
     gltf-viewer [OPTIONS] <FILE>
 
@@ -51,7 +48,7 @@ OPTIONS:
 ARGS:
     <FILE>    glTF file name
 ```
-Both .gltf and .glb files are supported.
+Both .gltf and .glb files are supported. 
 Navigate the scene with `WASD` + Mouse.
 
 ### Example
@@ -59,7 +56,6 @@ Navigate the scene with `WASD` + Mouse.
 $ curl -O https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Box/glTF-Binary/Box.glb
 $ gltf-viewer Box.glb
 ```
-For more models, see [KhronosGroup/glTF-Sample-Models](https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0).
 
 ## Goals
 * Complete gltF 2.0 support
