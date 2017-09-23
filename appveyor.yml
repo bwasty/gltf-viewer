@@ -82,3 +82,5 @@ notifications:
 
 # Building is done in the test phase, so we disable Appveyor's build phase.
 build: false
+
+skip_branch_with_pr: true
