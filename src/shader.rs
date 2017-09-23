@@ -146,12 +146,12 @@ impl Shader {
     /// utility function for checking shader compilation/linking errors.
     /// ------------------------------------------------------------------------
     unsafe fn check_compile_errors(&self, shader: u32, type_: &str) {
-        let mut success = gl::FALSE as GLint;
+        let mut success = i32::from(gl::FALSE);
         let mut info_log = Vec::with_capacity(1024);
         info_log.set_len(1024 - 1); // subtract 1 to skip the trailing null character
         if type_ != "PROGRAM" {
             gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut success);
-            let log_type = if success == gl::TRUE as GLint { "WARNING" } else { "ERROR" };
+            let log_type = if success == i32::from(gl::TRUE) { "WARNING" } else { "ERROR" };
             let mut length = 0;
             gl::GetShaderInfoLog(shader, 1024, &mut length, info_log.as_mut_ptr() as *mut GLchar);
             if length == 0 { return }
@@ -162,7 +162,7 @@ impl Shader {
 
         } else {
             gl::GetProgramiv(shader, gl::LINK_STATUS, &mut success);
-            let log_type = if success == gl::TRUE as GLint { "WARNING" } else { "ERROR" };
+            let log_type = if success == i32::from(gl::TRUE) { "WARNING" } else { "ERROR" };
             let mut length = 0;
             gl::GetProgramInfoLog(shader, 1024, &mut length, info_log.as_mut_ptr() as *mut GLchar);
             if length == 0 { return }

@@ -45,7 +45,7 @@ impl Node {
         let mut mesh = None;
         if let Some(g_mesh) = g_node.mesh() {
             if let Some(existing_mesh) = scene.meshes.iter().find(|mesh| (***mesh).index == g_mesh.index()) {
-                mesh = Some(existing_mesh.clone());
+                mesh = Some(Rc::clone(existing_mesh));
             }
 
             if mesh.is_none() { // not using else due to borrow-checking madness

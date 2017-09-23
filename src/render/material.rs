@@ -126,10 +126,10 @@ fn load_texture(
     assert_eq!(tex_coord, 0, "not yet implemented: tex coord set must be 0 (Material::from_gltf)");
 
     if let Some(tex) = scene.textures.iter().find(|tex| (***tex).index == g_texture.index()) {
-        return tex.clone()
+        return Rc::clone(tex)
     }
 
     let texture = Rc::new(Texture::from_gltf(g_texture, tex_coord, buffers, base_path));
-    scene.textures.push(texture.clone());
+    scene.textures.push(Rc::clone(&texture));
     texture
 }
