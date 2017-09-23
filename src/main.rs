@@ -250,7 +250,10 @@ impl GltfViewer {
         let (gltf, buffers) = match gltf_importer::import_with_config(source, config) {
             Ok((gltf, buffers)) => (gltf, buffers),
             Err(err) => {
-                error!("glTF import failed: {}", err);
+                error!("glTF import failed: {:?}", err);
+                if let gltf_importer::Error::Io(_) = err {
+                    error!("Hint: Are the .bin file(s) referenced by the .gltf file available?")
+                }
                 std::process::exit(1)
             },
         };
