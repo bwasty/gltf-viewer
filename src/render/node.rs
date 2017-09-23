@@ -27,7 +27,10 @@ pub struct Node {
     pub bounds: Bounds,
 }
 
+
 impl Node {
+    // TODO!: refactor transformations using mint and non-deprecated functions
+    #[allow(deprecated)]
     pub fn from_gltf(
         g_node: gltf::Node,
         scene: &mut Scene,
@@ -62,7 +65,6 @@ impl Node {
             matrix,
             mesh,
             rotation,
-            // TODO!!: use of deprecated item: Use `transform().decomposed()` instead.
             scale: g_node.scale().into(),
             translation: g_node.translation().into(),
             name: g_node.name().map(|s| s.into()),
