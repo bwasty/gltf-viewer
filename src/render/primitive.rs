@@ -22,7 +22,7 @@ pub struct Vertex {
     pub tangent: Vector4,
     pub tex_coord_0: Vector2,
     pub tex_coord_1: Vector2,
-    pub color_0: Vector3, // TODO: vec4 support
+    pub color_0: Vector4,
     // TODO: joints, weights
     // pub joints_0: Vector4,
     // pub weights_0: Vector4,
@@ -36,7 +36,7 @@ impl Default for Vertex {
             tangent: Vector4::zero(),
             tex_coord_0: Vector2::zero(),
             tex_coord_1: Vector2::zero(),
-            color_0: Vector3::zero(),
+            color_0: Vector4::zero(),
         }
     }
 }
@@ -168,9 +168,8 @@ impl Primitive {
                 color_set += 1;
                 continue;
             }
-            // TODO!!: alpha (color attribute)
             for (i, c) in colors.enumerate() {
-                vertices[i].color_0 = vec3(c[0], c[1], c[2]);
+                vertices[i].color_0 = vec4(c[0], c[1], c[2], c[3]);
             }
             shader_flags |= HAS_COLORS;
             color_set += 1;
@@ -321,7 +320,7 @@ impl Primitive {
         gl::VertexAttribPointer(4, 2, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, tex_coord_1) as *const c_void);
         // COLOR_0
         gl::EnableVertexAttribArray(5);
-        gl::VertexAttribPointer(5, 3, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, color_0) as *const c_void);
+        gl::VertexAttribPointer(5, 4, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, color_0) as *const c_void);
 
         gl::BindVertexArray(0);
     }

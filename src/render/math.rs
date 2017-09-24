@@ -2,7 +2,7 @@ use std::f32;
 
 use cgmath;
 pub use cgmath::prelude::*;
-pub use cgmath::vec3;
+pub use cgmath::{vec3, vec4};
 
 pub type Vector2 = cgmath::Vector2<f32>;
 pub type Vector3 = cgmath::Vector3<f32>;
