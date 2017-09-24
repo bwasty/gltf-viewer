@@ -47,6 +47,7 @@ version = "0.9.2"
 
 [dependencies.mikktspace]
 git = "https://github.com/gltf-rs/mikktspace"
+branch = "cmake_fix_old_gcc"
 
 # [profile.dev]
 # opt-level = 2
