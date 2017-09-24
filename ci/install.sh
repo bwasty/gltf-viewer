@@ -18,9 +18,6 @@ main() {
                        | grep -E '^v[0.1.0-9.]+$' \
                        | $sort --version-sort \
                        | tail -n1)
-    # TODO!: temporary workaround for https://github.com/japaric/cross/issues/126
-    tag=v0.1.11
-
     curl -LSfs https://japaric.github.io/trust/install.sh | \
         sh -s -- \
            --force \
