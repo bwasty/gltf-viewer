@@ -23,9 +23,8 @@ pub struct Vertex {
     pub tex_coord_0: Vector2,
     pub tex_coord_1: Vector2,
     pub color_0: Vector4,
-    // TODO: joints, weights
-    // pub joints_0: Vector4,
-    // pub weights_0: Vector4,
+    pub joints_0: [u16; 4],
+    pub weights_0: Vector4,
 }
 
 impl Default for Vertex {
@@ -37,6 +36,8 @@ impl Default for Vertex {
             tex_coord_0: Vector2::zero(),
             tex_coord_1: Vector2::zero(),
             color_0: Vector4::zero(),
+            joints_0: [0; 4],
+            weights_0: Vector4::zero(),
         }
     }
 }
@@ -159,20 +160,37 @@ impl Primitive {
         }
 
         // colors
-        let mut color_set = 0;
-        while let Some(colors) = g_primitive.colors_rgba_f32(color_set, 1.0, buffers) {
-            if color_set > 0 {
-                warn!("Ignoring color set {}, \
-                       only supporting 1 set at the moment. (mesh: {}, primitive: {})",
-                       color_set, mesh_index, primitive_index);
-                color_set += 1;
-                continue;
-            }
+        if let Some(colors) = g_primitive.colors_rgba_f32(0, 1.0, buffers) {
             for (i, c) in colors.enumerate() {
-                vertices[i].color_0 = vec4(c[0], c[1], c[2], c[3]);
+                vertices[i].color_0 = c.into();
             }
             shader_flags |= HAS_COLORS;
-            color_set += 1;
+        }
+        if g_primitive.colors_rgba_f32(1, 1.0, buffers).is_some() {
+            warn!("Ignoring further color attributes, only supporting COLOR_0. (mesh: {}, primitive: {})",
+                mesh_index, primitive_index);
+        }
+
+        if let Some(joints) = g_primitive.joints_u16(0, buffers) {
+            for (i, joint) in joints.enumerate() {
+                vertices[i].joints_0 = joint;
+            }
+            println!("has joints");
+        }
+        if g_primitive.joints_u16(1, buffers).is_some() {
+            warn!("Ignoring further joint attributes, only supporting JOINTS_0. (mesh: {}, primitive: {})",
+                mesh_index, primitive_index);
+        }
+
+        if let Some(weights) = g_primitive.weights_f32(0, buffers) {
+            for (i, weights) in weights.enumerate() {
+                vertices[i].weights_0 = weights.into();
+            }
+            println!("has weights");
+        }
+        if g_primitive.weights_f32(1, buffers).is_some() {
+            warn!("Ignoring further weight attributes, only supporting WEIGHTS_0. (mesh: {}, primitive: {})",
+                mesh_index, primitive_index);
         }
 
         let indices: Option<Vec<u32>> = g_primitive.indices_u32(buffers).map(|indices| indices.collect());
@@ -327,6 +345,13 @@ impl Primitive {
         // COLOR_0
         gl::EnableVertexAttribArray(5);
         gl::VertexAttribPointer(5, 4, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, color_0) as *const c_void);
+        // JOINTS_0
+        gl::EnableVertexAttribArray(6);
+        // TODO: normalization?
+        gl::VertexAttribPointer(6, 4, gl::UNSIGNED_SHORT, gl::FALSE, size, offset_of!(Vertex, joints_0) as *const c_void);
+        // WEIGHTS_0
+        gl::EnableVertexAttribArray(7);
+        gl::VertexAttribPointer(7, 4, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, weights_0) as *const c_void);
 
         gl::BindVertexArray(0);
     }
