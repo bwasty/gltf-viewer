@@ -20,7 +20,7 @@ use gltf_importer::config::ValidationStrategy;
 use image::{DynamicImage, ImageFormat};
 
 
-use camera::Camera;
+use camera::CameraControls;
 use camera::CameraMovement::*;
 use framebuffer::Framebuffer;
 use render::*;
@@ -38,7 +38,7 @@ pub struct GltfViewer {
     width: u32,
     height: u32,
 
-    camera: Camera,
+    camera: CameraControls,
     first_mouse: bool,
     last_x: f32,
     last_y: f32,
@@ -55,12 +55,16 @@ pub struct GltfViewer {
 
 impl GltfViewer {
     pub fn new(source: &str, width: u32, height: u32, headless: bool, visible: bool) -> GltfViewer {
-        let camera = Camera {
+        let mut camera = CameraControls {
             position: Point3::new(0.0, 0.0, 2.0),
-            zoom: 60.0,
+            fovy: 60.0,
             aspect_ratio: width as f32 / height as f32,
-            ..Camera::default()
+            ..CameraControls::default()
         };
+
+        // TODO!!!: tmp
+        camera.update_projection_matrix();
+
 
         let first_mouse = true;
         let last_x: f32 = width as f32 / 2.0;
@@ -272,7 +276,7 @@ fn process_events(
     first_mouse: &mut bool,
     last_x: &mut f32,
     last_y: &mut f32,
-    mut camera: &mut Camera,
+    mut camera: &mut CameraControls,
     width: &mut u32,
     height: &mut u32) -> bool
 {
@@ -321,7 +325,7 @@ fn process_events(
     keep_running
 }
 
-fn process_input(input: glutin::KeyboardInput, camera: &mut Camera) -> bool {
+fn process_input(input: glutin::KeyboardInput, camera: &mut CameraControls) -> bool {
     let pressed = match input.state {
         ElementState::Pressed => true,
         ElementState::Released => false

@@ -2,6 +2,9 @@ use cgmath;
 use cgmath::{vec3, Deg, perspective};
 use cgmath::prelude::*;
 
+use gltf;
+use gltf::camera::Projection;
+
 type Point3 = cgmath::Point3<f32>;
 type Vector3 = cgmath::Vector3<f32>;
 type Matrix4 = cgmath::Matrix4<f32>;
@@ -26,7 +29,7 @@ const ZOOM: f32 = 45.0;
 const MIN_ZOOM: f32 = 1.0;
 const MAZ_ZOOM: f32 = 90.0;
 
-pub struct Camera {
+pub struct CameraControls {
     // Camera Attributes
     pub position: Point3,
 
@@ -43,8 +46,19 @@ pub struct Camera {
     // Camera options
     pub movement_speed: f32,
     pub mouse_sensitivity: f32,
-    pub zoom: f32,
+
+    pub znear: f32,
+    pub zfar: Option<f32>,
+
+    // perspective camera
+    pub fovy: f32,
     pub aspect_ratio: f32,
+
+    // orthographic camera
+    pub xmag: Option<f32>,
+    pub ymag: Option<f32>,
+
+    pub projection_matrix: Matrix4,
 
     // pub moving_up: bool,
     pub moving_left: bool,
@@ -54,9 +68,9 @@ pub struct Camera {
     pub moving_backward: bool,
 }
 
-impl Default for Camera {
-    fn default() -> Camera {
-        let mut camera = Camera {
+impl Default for CameraControls {
+    fn default() -> CameraControls {
+        let mut camera = CameraControls {
             position: Point3::new(0.0, 0.0, 0.0),
             front: vec3(0.0, 0.0, -1.0),
             center: None,
@@ -67,8 +81,17 @@ impl Default for Camera {
             pitch: PITCH,
             movement_speed: SPEED,
             mouse_sensitivity: SENSITIVTY,
-            zoom: ZOOM,
+
+            znear: 0.01,
+            zfar: Some(1000.0),
+
+            fovy: ZOOM,
             aspect_ratio: 1.0,
+
+            xmag: None,
+            ymag: None,
+
+            projection_matrix: Matrix4::zero(),
 
             // moving_up: false,
             moving_left: false,
@@ -83,9 +106,44 @@ impl Default for Camera {
     }
 }
 
-impl Camera {
-    // TODO!: cache matrices? doesn't change every frame...
-    /// Returns the view matrix calculated using Eular Angles and the LookAt Matrix
+impl CameraControls {
+    fn set_from_gltf(&mut self, g_camera: &gltf::Camera) {
+        match g_camera.projection() {
+            Projection::Perspective(persp) => {
+                // TODO!: ignoring aspect ratio for now as it would require window resizing...
+                let _aspect = persp.aspect_ratio();
+                self.fovy = persp.yfov();
+                self.znear = persp.znear();
+                self.zfar = persp.zfar();
+            },
+            Projection::Orthographic(ortho) => {
+                self.xmag = Some(ortho.xmag());
+                self.ymag = Some(ortho.ymag());
+                self.znear = ortho.znear();
+                self.zfar = Some(ortho.zfar());
+            }
+        }
+        self.update_projection_matrix();
+    }
+
+    pub fn update_projection_matrix(&mut self) {
+        if let Some(_xmag) = self.xmag {
+            unimplemented!() // TODO!!!: ortho camera
+        } else {
+            if let Some(zfar) = self.zfar {
+                self.projection_matrix = perspective(
+                    Deg(self.fovy),
+                    self.aspect_ratio,
+                    self.znear, zfar)
+            } else {
+                unimplemented!() // TODO!!!: inifinite projection
+            }
+        }
+    }
+
+
+    // TODO!: cache? doesn't change every frame...
+    /// Returns the view matrix calculated using Euler Angles and the LookAt Matrix
     pub fn view_matrix(&self) -> Matrix4 {
         if let Some(center) = self.center {
             Matrix4::look_at(self.position, center, self.up)
@@ -93,11 +151,6 @@ impl Camera {
         else {
             Matrix4::look_at(self.position, self.position + self.front, self.up)
         }
-    }
-
-    // TODO!!: cache + avoid repeatedly setting same uniform
-    pub fn projection_matrix(&self) -> Matrix4 {
-        perspective(Deg(self.zoom), self.aspect_ratio, 0.01, 1000.0)
     }
 
     pub fn update(&mut self, delta_time: f64) {
@@ -150,14 +203,14 @@ impl Camera {
     // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     pub fn process_mouse_scroll(&mut self, mut yoffset: f32) {
         yoffset *= ZOOM_SENSITIVITY;
-        if self.zoom >= MIN_ZOOM && self.zoom <= MAZ_ZOOM {
-            self.zoom -= yoffset;
+        if self.fovy >= MIN_ZOOM && self.fovy <= MAZ_ZOOM {
+            self.fovy -= yoffset;
         }
-        if self.zoom <= MIN_ZOOM {
-            self.zoom = MIN_ZOOM;
+        if self.fovy <= MIN_ZOOM {
+            self.fovy = MIN_ZOOM;
         }
-        if self.zoom >= MAZ_ZOOM {
-            self.zoom = MAZ_ZOOM;
+        if self.fovy >= MAZ_ZOOM {
+            self.fovy = MAZ_ZOOM;
         }
     }
 

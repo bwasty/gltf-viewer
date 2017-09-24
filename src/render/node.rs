@@ -4,10 +4,11 @@ use std::path::Path;
 use gltf;
 use gltf_importer;
 
-use camera::Camera;
+use camera::CameraControls;
 use render::math::*;
 use render::mesh::Mesh;
 use render::scene::Scene;
+use render::camera::Camera;
 
 pub struct Node {
     // TODO!!: handle camera in Node
@@ -19,6 +20,7 @@ pub struct Node {
     pub translation: Vector3,
     // TODO: weights
     // weights_id: usize,
+    pub camera: Option<Camera>,
     pub name: Option<String>,
 
     final_transform: Matrix4, // including parent transforms
@@ -67,6 +69,7 @@ impl Node {
             rotation,
             scale: g_node.scale().into(),
             translation: g_node.translation().into(),
+            camera: g_node.camera().as_ref().map(Camera::from_gltf),
             name: g_node.name().map(|s| s.into()),
 
             final_transform: Matrix4::identity(),
@@ -116,9 +119,9 @@ impl Node {
         }
     }
 
-    pub fn draw(&mut self, camera: &Camera) {
+    pub fn draw(&mut self, camera: &CameraControls) {
         if let Some(ref mesh) = self.mesh {
-            let mvp_matrix = camera.projection_matrix() * camera.view_matrix() * self.final_transform;
+            let mvp_matrix = camera.projection_matrix * camera.view_matrix() * self.final_transform;
 
             (*mesh).draw(&self.final_transform, &mvp_matrix, &camera.position.to_vec());
         }
