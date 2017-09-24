@@ -12,7 +12,7 @@ layout (location = 2) in vec4 a_Tangent;
 #ifdef HAS_UV
 layout (location = 3) in vec2 a_UV;
 #endif
-// TODO!: tex_coord_1, color_0
+// TODO!: tex_coord_1, color_0, joints_0, weights_0
 
 uniform mat4 u_MVPMatrix;
 uniform mat4 u_ModelMatrix;

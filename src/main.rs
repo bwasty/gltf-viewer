@@ -126,6 +126,7 @@ pub fn main() {
 // How about state ordering anyway?
 // struct DrawState {
 //     current_shader: ShaderFlags,
+//     back_face_culling_enabled: bool
 // }
 
 struct GltfViewer {
@@ -284,6 +285,7 @@ impl GltfViewer {
         let _obj_pos_modifier = -center;
 
         let _max_distance = size * 10.0;
+        // TODO: x,y addition optional, z optionally minus instead
         let cam_pos = Point3::new(
             center.x + size / 2.0,
             center.y + size / 5.0,

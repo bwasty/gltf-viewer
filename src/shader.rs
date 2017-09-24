@@ -254,7 +254,6 @@ pub struct PbrShader {
 
 impl PbrShader {
     pub fn new(flags: ShaderFlags) -> Self {
-        // TODO!!: switch before/after release! + find better way...override?
         let mut shader = Shader::from_source(
             include_str!("shaders/pbr-vert.glsl"),
             include_str!("shaders/pbr-frag.glsl"),
@@ -307,6 +306,7 @@ impl PbrShader {
             shader.set_int(uniforms.u_OcclusionSampler, 4);
 
             shader.set_vec3(uniforms.u_LightColor, 5.0, 5.0, 5.0);
+            // TODO!: optional minus on z
             shader.set_vec3(uniforms.u_LightDirection, 0.0, 0.5, 0.5);
 
             uniforms

@@ -5,8 +5,6 @@ dependencies = [
  "bitflags 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cgmath 0.14.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.26.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "futures 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
- "futures-cpupool 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "gl 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "gltf 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "gltf-importer 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
