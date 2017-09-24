@@ -127,6 +127,10 @@ vec3 getNormal()
     vec3 n = tbn[2].xyz;
 #endif
 
+    // reverse backface normals
+    // TODO!: correct/best place? -> https://github.com/KhronosGroup/glTF-WebGL-PBR/issues/51
+    n *= (2.0 * float(gl_FrontFacing) - 1.0);
+
     return n;
 }
 
