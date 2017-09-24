@@ -23,17 +23,17 @@ repository = "bwasty/gltf-viewer"
 
 [dependencies]
 bitflags = "0.9.1"
-cgmath = "0.14.1"
-clap = "2.25.1"
+cgmath = "0.15.0"
+clap = "2.26.2"
 # futures = "0.1.14"
 # futures-cpupool = "0.1.5"
 gl = "0.6.3"
 glutin = "0.9.2"
-image = "0.14.0"
-reqwest = "0.7.2"
-log = "0.3"
+image = "0.16.0"
+# reqwest = "0.7.3"
+log = "0.3.8"
 simplelog = "0.4.2"
-itertools = "0.6.1"
+# itertools = "0.6.3"
 
 [dependencies.gltf]
 version = "0.9.2"
