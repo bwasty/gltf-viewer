@@ -55,16 +55,17 @@ pub struct GltfViewer {
 
 impl GltfViewer {
     pub fn new(source: &str, width: u32, height: u32, headless: bool, visible: bool) -> GltfViewer {
+        // TODO!: handle initialization better
         let mut camera = CameraControls {
             position: Point3::new(0.0, 0.0, 2.0),
-            fovy: 60.0,
-            aspect_ratio: width as f32 / height as f32,
+            camera: Camera {
+                fovy: 60.0,
+                aspect_ratio: width as f32 / height as f32,
+                ..Camera::default()
+            },
             ..CameraControls::default()
         };
-
-        // TODO!!!: tmp
-        camera.update_projection_matrix();
-
+        camera.camera.update_projection_matrix();
 
         let first_mouse = true;
         let last_x: f32 = width as f32 / 2.0;

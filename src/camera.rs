@@ -1,13 +1,12 @@
-use cgmath;
-use cgmath::{vec3, Deg, perspective};
+use cgmath::{vec3};
 use cgmath::prelude::*;
 
-use gltf;
-use gltf::camera::Projection;
+// type Point3 = cgmath::Point3<f32>;
+// type Vector3 = cgmath::Vector3<f32>;
+// type Matrix4 = cgmath::Matrix4<f32>;
 
-type Point3 = cgmath::Point3<f32>;
-type Vector3 = cgmath::Vector3<f32>;
-type Matrix4 = cgmath::Matrix4<f32>;
+use render::Camera;
+use render::math::*;
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
 #[derive(PartialEq)]
@@ -25,7 +24,7 @@ const PITCH: f32 = 0.0;
 const SPEED: f32 = 2.5;
 const SENSITIVTY: f32 = 0.1;
 const ZOOM_SENSITIVITY: f32 = 0.1;
-const ZOOM: f32 = 45.0;
+pub const ZOOM: f32 = 45.0;
 const MIN_ZOOM: f32 = 1.0;
 const MAZ_ZOOM: f32 = 90.0;
 
@@ -47,18 +46,7 @@ pub struct CameraControls {
     pub movement_speed: f32,
     pub mouse_sensitivity: f32,
 
-    pub znear: f32,
-    pub zfar: Option<f32>,
-
-    // perspective camera
-    pub fovy: f32,
-    pub aspect_ratio: f32,
-
-    // orthographic camera
-    pub xmag: Option<f32>,
-    pub ymag: Option<f32>,
-
-    pub projection_matrix: Matrix4,
+    pub camera: Camera,
 
     // pub moving_up: bool,
     pub moving_left: bool,
@@ -82,16 +70,7 @@ impl Default for CameraControls {
             movement_speed: SPEED,
             mouse_sensitivity: SENSITIVTY,
 
-            znear: 0.01,
-            zfar: Some(1000.0),
-
-            fovy: ZOOM,
-            aspect_ratio: 1.0,
-
-            xmag: None,
-            ymag: None,
-
-            projection_matrix: Matrix4::zero(),
+            camera: Camera::default(),
 
             // moving_up: false,
             moving_left: false,
@@ -107,41 +86,6 @@ impl Default for CameraControls {
 }
 
 impl CameraControls {
-    fn set_from_gltf(&mut self, g_camera: &gltf::Camera) {
-        match g_camera.projection() {
-            Projection::Perspective(persp) => {
-                // TODO!: ignoring aspect ratio for now as it would require window resizing...
-                let _aspect = persp.aspect_ratio();
-                self.fovy = persp.yfov();
-                self.znear = persp.znear();
-                self.zfar = persp.zfar();
-            },
-            Projection::Orthographic(ortho) => {
-                self.xmag = Some(ortho.xmag());
-                self.ymag = Some(ortho.ymag());
-                self.znear = ortho.znear();
-                self.zfar = Some(ortho.zfar());
-            }
-        }
-        self.update_projection_matrix();
-    }
-
-    pub fn update_projection_matrix(&mut self) {
-        if let Some(_xmag) = self.xmag {
-            unimplemented!() // TODO!!!: ortho camera
-        } else {
-            if let Some(zfar) = self.zfar {
-                self.projection_matrix = perspective(
-                    Deg(self.fovy),
-                    self.aspect_ratio,
-                    self.znear, zfar)
-            } else {
-                unimplemented!() // TODO!!!: inifinite projection
-            }
-        }
-    }
-
-
     // TODO!: cache? doesn't change every frame...
     /// Returns the view matrix calculated using Euler Angles and the LookAt Matrix
     pub fn view_matrix(&self) -> Matrix4 {
@@ -203,15 +147,16 @@ impl CameraControls {
     // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     pub fn process_mouse_scroll(&mut self, mut yoffset: f32) {
         yoffset *= ZOOM_SENSITIVITY;
-        if self.fovy >= MIN_ZOOM && self.fovy <= MAZ_ZOOM {
-            self.fovy -= yoffset;
+        if self.camera.fovy >= MIN_ZOOM && self.camera.fovy <= MAZ_ZOOM {
+            self.camera.fovy -= yoffset;
         }
-        if self.fovy <= MIN_ZOOM {
-            self.fovy = MIN_ZOOM;
+        if self.camera.fovy <= MIN_ZOOM {
+            self.camera.fovy = MIN_ZOOM;
         }
-        if self.fovy >= MAZ_ZOOM {
-            self.fovy = MAZ_ZOOM;
+        if self.camera.fovy >= MAZ_ZOOM {
+            self.camera.fovy = MAZ_ZOOM;
         }
+        self.camera.update_projection_matrix();
     }
 
     /// Calculates the front vector from the Camera's (updated) Eular Angles

@@ -119,14 +119,14 @@ impl Node {
         }
     }
 
-    pub fn draw(&mut self, camera: &CameraControls) {
+    pub fn draw(&mut self, controls: &CameraControls) {
         if let Some(ref mesh) = self.mesh {
-            let mvp_matrix = camera.projection_matrix * camera.view_matrix() * self.final_transform;
+            let mvp_matrix = controls.camera.projection_matrix * controls.view_matrix() * self.final_transform;
 
-            (*mesh).draw(&self.final_transform, &mvp_matrix, &camera.position.to_vec());
+            (*mesh).draw(&self.final_transform, &mvp_matrix, &controls.position.to_vec());
         }
         for node in &mut self.children {
-            node.draw(camera);
+            node.draw(controls);
         }
     }
 }
