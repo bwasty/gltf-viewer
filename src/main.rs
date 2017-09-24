@@ -111,16 +111,16 @@ mod tests {
     fn print_struct_sizes() {
         // run with `cargo test -- --nocapture`
         println!("Sizes in bytes:");
-        println!("Scene:     {:>3}", std::mem::size_of::<Scene>());
-        println!("Node:      {:>3}", std::mem::size_of::<Node>());
-        println!("Mesh:      {:>3}", std::mem::size_of::<Mesh>());
-        println!("Primitive: {:>3}", std::mem::size_of::<Primitive>());
-        println!("Vertex:    {:>3}", std::mem::size_of::<Vertex>());
+        println!("Scene:     {:>3}", std::mem::size_of::<render::Scene>());
+        println!("Node:      {:>3}", std::mem::size_of::<render::Node>());
+        println!("Mesh:      {:>3}", std::mem::size_of::<render::Mesh>());
+        println!("Primitive: {:>3}", std::mem::size_of::<render::Primitive>());
+        println!("Vertex:    {:>3}", std::mem::size_of::<render::Vertex>());
         println!();
         println!("Option<String>: {:>3}", std::mem::size_of::<Option<String>>());
         println!("String:         {:>3}", std::mem::size_of::<String>());
         println!("Vec<f32>:       {:>3}", std::mem::size_of::<Vec<f32>>());
-        println!("Vec<Node>:      {:>3}", std::mem::size_of::<Vec<Node>>());
+        println!("Vec<Node>:      {:>3}", std::mem::size_of::<Vec<render::Node>>());
     }
 
 //     extern crate test;
