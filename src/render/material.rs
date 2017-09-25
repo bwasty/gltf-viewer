@@ -5,7 +5,7 @@ use gltf;
 use gltf_importer;
 
 use render::math::*;
-use render::{ Scene, Texture };
+use render::{ Root, Texture };
 use shader::*;
 
 pub struct Material {
@@ -37,7 +37,7 @@ pub struct Material {
 impl Material {
     pub fn from_gltf(
         g_material: &gltf::material::Material,
-        scene: &mut Scene,
+        root: &mut Root,
         buffers: &gltf_importer::Buffers, base_path: &Path
     ) -> Material {
         let pbr = g_material.pbr_metallic_roughness();
@@ -69,25 +69,25 @@ impl Material {
 
         if let Some(color_info) = pbr.base_color_texture() {
             material.base_color_texture = Some(
-                load_texture(&color_info.texture(), color_info.tex_coord(), scene, buffers, base_path));
+                load_texture(&color_info.texture(), color_info.tex_coord(), root, buffers, base_path));
         }
         if let Some(mr_info) = pbr.metallic_roughness_texture() {
             material.metallic_roughness_texture = Some(
-                load_texture(&mr_info.texture(), mr_info.tex_coord(), scene, buffers, base_path));
+                load_texture(&mr_info.texture(), mr_info.tex_coord(), root, buffers, base_path));
         }
         if let Some(normal_texture) = g_material.normal_texture() {
             material.normal_texture = Some(
-                load_texture(&normal_texture.texture(), normal_texture.tex_coord(), scene, buffers, base_path));
+                load_texture(&normal_texture.texture(), normal_texture.tex_coord(), root, buffers, base_path));
             material.normal_scale = Some(normal_texture.scale());
         }
         if let Some(occ_texture) = g_material.occlusion_texture() {
             material.occlusion_texture = Some(
-                load_texture(&occ_texture.texture(), occ_texture.tex_coord(), scene, buffers, base_path));
+                load_texture(&occ_texture.texture(), occ_texture.tex_coord(), root, buffers, base_path));
             material.occlusion_strength = occ_texture.strength();
         }
         if let Some(em_info) = g_material.emissive_texture() {
             material.emissive_texture = Some(
-                load_texture(&em_info.texture(), em_info.tex_coord(), scene, buffers, base_path));
+                load_texture(&em_info.texture(), em_info.tex_coord(), root, buffers, base_path));
         }
 
         material
@@ -118,18 +118,18 @@ impl Material {
 fn load_texture(
     g_texture: &gltf::texture::Texture,
     tex_coord: u32,
-    scene: &mut Scene,
+    root: &mut Root,
     buffers: &gltf_importer::Buffers,
     base_path: &Path) -> Rc<Texture>
 {
     // TODO!: handle tex coord set in shaders
     assert_eq!(tex_coord, 0, "not yet implemented: tex coord set must be 0 (Material::from_gltf)");
 
-    if let Some(tex) = scene.textures.iter().find(|tex| (***tex).index == g_texture.index()) {
+    if let Some(tex) = root.textures.iter().find(|tex| (***tex).index == g_texture.index()) {
         return Rc::clone(tex)
     }
 
     let texture = Rc::new(Texture::from_gltf(g_texture, tex_coord, buffers, base_path));
-    scene.textures.push(Rc::clone(&texture));
+    root.textures.push(Rc::clone(&texture));
     texture
 }

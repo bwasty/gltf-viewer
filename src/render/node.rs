@@ -7,12 +7,12 @@ use gltf_importer;
 use camera::CameraControls;
 use render::math::*;
 use render::mesh::Mesh;
-use render::scene::Scene;
+use render::Root;
 use render::camera::Camera;
 
 pub struct Node {
-    // TODO!!: handle camera in Node
-    pub children: Vec<Node>,
+    pub index: usize, // glTF index
+    pub children: Vec<Node>, // TODO!!!: change to indices
     pub matrix: Matrix4,
     pub mesh: Option<Rc<Mesh>>,
     pub rotation: Quaternion,
@@ -35,7 +35,7 @@ impl Node {
     #[allow(deprecated)]
     pub fn from_gltf(
         g_node: gltf::Node,
-        scene: &mut Scene,
+        root: &mut Root,
         buffers: &gltf_importer::Buffers,
         base_path: &Path
     ) -> Node {
@@ -49,20 +49,21 @@ impl Node {
 
         let mut mesh = None;
         if let Some(g_mesh) = g_node.mesh() {
-            if let Some(existing_mesh) = scene.meshes.iter().find(|mesh| (***mesh).index == g_mesh.index()) {
+            if let Some(existing_mesh) = root.meshes.iter().find(|mesh| (***mesh).index == g_mesh.index()) {
                 mesh = Some(Rc::clone(existing_mesh));
             }
 
             if mesh.is_none() { // not using else due to borrow-checking madness
-                mesh = Some(Rc::new(Mesh::from_gltf(g_mesh, scene, buffers, base_path)));
-                scene.meshes.push(mesh.clone().unwrap());
+                mesh = Some(Rc::new(Mesh::from_gltf(g_mesh, root, buffers, base_path)));
+                root.meshes.push(mesh.clone().unwrap());
             }
         }
         let children: Vec<_> = g_node.children()
-                .map(|g_node| Node::from_gltf(g_node, scene, buffers, base_path))
+                .map(|g_node| Node::from_gltf(g_node, root, buffers, base_path))
                 .collect();
 
         Node {
+            index: g_node.index(),
             children,
             matrix,
             mesh,
@@ -129,4 +130,13 @@ impl Node {
             node.draw(controls);
         }
     }
+
+    // pub fn walk_children<F>(&self, callback: F)
+    //     where F: Fn(&Node)
+    // {
+    //     for child in &self.children {
+    //         callback(child);
+    //         child.walk_children(callback)
+    //     }
+    // }
 }

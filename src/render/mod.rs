@@ -1,6 +1,8 @@
 pub mod math;
 // pub use self::math::*;
 
+mod root;
+pub use self::root::*;
 mod scene;
 pub use self::scene::*;
 mod node;

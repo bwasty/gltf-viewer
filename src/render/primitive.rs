@@ -12,7 +12,7 @@ use gltf_utils::PrimitiveIterators;
 
 // use camera::Camera;
 use render::math::*;
-use render::{Material, Scene};
+use render::{Material, Root};
 use shader::*;
 
 #[derive(Debug)]
@@ -93,7 +93,7 @@ impl Primitive {
         g_primitive: gltf::Primitive,
         primitive_index: usize,
         mesh_index: usize,
-        scene: &mut Scene,
+        root: &mut Root,
         buffers: &gltf_importer::Buffers,
         base_path: &Path) -> Primitive
     {
@@ -200,13 +200,13 @@ impl Primitive {
         let g_material = g_primitive.material();
 
         let mut material = None;
-        if let Some(mat) = scene.materials.iter().find(|m| (***m).index == g_material.index()) {
+        if let Some(mat) = root.materials.iter().find(|m| (***m).index == g_material.index()) {
             material = Rc::clone(mat).into()
         }
 
         if material.is_none() { // no else due to borrow checker madness
-            let mat = Rc::new(Material::from_gltf(&g_material, scene, buffers, base_path));
-            scene.materials.push(Rc::clone(&mat));
+            let mat = Rc::new(Material::from_gltf(&g_material, root, buffers, base_path));
+            root.materials.push(Rc::clone(&mat));
             material = Some(mat);
         };
         let material = material.unwrap();
@@ -214,7 +214,7 @@ impl Primitive {
 
         let mut new_shader = false; // borrow checker workaround
         let shader =
-            if let Some(shader) = scene.shaders.get(&shader_flags) {
+            if let Some(shader) = root.shaders.get(&shader_flags) {
                 Rc::clone(shader)
             }
             else {
@@ -223,7 +223,7 @@ impl Primitive {
 
             };
         if new_shader {
-            scene.shaders.insert(shader_flags, Rc::clone(&shader));
+            root.shaders.insert(shader_flags, Rc::clone(&shader));
         }
 
         Primitive::new(bounds.into(), vertices, indices, material, shader)

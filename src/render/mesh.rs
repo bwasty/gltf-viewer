@@ -5,7 +5,7 @@ use gltf;
 use gltf_importer;
 
 use render::math::*;
-use render::{Primitive, Scene};
+use render::{Primitive, Root};
 
 pub struct Mesh {
     pub index: usize, // glTF index
@@ -20,14 +20,14 @@ pub struct Mesh {
 impl Mesh {
     pub fn from_gltf(
         g_mesh: gltf::Mesh,
-        scene: &mut Scene,
+        root: &mut Root,
         buffers: &gltf_importer::Buffers,
         base_path: &Path,
     ) -> Mesh {
         let primitives: Vec<Primitive> = g_mesh.primitives()
             .enumerate()
             .map(|(i, g_prim)| {
-                Primitive::from_gltf(g_prim, i, g_mesh.index(), scene, buffers, base_path)
+                Primitive::from_gltf(g_prim, i, g_mesh.index(), root, buffers, base_path)
             })
             .collect();
 

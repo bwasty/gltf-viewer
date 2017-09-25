@@ -47,7 +47,7 @@ impl Camera {
             znear: 0.0,
             zfar: None,
             fovy: 0.0,
-            aspect_ratio: 0.0,
+            aspect_ratio: 1.0,
             xmag: None,
             ymag: None,
         };
@@ -72,7 +72,7 @@ impl Camera {
 
     pub fn update_projection_matrix(&mut self) {
         if let Some(_xmag) = self.xmag {
-            unimplemented!() // TODO!!!: ortho camera
+            unimplemented!("orthographic camera") // TODO!!!: ortho camera
         } else {
             if let Some(zfar) = self.zfar {
                 self.projection_matrix = perspective(
@@ -80,7 +80,8 @@ impl Camera {
                     self.aspect_ratio,
                     self.znear, zfar)
             } else {
-                unimplemented!() // TODO!!!: inifinite projection
+                // TODO!!: inifinite perspective (missing sample models)
+                unimplemented!("infinite perspective")
             }
         }
     }

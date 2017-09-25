@@ -176,9 +176,10 @@ impl GltfViewer {
             warn!("Found more than 1 scene, can only load first at the moment.")
         }
         let base_path = Path::new(source);
-        let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap(), &buffers, base_path);
+        let mut root = Root::from_gltf(&gltf, &buffers, base_path);
+        let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap(), &mut root, &buffers, base_path);
         print_elapsed(&format!("Loaded scene with {} nodes, {} meshes in ",
-                gltf.nodes().count(), scene.meshes.len()), &start_time);
+                gltf.nodes().count(), root.meshes.len()), &start_time);
 
         scene
     }

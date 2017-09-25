@@ -1,35 +1,27 @@
-use std::rc::Rc;
 use std::path::Path;
-use std::collections::HashMap;
 
 use gltf;
 use gltf_importer;
 
 use camera::CameraControls;
-use render::{Mesh, Node, Texture, Material};
+use render::{Node, Root};
 use render::math::*;
-use shader::*;
 
 #[derive(Default)]
 pub struct Scene {
     pub name: Option<String>,
-    pub nodes: Vec<Node>,
-    pub meshes: Vec<Rc<Mesh>>,
-    pub textures: Vec<Rc<Texture>>,
-    pub materials: Vec<Rc<Material>>,
-    pub shaders: HashMap<ShaderFlags, Rc<PbrShader>>,
-
+    pub nodes: Vec<Node>, // TODO!!!: change to indices; all indices instead of or in addition to roots?
     pub bounds: Bounds,
 }
 
 impl Scene {
-    pub fn from_gltf(g_scene: gltf::Scene, buffers: &gltf_importer::Buffers, base_path: &Path) -> Scene {
+    pub fn from_gltf(g_scene: gltf::Scene, root: &mut Root, buffers: &gltf_importer::Buffers, base_path: &Path) -> Scene {
         let mut scene = Scene {
             name: g_scene.name().map(|s| s.to_owned()),
             ..Default::default()
         };
         scene.nodes = g_scene.nodes()
-            .map(|g_node| Node::from_gltf(g_node, &mut scene, buffers, base_path))
+            .map(|g_node| Node::from_gltf(g_node, root, buffers, base_path))
             .collect();
 
         // propagate transforms
@@ -50,4 +42,15 @@ impl Scene {
             node.draw(camera);
         }
     }
+
+    // pub fn walk_nodes<F>(&self, callback: F)
+    //     where F: Fn(&Node)
+    // {
+    //     for node in &self.nodes {
+    //         callback(node);
+    //         // let mut current_child = node;
+    //         node.walk_children(callback);
+
+    //     }
+    // }
 }
