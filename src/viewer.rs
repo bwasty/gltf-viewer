@@ -45,6 +45,8 @@ pub struct GltfViewer {
     events_loop: Option<glutin::EventsLoop>,
     gl_window: Option<glutin::GlWindow>,
 
+    // TODO!: get rid of scene?
+    root: Root,
     scene: Scene,
 
     delta_time: f64, // seconds
@@ -121,6 +123,7 @@ impl GltfViewer {
             // gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
         };
 
+        let (root, scene) = Self::load(source);
         let mut viewer = GltfViewer {
             width,
             height,
@@ -131,7 +134,8 @@ impl GltfViewer {
             events_loop,
             gl_window,
 
-            scene: Self::load(source),
+            root,
+            scene,
 
             delta_time: 0.0, // seconds
             last_frame: Instant::now(),
@@ -143,7 +147,7 @@ impl GltfViewer {
         viewer
     }
 
-    pub fn load(source: &str) -> Scene {
+    pub fn load(source: &str) -> (Root, Scene) {
         let mut start_time = Instant::now();
         // TODO!: http source
         // let gltf =
@@ -181,7 +185,7 @@ impl GltfViewer {
         print_elapsed(&format!("Loaded scene with {} nodes, {} meshes in ",
                 gltf.nodes().count(), root.meshes.len()), &start_time);
 
-        scene
+        (root, scene)
     }
 
     /// determine "nice" camera perspective from bounding box. Inspired by donmccurdy/three-gltf-viewer
@@ -240,7 +244,7 @@ impl GltfViewer {
             gl::ClearColor(0.1, 0.2, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-            self.scene.draw(&self.camera);
+            self.scene.draw(&mut self.root, &self.camera);
 
             self.render_timer.end();
         }

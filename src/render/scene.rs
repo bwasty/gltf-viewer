@@ -27,8 +27,8 @@ impl Scene {
         // propagate transforms
         let root_transform = Matrix4::identity();
         for node in &mut scene.nodes {
-            node.update_transform(&root_transform);
-            node.update_bounds();
+            node.update_transform(root, &root_transform);
+            node.update_bounds(root);
             // TODO!: visualize final bounds
             scene.bounds = scene.bounds.union(&node.bounds);
         }
@@ -37,9 +37,9 @@ impl Scene {
     }
 
     // TODO: flatten draw call hierarchy (global Vec<SPrimitive>?)
-    pub fn draw(&mut self, camera: &CameraControls) {
+    pub fn draw(&mut self, root: &mut Root, camera: &CameraControls) {
         for node in &mut self.nodes {
-            node.draw(camera);
+            node.draw(root, camera);
         }
     }
 

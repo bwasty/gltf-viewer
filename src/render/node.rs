@@ -12,7 +12,7 @@ use render::camera::Camera;
 
 pub struct Node {
     pub index: usize, // glTF index
-    pub children: Vec<Node>, // TODO!!!: change to indices
+    pub children: Vec<usize>,
     pub matrix: Matrix4,
     pub mesh: Option<Rc<Mesh>>,
     pub rotation: Quaternion,
@@ -59,7 +59,7 @@ impl Node {
             }
         }
         let children: Vec<_> = g_node.children()
-                .map(|g_node| Node::from_gltf(g_node, root, buffers, base_path))
+                .map(|g_node| g_node.index())
                 .collect();
 
         Node {
@@ -80,7 +80,7 @@ impl Node {
         }
     }
 
-    pub fn update_transform(&mut self, parent_transform: &Matrix4) {
+    pub fn update_transform(&mut self, root: &Root, parent_transform: &Matrix4) {
         self.final_transform = *parent_transform;
 
         if !self.matrix.is_identity() {
@@ -94,13 +94,14 @@ impl Node {
                 Matrix4::from(self.rotation);
         }
 
-        for node in &mut self.children {
-            node.update_transform(&self.final_transform);
+        for node_id in &self.children {
+            let mut node = root.nodes[*node_id].borrow_mut();
+            node.update_transform(root, &self.final_transform);
         }
     }
 
     /// Should be called after update_transforms
-    pub fn update_bounds(&mut self) {
+    pub fn update_bounds(&mut self, root: &Root) {
         self.bounds = Default::default();
         if let Some(ref mesh) = self.mesh {
             self.bounds = mesh.bounds
@@ -113,21 +114,23 @@ impl Node {
             self.bounds = self.bounds.transform(&self.final_transform);
         }
         else {
-            for node in &mut self.children {
-                node.update_bounds();
+            for node_id in &self.children {
+                let mut node = root.nodes[*node_id].borrow_mut();
+                node.update_bounds(root);
                 self.bounds = self.bounds.union(&node.bounds);
             }
         }
     }
 
-    pub fn draw(&mut self, controls: &CameraControls) {
+    pub fn draw(&mut self, root: &Root, controls: &CameraControls) {
         if let Some(ref mesh) = self.mesh {
             let mvp_matrix = controls.camera.projection_matrix * controls.view_matrix() * self.final_transform;
 
             (*mesh).draw(&self.final_transform, &mvp_matrix, &controls.position.to_vec());
         }
-        for node in &mut self.children {
-            node.draw(controls);
+        for node_id in &self.children {
+            let mut node = root.nodes[*node_id].borrow_mut();
+            node.draw(root, controls);
         }
     }
 
