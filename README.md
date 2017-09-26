@@ -1,4 +1,4 @@
-# gltf-viewer ![status](https://img.shields.io/badge/glTF-2%2E0-green.svg?style=flat)
+# gltf-viewer [![status](https://img.shields.io/badge/glTF-2%2E0-green.svg?style=flat)](https://github.com/KhronosGroup/glTF)
 [![crates.io](https://img.shields.io/crates/v/gltf-viewer.svg)](https://crates.io/crates/gltf-viewer)
 [![GitHub release](https://img.shields.io/github/release/bwasty/gltf-viewer.svg)](https://github.com/bwasty/gltf-viewer/releases/latest)
  [![](https://tokei.rs/b1/github/bwasty/gltf-viewer)](https://github.com/Aaronepower/tokei)
@@ -11,7 +11,7 @@
 
 Rust [glTF 2.0](https://github.com/KhronosGroup/glTF) viewer, written using the [gltf](https://github.com/gltf-rs/gltf) crate and plain OpenGL.
 
-**Current state** : All [official sample modles](https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0) can be loaded and are rendered with the [reference PBR shader](https://github.com/KhronosGroup/glTF-WebGL-PBR). Example: <br>
+**Current state**: All [official sample models](https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0) can be loaded and are rendered with the [reference PBR shader](https://github.com/KhronosGroup/glTF-WebGL-PBR). Example: <br>
 <img width="412" alt="SciFiHelmet" title="SciFiHelmet" src="https://user-images.githubusercontent.com/1647415/30771307-d70dbd26-a044-11e7-9ed1-b0e2ba80198c.png"><br>
 Some glTF features are not yet implemented, most notably **animations**. See [#3](https://github.com/bwasty/gltf-viewer/issues/3) for details.
 
