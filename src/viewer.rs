@@ -181,7 +181,7 @@ impl GltfViewer {
         }
         let base_path = Path::new(source);
         let mut root = Root::from_gltf(&gltf, &buffers, base_path);
-        let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap(), &mut root, &buffers, base_path);
+        let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap(), &mut root);
         print_elapsed(&format!("Loaded scene with {} nodes, {} meshes in ",
                 gltf.nodes().count(), root.meshes.len()), &start_time);
 

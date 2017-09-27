@@ -18,6 +18,7 @@ pub struct Root {
     pub shaders: HashMap<ShaderFlags, Rc<PbrShader>>,
 
     pub camera_nodes: Vec<usize>, // indices of camera nodes
+    // TODO!: joint_nodes, mesh_nodes?
 }
 
 impl Root {

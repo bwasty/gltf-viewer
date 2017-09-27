@@ -175,7 +175,6 @@ impl Primitive {
             for (i, joint) in joints.enumerate() {
                 vertices[i].joints_0 = joint;
             }
-            println!("has joints");
         }
         if g_primitive.joints_u16(1, buffers).is_some() {
             warn!("Ignoring further joint attributes, only supporting JOINTS_0. (mesh: {}, primitive: {})",
@@ -186,7 +185,6 @@ impl Primitive {
             for (i, weights) in weights.enumerate() {
                 vertices[i].weights_0 = weights.into();
             }
-            println!("has weights");
         }
         if g_primitive.weights_f32(1, buffers).is_some() {
             warn!("Ignoring further weight attributes, only supporting WEIGHTS_0. (mesh: {}, primitive: {})",
