@@ -2,7 +2,7 @@
 use gltf;
 
 use camera::CameraControls;
-use render::{Root};
+use render::{Root, Node};
 use render::math::*;
 
 #[derive(Default)]
@@ -25,7 +25,7 @@ impl Scene {
         // propagate transforms
         let root_transform = Matrix4::identity();
         for node_id in &scene.nodes {
-            let mut node = root.nodes[*node_id].borrow_mut();
+            let node = unsafe_get_node!(root, *node_id);
             node.update_transform(root, &root_transform);
             node.update_bounds(root);
             // TODO!: visualize final bounds
@@ -35,17 +35,28 @@ impl Scene {
         scene
     }
 
-    // pub fn update_transforms(&self) {
-    //     let root_transform = Matrix4::identity();
-    //     // create stack with root nodes
-    //     let mut stack = self.nodes.iter().map(|node|)
+    // TODO!!!: broken - see Buggy -
+    // (reason: passing through parent transforms completely wrong)
+    // pub fn update_transforms(&self, root: &mut Root) {
+    //     struct Item {
+    //         a: i32
+    //     }
 
+    //     let mut parent_transform = Matrix4::identity();
+    //     // create stack with root nodes
+    //     let mut stack = self.nodes.clone();
+    //     while let Some(node_id) = stack.pop() {
+    //         let mut node = root.nodes[node_id].borrow_mut();
+    //         node.update_transform(&parent_transform);
+    //         parent_transform = node.final_transform;
+    //         stack.extend_from_slice(&node.children);
+    //     }
     // }
 
-    // TODO: flatten draw call hierarchy (global Vec<SPrimitive>?)
+    // TODO: flatten draw call hierarchy (global Vec<Primitive>?)
     pub fn draw(&mut self, root: &mut Root, camera: &CameraControls) {
         for node_id in &self.nodes {
-            let mut node = root.nodes[*node_id].borrow_mut();
+            let node = unsafe_get_node!(root, *node_id);
             node.draw(root, camera);
         }
     }

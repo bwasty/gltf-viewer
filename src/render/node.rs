@@ -23,7 +23,7 @@ pub struct Node {
     pub camera: Option<Camera>,
     pub name: Option<String>,
 
-    final_transform: Matrix4, // including parent transforms
+    pub final_transform: Matrix4, // including parent transforms
     model_loc: Option<i32>,
 
     pub bounds: Bounds,
@@ -80,7 +80,7 @@ impl Node {
         }
     }
 
-    pub fn update_transform(&mut self, root: &Root, parent_transform: &Matrix4) {
+    pub fn update_transform(&mut self, root: &mut Root, parent_transform: &Matrix4) {
         self.final_transform = *parent_transform;
 
         if !self.matrix.is_identity() {
@@ -95,13 +95,13 @@ impl Node {
         }
 
         for node_id in &self.children {
-            let mut node = root.nodes[*node_id].borrow_mut();
+            let node = unsafe_get_node!(root, *node_id);
             node.update_transform(root, &self.final_transform);
         }
     }
 
     /// Should be called after update_transforms
-    pub fn update_bounds(&mut self, root: &Root) {
+    pub fn update_bounds(&mut self, root: &mut Root) {
         self.bounds = Default::default();
         if let Some(ref mesh) = self.mesh {
             self.bounds = mesh.bounds
@@ -115,21 +115,21 @@ impl Node {
         }
         else {
             for node_id in &self.children {
-                let mut node = root.nodes[*node_id].borrow_mut();
+                let node = unsafe_get_node!(root, *node_id);
                 node.update_bounds(root);
                 self.bounds = self.bounds.union(&node.bounds);
             }
         }
     }
 
-    pub fn draw(&mut self, root: &Root, controls: &CameraControls) {
+    pub fn draw(&mut self, root: &mut Root, controls: &CameraControls) {
         if let Some(ref mesh) = self.mesh {
             let mvp_matrix = controls.camera.projection_matrix * controls.view_matrix() * self.final_transform;
 
             (*mesh).draw(&self.final_transform, &mvp_matrix, &controls.position.to_vec());
         }
         for node_id in &self.children {
-            let mut node = root.nodes[*node_id].borrow_mut();
+            let node = unsafe_get_node!(root, *node_id);
             node.draw(root, controls);
         }
     }

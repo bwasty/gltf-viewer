@@ -1,4 +1,5 @@
-use std::cell::RefCell;
+#![macro_use]
+
 use std::rc::Rc;
 use std::collections::HashMap;
 use std::path::Path;
@@ -11,7 +12,7 @@ use render::{Mesh, Node, Texture, Material};
 
 #[derive(Default)]
 pub struct Root {
-    pub nodes: Vec<RefCell<Node>>,
+    pub nodes: Vec<Node>,
     pub meshes: Vec<Rc<Mesh>>, // TODO!: use gltf indices; drop Rc?
     pub textures: Vec<Rc<Texture>>,
     pub materials: Vec<Rc<Material>>,
@@ -29,9 +30,18 @@ impl Root {
             .collect();
         root.nodes = nodes;
         root.camera_nodes = root.nodes.iter()
-            .filter(|node| node.borrow().camera.is_some())
-            .map(|node| node.borrow().index)
+            .filter(|node| node.camera.is_some())
+            .map(|node| node.index)
             .collect();
         root
+    }
+}
+
+/// Get a mutable reference to a node without borrowing Root or Root::nodes.
+/// Safe for tree traversal (visiting each node ONCE) as long as the
+/// glTF is valid, i.e. the scene actually is a tree.
+macro_rules! unsafe_get_node {
+    ($root:ident, $index:expr) => {
+        unsafe { &mut *(&mut $root.nodes[$index] as *mut Node) };
     }
 }
