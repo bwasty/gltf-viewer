@@ -95,7 +95,7 @@ impl Node {
         }
 
         for node_id in &self.children {
-            let node = unsafe_get_node!(root, *node_id);
+            let node = root.unsafe_get_node_mut(*node_id);
             node.update_transform(root, &self.final_transform);
         }
     }
@@ -115,7 +115,7 @@ impl Node {
         }
         else {
             for node_id in &self.children {
-                let node = unsafe_get_node!(root, *node_id);
+                let node = root.unsafe_get_node_mut(*node_id);
                 node.update_bounds(root);
                 self.bounds = self.bounds.union(&node.bounds);
             }
@@ -129,17 +129,8 @@ impl Node {
             (*mesh).draw(&self.final_transform, &mvp_matrix, &controls.position.to_vec());
         }
         for node_id in &self.children {
-            let node = unsafe_get_node!(root, *node_id);
+            let node = root.unsafe_get_node_mut(*node_id);
             node.draw(root, controls);
         }
     }
-
-    // pub fn walk_children<F>(&self, callback: F)
-    //     where F: Fn(&Node)
-    // {
-    //     for child in &self.children {
-    //         callback(child);
-    //         child.walk_children(callback)
-    //     }
-    // }
 }

@@ -2,7 +2,7 @@
 use gltf;
 
 use camera::CameraControls;
-use render::{Root, Node};
+use render::{Root};
 use render::math::*;
 
 #[derive(Default)]
@@ -25,7 +25,7 @@ impl Scene {
         // propagate transforms
         let root_transform = Matrix4::identity();
         for node_id in &scene.nodes {
-            let node = unsafe_get_node!(root, *node_id);
+            let node = root.unsafe_get_node_mut(*node_id);
             node.update_transform(root, &root_transform);
             node.update_bounds(root);
             // TODO!: visualize final bounds
@@ -38,7 +38,7 @@ impl Scene {
     // TODO: flatten draw call hierarchy (global Vec<Primitive>?)
     pub fn draw(&mut self, root: &mut Root, camera: &CameraControls) {
         for node_id in &self.nodes {
-            let node = unsafe_get_node!(root, *node_id);
+            let node = root.unsafe_get_node_mut(*node_id);
             node.draw(root, camera);
         }
     }
