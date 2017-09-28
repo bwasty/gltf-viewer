@@ -24,7 +24,7 @@ pub struct Camera {
 
 impl Default for Camera {
     fn default() -> Self {
-        let camera = Camera {
+        Camera {
             znear: 0.01,
             zfar: Some(1000.0),
 
@@ -35,8 +35,7 @@ impl Default for Camera {
             ymag: None,
 
             projection_matrix: Matrix4::zero(),
-        };
-        camera
+        }
     }
 }
 
@@ -73,16 +72,14 @@ impl Camera {
     pub fn update_projection_matrix(&mut self) {
         if let Some(_xmag) = self.xmag {
             unimplemented!("orthographic camera") // TODO!!!: ortho camera
+        } else if let Some(zfar) = self.zfar {
+            self.projection_matrix = perspective(
+                Deg(self.fovy),
+                self.aspect_ratio,
+                self.znear, zfar)
         } else {
-            if let Some(zfar) = self.zfar {
-                self.projection_matrix = perspective(
-                    Deg(self.fovy),
-                    self.aspect_ratio,
-                    self.znear, zfar)
-            } else {
-                // TODO!!: inifinite perspective (missing sample models)
-                unimplemented!("infinite perspective")
-            }
+            // TODO!!: inifinite perspective (missing sample models)
+            unimplemented!("infinite perspective")
         }
     }
 }

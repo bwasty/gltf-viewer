@@ -37,9 +37,9 @@ impl Root {
     }
 }
 
-/// Get a mutable reference to a node without borrowing Root or Root::nodes.
+/// Get a mutable reference to a node without borrowing Root or `Root::nodes`.
 /// Safe for tree traversal (visiting each node ONCE) as long as the
-/// glTF is valid, i.e. the scene actually is a tree.
+/// gltf is valid, i.e. the scene actually is a tree.
 macro_rules! unsafe_get_node {
     ($root:ident, $index:expr) => {
         unsafe { &mut *(&mut $root.nodes[$index] as *mut Node) };
