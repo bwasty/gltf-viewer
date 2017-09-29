@@ -144,7 +144,8 @@ impl GltfViewer {
         };
         unsafe { gl_check_error!(); }
 
-        if !viewer.root.camera_nodes.is_empty() {
+        // TODO!!!: completely broken (using gltf camera)
+        if false && !viewer.root.camera_nodes.is_empty() {
             // Take first camera node
             let cam_node = &viewer.root.get_camera_node(0);
             viewer.controls.set_camera(
