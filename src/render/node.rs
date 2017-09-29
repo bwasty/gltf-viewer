@@ -4,7 +4,7 @@ use std::path::Path;
 use gltf;
 use gltf_importer;
 
-use camera::CameraControls;
+use controls::CameraControls;
 use render::math::*;
 use render::mesh::Mesh;
 use render::Root;

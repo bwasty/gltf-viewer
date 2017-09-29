@@ -1,7 +1,7 @@
 
 use gltf;
 
-use camera::CameraControls;
+use controls::CameraControls;
 use render::{Root};
 use render::math::*;
 

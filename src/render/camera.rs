@@ -4,7 +4,7 @@ use gltf;
 use gltf::camera::Projection;
 
 use render::math::*;
-use ::camera::{ZOOM};
+use ::controls::{ZOOM};
 
 #[derive(Clone)]
 pub struct Camera {

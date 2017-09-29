@@ -20,8 +20,8 @@ use gltf_importer::config::ValidationStrategy;
 use image::{DynamicImage, ImageFormat};
 
 
-use camera::CameraControls;
-use camera::CameraMovement::*;
+use controls::CameraControls;
+use controls::CameraMovement::*;
 use framebuffer::Framebuffer;
 use render::*;
 use render::math::*;

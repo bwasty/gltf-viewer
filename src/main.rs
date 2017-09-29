@@ -31,7 +31,7 @@ mod viewer;
 use viewer::{GltfViewer};
 
 mod shader;
-mod camera;
+mod controls;
 mod framebuffer;
 mod macros;
 // TODO!: adapt Source...
