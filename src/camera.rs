@@ -58,7 +58,7 @@ pub struct CameraControls {
 
 impl Default for CameraControls {
     fn default() -> CameraControls {
-        let mut camera = CameraControls {
+        let mut controls = CameraControls {
             position: Point3::new(0.0, 0.0, 0.0),
             front: vec3(0.0, 0.0, -1.0),
             center: None,
@@ -80,8 +80,8 @@ impl Default for CameraControls {
             moving_backward: false,
         };
         // TODO!!: overriding default order...? -> NO!
-        camera.update_camera_vectors();
-        camera
+        controls.update_camera_vectors();
+        controls
     }
 }
 
@@ -175,5 +175,23 @@ impl CameraControls {
         // Also re-calculate the Right and Up vector
         self.right = self.front.cross(self.world_up).normalize(); // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
         self.up = self.right.cross(self.front).normalize();
+    }
+
+    pub fn set_camera(&mut self, camera: &Camera, transform: &Matrix4) {
+        // spec: If no transformation is specified, the location of the camera is at the origin.
+        let pos = transform * Vector4::zero();
+
+        // spec: ... the lens looks towards the local -Z axis ...
+        let look_at = transform * vec4(0.0, 0.0, -1.0, 0.0);
+
+        self.position = Point3::new(pos.x, pos.y, pos.z);
+        self.center = Some(Point3::new(look_at.x, look_at.y, look_at.z));
+
+        // TODO!!: handle better (camera zoom/fovy)
+        let mut camera = camera.clone();
+        camera.fovy = self.camera.fovy;
+        self.camera = camera;
+
+        self.update_camera_vectors();
     }
 }

@@ -36,10 +36,10 @@ impl Scene {
     }
 
     // TODO: flatten draw call hierarchy (global Vec<Primitive>?)
-    pub fn draw(&mut self, root: &mut Root, camera: &CameraControls) {
+    pub fn draw(&mut self, root: &mut Root, controls: &CameraControls) {
         for node_id in &self.nodes {
             let node = root.unsafe_get_node_mut(*node_id);
-            node.draw(root, camera);
+            node.draw(root, controls);
         }
     }
 }

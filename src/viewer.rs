@@ -38,7 +38,7 @@ pub struct GltfViewer {
     width: u32,
     height: u32,
 
-    camera: CameraControls,
+    controls: CameraControls,
     first_mouse: bool,
     last_x: f32,
     last_y: f32,
@@ -58,7 +58,7 @@ pub struct GltfViewer {
 impl GltfViewer {
     pub fn new(source: &str, width: u32, height: u32, headless: bool, visible: bool) -> GltfViewer {
         // TODO!: handle initialization better
-        let mut camera = CameraControls {
+        let mut controls = CameraControls {
             position: Point3::new(0.0, 0.0, 2.0),
             camera: Camera {
                 fovy: 60.0,
@@ -67,7 +67,7 @@ impl GltfViewer {
             },
             ..CameraControls::default()
         };
-        camera.camera.update_projection_matrix();
+        controls.camera.update_projection_matrix();
 
         let first_mouse = true;
         let last_x: f32 = width as f32 / 2.0;
@@ -128,7 +128,7 @@ impl GltfViewer {
             width,
             height,
 
-            camera,
+            controls,
             first_mouse, last_x, last_y,
 
             events_loop,
@@ -143,7 +143,17 @@ impl GltfViewer {
             render_timer: FrameTimer::new("rendering", 300),
         };
         unsafe { gl_check_error!(); }
-        viewer.set_camera_from_bounds();
+
+        if !viewer.root.camera_nodes.is_empty() {
+            // Take first camera node
+            let cam_node = &viewer.root.get_camera_node(0);
+            viewer.controls.set_camera(
+                cam_node.camera.as_ref().unwrap(),
+                &cam_node.final_transform);
+        } else {
+            viewer.set_camera_from_bounds();
+        }
+
         viewer
     }
 
@@ -208,8 +218,8 @@ impl GltfViewer {
         let _near = size / 100.0;
         let _far = size * 100.0;
 
-        self.camera.position = cam_pos;
-        self.camera.center = Some(Point3::from_vec(center));
+        self.controls.position = cam_pos;
+        self.controls.center = Some(Point3::from_vec(center));
         // TODO!: set near, far, max_distance, obj_pos_modifier...
     }
 
@@ -224,10 +234,10 @@ impl GltfViewer {
             let keep_running = process_events(
                 &mut self.events_loop.as_mut().unwrap(), self.gl_window.as_mut().unwrap(),
                 &mut self.first_mouse, &mut self.last_x, &mut self.last_y,
-                &mut self.camera, &mut self.width, &mut self.height);
+                &mut self.controls, &mut self.width, &mut self.height);
             if !keep_running { break }
 
-            self.camera.update(self.delta_time); // navigation
+            self.controls.update(self.delta_time); // navigation
 
             self.draw();
 
@@ -244,7 +254,7 @@ impl GltfViewer {
             gl::ClearColor(0.1, 0.2, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-            self.scene.draw(&mut self.root, &self.camera);
+            self.scene.draw(&mut self.root, &self.controls);
 
             self.render_timer.end();
         }

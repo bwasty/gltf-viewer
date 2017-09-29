@@ -24,8 +24,6 @@ pub struct Node {
     pub name: Option<String>,
 
     pub final_transform: Matrix4, // including parent transforms
-    model_loc: Option<i32>,
-
     pub bounds: Bounds,
 }
 
@@ -74,7 +72,6 @@ impl Node {
             name: g_node.name().map(|s| s.into()),
 
             final_transform: Matrix4::identity(),
-            model_loc: None,
 
             bounds: Bounds::default(),
         }

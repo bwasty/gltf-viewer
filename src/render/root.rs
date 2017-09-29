@@ -44,4 +44,9 @@ impl Root {
             &mut *(&mut self.nodes[index] as *mut Node)
         }
     }
+
+    /// Note: index refers to the vec of camera node indices!
+    pub fn get_camera_node(&self, index: usize) -> &Node {
+        &self.nodes[self.camera_nodes[index]]
+    }
 }

@@ -4,8 +4,9 @@ use gltf;
 use gltf::camera::Projection;
 
 use render::math::*;
-use ::camera::ZOOM;
+use ::camera::{ZOOM};
 
+#[derive(Clone)]
 pub struct Camera {
     pub projection_matrix: Matrix4,
 
