@@ -105,7 +105,6 @@ impl CameraControls {
         }
     }
 
-    // TODO!: cache? doesn't change every frame...
     /// Returns the view matrix calculated using Euler Angles and the LookAt Matrix
     pub fn view_matrix(&self) -> Matrix4 {
         if let Some(center) = self.center {
@@ -229,7 +228,9 @@ pub struct OrbitControls {
 
     rotate_start: Option<Vector2>,
     rotate_end: Vector2,
-    rotate_delta: Vector2,
+
+	pan_start: Option<Vector2>,
+	pan_end: Vector2,
 
     pub screen_width: f32,
     pub screen_height: f32,
@@ -237,9 +238,9 @@ pub struct OrbitControls {
     //
     offset: Vector3,
 
-    quat: Quaternion,
-    quat_inverse: Quaternion,
+    // quat: Quaternion,
 
+    // TODO!!: unused?
     last_position: Vector3,
     last_quaternion: Quaternion,
 }
@@ -263,7 +264,9 @@ impl OrbitControls {
 
             rotate_start: None,
             rotate_end: Vector2::zero(),
-            rotate_delta: Vector2::zero(),
+
+            pan_start: None,
+            pan_end: Vector2::zero(),
 
             screen_width,
             screen_height,
@@ -271,15 +274,16 @@ impl OrbitControls {
             //
             offset: Vector3::zero(),
 
-            // TODO!: works? different object.up? Quaternion::from_arc?
-            quat: Quaternion::one(),
-            quat_inverse: Quaternion::one(),
+            // NOTE: original uses sth like Quaternion::from_arc from "up" to "y up"
+            // and stores inverse quaternion
+            // quat: Quaternion::one(),
 
             last_position: Vector3::zero(),
             last_quaternion: Quaternion::zero(),
         }
     }
 
+    // TODO!!: cache/return reference? often many of them stay the same...
     pub fn camera_params(&self) -> CameraParams {
         CameraParams {
             position: self.position.to_vec(),
@@ -295,7 +299,7 @@ impl OrbitControls {
     pub fn handle_mouse_move(&mut self, x: f32, y: f32) {
         match self.state {
             NavState::Rotating => self.handle_mouse_move_rotate(x, y),
-            NavState::Panning => (),
+            NavState::Panning => self.handle_mouse_move_pan(x, y),
             NavState::None => ()
         }
     }
@@ -303,19 +307,19 @@ impl OrbitControls {
     fn handle_mouse_move_rotate(&mut self, x: f32, y: f32) {
         self.rotate_end.x = x;
         self.rotate_end.y = y;
-        if let Some(rotate_start) = self.rotate_start {
-            self.rotate_delta = self.rotate_end - rotate_start;
+        let rotate_delta = if let Some(rotate_start) = self.rotate_start {
+            self.rotate_end - rotate_start
         } else {
-            self.rotate_delta = Vector2::zero();
-        }
+            Vector2::zero()
+        };
 
         // rotating across whole screen goes 360 degrees around
         let rotate_speed = 1.0; // TODO: const/param/remove?
-        let angle = 2.0 * PI * self.rotate_delta.x / self.screen_width * rotate_speed;
+        let angle = 2.0 * PI * rotate_delta.x / self.screen_width * rotate_speed;
         self.rotate_left(angle);
 
         // rotating up and down along whole screen attempts to go 360, but limited to 180
-        let angle = 2.0 * PI * self.rotate_delta.y / self.screen_height * rotate_speed;
+        let angle = 2.0 * PI * rotate_delta.y / self.screen_height * rotate_speed;
 		self.rotate_up(angle);
 
         self.rotate_start = Some(self.rotate_end);
@@ -325,7 +329,7 @@ impl OrbitControls {
 
     pub fn handle_mouse_up(&mut self) {
         self.rotate_start = None;
-        // TODO!!: pan?
+        self.pan_start = None;
     }
 
     fn rotate_left(&mut self, angle: f32) {
@@ -334,6 +338,49 @@ impl OrbitControls {
 
     fn rotate_up(&mut self, angle: f32) {
         self.spherical_delta.phi -= angle;
+    }
+
+    fn handle_mouse_move_pan(&mut self, x: f32, y: f32) {
+        self.pan_end.x = x;
+        self.pan_end.y = y;
+
+        let pan_delta = if let Some(pan_start) = self.pan_start {
+            self.pan_end - pan_start
+        } else {
+            Vector2::zero()
+        };
+
+        self.pan(&pan_delta);
+
+        self.pan_start = Some(self.pan_end);
+
+        self.update();
+    }
+
+    fn pan(&mut self, delta: &Vector2) {
+        if self.camera.is_perspective() {
+            self.offset = self.position - self.target;
+            let mut target_distance = self.offset.magnitude();
+
+            // half of the fov is center to top of screen
+            target_distance *= (self.camera.fovy / 2.0).tan() * PI / 180.0;
+
+            // we actually don't use screen_width, since perspective camera is fixed to screen height
+            let distance = 2.0 * delta.x * target_distance / self.screen_height;
+            self.pan_left(distance);
+            let distance = 2.0 * delta.y * target_distance / self.screen_height;
+            self.pan_up(distance);
+        } else {
+            unimplemented!("orthographic camera zoom")
+        }
+    }
+
+    pub fn pan_left(&mut self, distance: f32) {
+        self.pan_offset.x -= distance
+    }
+
+    pub fn pan_up(&mut self, distance: f32) {
+        self.pan_offset.y -= distance
     }
 
     // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
@@ -355,7 +402,7 @@ impl OrbitControls {
         self.offset = self.position - self.target;
 
         // rotate offset to "y-axis-is-up" space
-        self.offset = self.quat.rotate_vector(self.offset);
+        // self.offset = self.quat.rotate_vector(self.offset);
 
         // angle from z-axis around y-axis
         self.spherical = Spherical::from_vec3(self.offset);
@@ -371,17 +418,18 @@ impl OrbitControls {
 
         self.spherical.radius *= self.scale;
 
-        // TODO!: restrict radius to be between desired limits
+        // TODO?: restrict radius to be between desired limits?
 
         // move target to panned location
         self.target += self.pan_offset;
 
         self.offset = self.spherical.to_vec3();
 
-        // rotate offset back to "camera-up-vector-is-up" space
-        self.quat_inverse.rotate_vector(self.offset);
+        // NOTE: skipped from original: rotate offset back to "camera-up-vector-is-up" space
 
         self.position = self.target + self.offset;
+
+        // self.position += self.pan_offset;
 
         // TODO!!: how to do this?
         // scope.object.lookAt( scope.target );

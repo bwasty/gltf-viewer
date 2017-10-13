@@ -88,4 +88,8 @@ impl Camera {
             unimplemented!("infinite perspective")
         }
     }
+
+    pub fn is_perspective(&self) -> bool {
+        self.xmag.is_none()
+    }
 }
