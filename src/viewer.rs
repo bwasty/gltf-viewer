@@ -20,7 +20,7 @@ use gltf_importer::config::ValidationStrategy;
 use image::{DynamicImage, ImageFormat};
 
 
-use controls::CameraControls;
+use controls::{CameraControls, OrbitControls};
 use controls::CameraMovement::*;
 use framebuffer::Framebuffer;
 use render::*;
@@ -39,6 +39,7 @@ pub struct GltfViewer {
     height: u32,
 
     controls: CameraControls,
+    orbit_controls: OrbitControls,
     first_mouse: bool,
     last_x: f32,
     last_y: f32,
@@ -68,6 +69,16 @@ impl GltfViewer {
             ..CameraControls::default()
         };
         controls.camera.update_projection_matrix();
+
+        let mut orbit_controls = OrbitControls::new(
+            Point3::new(0.0, 0.0, 2.0), width as f32, height as f32
+        );
+        orbit_controls.camera = Camera {
+            fovy: 60.0,
+            aspect_ratio: width as f32 / height as f32,
+            ..Camera::default()
+        };
+        orbit_controls.camera.update_projection_matrix();
 
         let first_mouse = true;
         let last_x: f32 = width as f32 / 2.0;
@@ -129,6 +140,7 @@ impl GltfViewer {
             height,
 
             controls,
+            orbit_controls,
             first_mouse, last_x, last_y,
 
             events_loop,
@@ -219,8 +231,13 @@ impl GltfViewer {
         let _near = size / 100.0;
         let _far = size * 100.0;
 
+        // TODO!! TMP duplication (orbit controls)
+        self.orbit_controls.position = cam_pos;
+        self.orbit_controls.target = Point3::from_vec(center);
+
         self.controls.position = cam_pos;
         self.controls.center = Some(Point3::from_vec(center));
+
         // TODO!: set near, far, max_distance, obj_pos_modifier...
     }
 
@@ -235,7 +252,8 @@ impl GltfViewer {
             let keep_running = process_events(
                 &mut self.events_loop.as_mut().unwrap(), self.gl_window.as_mut().unwrap(),
                 &mut self.first_mouse, &mut self.last_x, &mut self.last_y,
-                &mut self.controls, &mut self.width, &mut self.height);
+                &mut self.controls, &mut self.orbit_controls,
+                &mut self.width, &mut self.height);
             if !keep_running { break }
 
             self.controls.update(self.delta_time); // navigation
@@ -255,7 +273,9 @@ impl GltfViewer {
             gl::ClearColor(0.1, 0.2, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-            self.scene.draw(&mut self.root, &self.controls);
+            // let cam_params = self.controls.camera_params();
+            let cam_params = self.orbit_controls.camera_params();
+            self.scene.draw(&mut self.root, &cam_params);
 
             self.render_timer.end();
         }
@@ -293,7 +313,8 @@ fn process_events(
     first_mouse: &mut bool,
     last_x: &mut f32,
     last_y: &mut f32,
-    mut camera: &mut CameraControls,
+    mut controls: &mut CameraControls,
+    orbit_controls: &mut OrbitControls,
     width: &mut u32,
     height: &mut u32) -> bool
 {
@@ -312,26 +333,28 @@ fn process_events(
                 WindowEvent::DroppedFile(_path_buf) => (), // TODO: drag file in
                 WindowEvent::MouseMoved { position: (xpos, ypos), .. } => {
                     let (xpos, ypos) = (xpos as f32, ypos as f32);
-                    if *first_mouse {
-                        *last_x = xpos;
-                        *last_y = ypos;
-                        *first_mouse = false;
-                    }
+                    // if *first_mouse {
+                    //     *last_x = xpos;
+                    //     *last_y = ypos;
+                    //     *first_mouse = false;
+                    // }
 
-                    let xoffset = xpos - *last_x;
-                    let yoffset = *last_y - ypos; // reversed since y-coordinates go from bottom to top
+                    // let xoffset = xpos - *last_x;
+                    // let yoffset = *last_y - ypos; // reversed since y-coordinates go from bottom to top
 
-                    *last_x = xpos;
-                    *last_y = ypos;
+                    // *last_x = xpos;
+                    // *last_y = ypos;
 
-                    camera.process_mouse_movement(xoffset, yoffset, true);
+                    // controls.process_mouse_movement(xoffset, yoffset, true);
+
+                    orbit_controls.handle_mouse_move_rotate(xpos, ypos);
                 },
                 WindowEvent::MouseWheel { delta: MouseScrollDelta::PixelDelta(_xoffset, yoffset), .. } => {
                     // TODO: need to handle LineDelta case too?
-                    camera.process_mouse_scroll(yoffset);
+                    controls.process_mouse_scroll(yoffset);
                 }
                 WindowEvent::KeyboardInput { input, .. } => {
-                    keep_running = process_input(input, &mut camera);
+                    keep_running = process_input(input, &mut controls);
                 }
                 _ => ()
             },

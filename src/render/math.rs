@@ -140,6 +140,10 @@ impl Spherical {
     }
 
     pub fn to_vec3(&self) -> Vector3 {
-
+        let sin_phi_radius = self.phi.sin() * self.radius;
+        let x = sin_phi_radius * self.theta.sin();
+        let y = self.phi.cos() * self.radius;
+        let z = sin_phi_radius * self.theta.cos();
+        vec3(x, y, z)
     }
 }

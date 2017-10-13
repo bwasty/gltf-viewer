@@ -20,6 +20,13 @@ pub enum CameraMovement {
 }
 use self::CameraMovement::*;
 
+#[derive(Debug)]
+pub struct CameraParams {
+    pub position: Vector3,
+    pub view_matrix: Matrix4,
+    pub projection_matrix: Matrix4,
+}
+
 // Default camera values
 const YAW: f32 = -90.0;
 const PITCH: f32 = 0.0;
@@ -88,6 +95,14 @@ impl Default for CameraControls {
 }
 
 impl CameraControls {
+    pub fn camera_params(&self) -> CameraParams {
+        CameraParams {
+            position: self.position.to_vec(),
+            view_matrix: self.view_matrix(),
+            projection_matrix: self.camera.projection_matrix,
+        }
+    }
+
     // TODO!: cache? doesn't change every frame...
     /// Returns the view matrix calculated using Euler Angles and the LookAt Matrix
     pub fn view_matrix(&self) -> Matrix4 {
@@ -200,10 +215,12 @@ impl CameraControls {
 
 /// Inspirted by ThreeJS OrbitControls
 pub struct OrbitControls {
-    position: Vector3,
+    pub camera: Camera,
+
+    pub position: Point3,
 
     // "target" sets the location of focus, where the object orbits around
-	target: Vector3,
+	pub target: Point3,
 
 	// current position in spherical coordinates
 	spherical: Spherical,
@@ -230,10 +247,12 @@ pub struct OrbitControls {
 }
 
 impl OrbitControls {
-    fn new(position: Vector3, screen_width: f32, screen_height: f32) -> Self {
+    pub fn new(position: Point3, screen_width: f32, screen_height: f32) -> Self {
         OrbitControls {
+            camera: Camera::default(),
+
             position,
-            target: Vector3::zero(),
+            target: Point3::new(0.0, 0.0, 0.0),
 
             // current position in spherical coordinates
             spherical: Spherical::default(),
@@ -261,7 +280,19 @@ impl OrbitControls {
         }
     }
 
-    fn handle_mouse_move_rotate(&mut self, x: f32, y: f32) {
+    pub fn camera_params(&self) -> CameraParams {
+        CameraParams {
+            position: self.position.to_vec(),
+            view_matrix: self.view_matrix(),
+            projection_matrix: self.camera.projection_matrix,
+        }
+    }
+
+    pub fn view_matrix(&self) -> Matrix4 {
+        Matrix4::look_at(self.position, self.target, vec3(0.0, 1.0, 0.0))
+    }
+
+    pub fn handle_mouse_move_rotate(&mut self, x: f32, y: f32) {
         self.rotate_end.x = x;
         self.rotate_end.y = y;
         self.rotate_delta = self.rotate_end - self.rotate_start;
