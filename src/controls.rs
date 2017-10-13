@@ -37,7 +37,7 @@ const SENSITIVTY: f32 = 0.1;
 const ZOOM_SENSITIVITY: f32 = 0.1;
 pub const ZOOM: f32 = 45.0;
 const MIN_ZOOM: f32 = 1.0;
-const MAZ_ZOOM: f32 = 90.0;
+const MAZ_ZOOM: f32 = 170.0;
 
 pub struct CameraControls {
     // Camera Attributes
@@ -163,20 +163,7 @@ impl CameraControls {
         self.update_camera_vectors();
     }
 
-    // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
-    pub fn process_mouse_scroll(&mut self, mut yoffset: f32) {
-        yoffset *= ZOOM_SENSITIVITY;
-        if self.camera.fovy >= MIN_ZOOM && self.camera.fovy <= MAZ_ZOOM {
-            self.camera.fovy -= yoffset;
-        }
-        if self.camera.fovy <= MIN_ZOOM {
-            self.camera.fovy = MIN_ZOOM;
-        }
-        if self.camera.fovy >= MAZ_ZOOM {
-            self.camera.fovy = MAZ_ZOOM;
-        }
-        self.camera.update_projection_matrix();
-    }
+
 
     /// Calculates the front vector from the Camera's (updated) Eular Angles
     fn update_camera_vectors(&mut self) {
@@ -347,6 +334,21 @@ impl OrbitControls {
 
     fn rotate_up(&mut self, angle: f32) {
         self.spherical_delta.phi -= angle;
+    }
+
+    // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
+    pub fn process_mouse_scroll(&mut self, mut yoffset: f32) {
+        yoffset *= ZOOM_SENSITIVITY;
+        if self.camera.fovy >= MIN_ZOOM && self.camera.fovy <= MAZ_ZOOM {
+            self.camera.fovy -= yoffset;
+        }
+        if self.camera.fovy <= MIN_ZOOM {
+            self.camera.fovy = MIN_ZOOM;
+        }
+        if self.camera.fovy >= MAZ_ZOOM {
+            self.camera.fovy = MAZ_ZOOM;
+        }
+        self.camera.update_projection_matrix();
     }
 
     fn update(&mut self) {

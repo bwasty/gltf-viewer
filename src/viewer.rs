@@ -245,7 +245,6 @@ impl GltfViewer {
             // events
             let keep_running = process_events(
                 &mut self.events_loop.as_mut().unwrap(), self.gl_window.as_mut().unwrap(),
-                &mut self.first_mouse, &mut self.last_x, &mut self.last_y,
                 &mut self.controls, &mut self.orbit_controls,
                 &mut self.width, &mut self.height);
             if !keep_running { break }
@@ -304,9 +303,6 @@ impl GltfViewer {
 fn process_events(
     events_loop: &mut glutin::EventsLoop,
     gl_window: &glutin::GlWindow,
-    first_mouse: &mut bool,
-    last_x: &mut f32,
-    last_y: &mut f32,
     mut controls: &mut CameraControls,
     orbit_controls: &mut OrbitControls,
     width: &mut u32,
@@ -356,25 +352,11 @@ fn process_events(
                 }
                 WindowEvent::MouseMoved { position: (xpos, ypos), .. } => {
                     let (xpos, ypos) = (xpos as f32, ypos as f32);
-                    // if *first_mouse {
-                    //     *last_x = xpos;
-                    //     *last_y = ypos;
-                    //     *first_mouse = false;
-                    // }
-
-                    // let xoffset = xpos - *last_x;
-                    // let yoffset = *last_y - ypos; // reversed since y-coordinates go from bottom to top
-
-                    // *last_x = xpos;
-                    // *last_y = ypos;
-
-                    // controls.process_mouse_movement(xoffset, yoffset, true);
-
                     orbit_controls.handle_mouse_move(xpos, ypos);
                 },
                 WindowEvent::MouseWheel { delta: MouseScrollDelta::PixelDelta(_xoffset, yoffset), .. } => {
                     // TODO: need to handle LineDelta case too?
-                    controls.process_mouse_scroll(yoffset);
+                    orbit_controls.process_mouse_scroll(yoffset);
                 }
                 WindowEvent::KeyboardInput { input, .. } => {
                     keep_running = process_input(input, &mut controls);
