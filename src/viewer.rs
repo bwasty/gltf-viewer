@@ -58,33 +58,9 @@ pub struct GltfViewer {
 
 impl GltfViewer {
     pub fn new(source: &str, width: u32, height: u32, headless: bool, visible: bool) -> GltfViewer {
-        // TODO!: handle initialization better
-        let mut controls = CameraControls {
-            position: Point3::new(0.0, 0.0, 2.0),
-            camera: Camera {
-                fovy: 60.0,
-                aspect_ratio: width as f32 / height as f32,
-                ..Camera::default()
-            },
-            ..CameraControls::default()
-        };
-        controls.camera.update_projection_matrix();
 
-        let mut orbit_controls = OrbitControls::new(
-            Point3::new(0.0, 0.0, 2.0), width as f32, height as f32
-        );
-        orbit_controls.camera = Camera {
-            fovy: 60.0,
-            aspect_ratio: width as f32 / height as f32,
-            ..Camera::default()
-        };
-        orbit_controls.camera.update_projection_matrix();
 
-        let first_mouse = true;
-        let last_x: f32 = width as f32 / 2.0;
-        let last_y: f32 = height as f32 / 2.0;
-
-        let (events_loop, gl_window) =
+        let (events_loop, gl_window, width, height) =
             if headless {
                 let headless_context = glutin::HeadlessRendererBuilder::new(width, height).build().unwrap();
                 unsafe { headless_context.make_current().unwrap() }
@@ -92,7 +68,7 @@ impl GltfViewer {
                 let framebuffer = Framebuffer::new(width, height);
                 framebuffer.bind();
 
-                (None, None)
+                (None, None, width, height) // TODO: real height (retina?)
             }
             else {
                 // glutin: initialize and configure
@@ -104,9 +80,13 @@ impl GltfViewer {
                         .with_dimensions(width, height)
                         .with_visibility(visible);
 
+
                 let context = glutin::ContextBuilder::new()
                     .with_vsync(true);
                 let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
+
+                // Real dimensions might be much higher on High-DPI displays
+                let (real_width, real_height) = gl_window.get_inner_size_pixels().unwrap();
 
                 unsafe { gl_window.make_current().unwrap(); }
 
@@ -120,8 +100,28 @@ impl GltfViewer {
                 // gl: load all OpenGL function pointers
                 gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
 
-                (Some(events_loop), Some(gl_window))
+                (Some(events_loop), Some(gl_window), real_width, real_height)
             };
+
+        // TODO!!: tmp duplicated camera controls
+        let mut controls = CameraControls {
+            position: Point3::new(0.0, 0.0, 2.0),
+            camera: Camera::default(),
+            ..CameraControls::default()
+        };
+        controls.camera.fovy = 60.0;
+        controls.camera.update_aspect_ratio(width as f32 / height as f32); // updates projection matrix
+
+        let mut orbit_controls = OrbitControls::new(
+            Point3::new(0.0, 0.0, 2.0), width as f32, height as f32
+        );
+        orbit_controls.camera = Camera::default();
+        orbit_controls.camera.fovy = 60.0;
+        orbit_controls.camera.update_aspect_ratio(width as f32 / height as f32); // updates projection matrix
+
+        let first_mouse = true;
+        let last_x: f32 = width as f32 / 2.0;
+        let last_y: f32 = height as f32 / 2.0;
 
         unsafe {
             gl::ClearColor(0.0, 1.0, 0.0, 1.0); // green for debugging
@@ -328,9 +328,16 @@ fn process_events(
                     gl_window.resize(w, h);
                     *width = w;
                     *height = h;
-                    // TODO!: update camera aspect?
+                    let w = w as f32;
+                    let h = h as f32;
+                    orbit_controls.camera.update_aspect_ratio(w / h);
+                    orbit_controls.screen_width = w;
+                    orbit_controls.screen_height = h;
                 },
                 WindowEvent::DroppedFile(_path_buf) => (), // TODO: drag file in
+                WindowEvent::MouseInput { button, state, ..} => {
+
+                },
                 WindowEvent::MouseMoved { position: (xpos, ypos), .. } => {
                     let (xpos, ypos) = (xpos as f32, ypos as f32);
                     // if *first_mouse {

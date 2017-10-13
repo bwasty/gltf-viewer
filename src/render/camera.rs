@@ -16,7 +16,7 @@ pub struct Camera {
     // perspective camera
     // TODO!: setters that update...
     pub fovy: f32,
-    pub aspect_ratio: f32,
+    aspect_ratio: f32,
 
     // orthographic camera
     pub xmag: Option<f32>,
@@ -68,6 +68,11 @@ impl Camera {
         }
         camera.update_projection_matrix();
         camera
+    }
+
+    pub fn update_aspect_ratio(&mut self, aspect_ratio: f32) {
+        self.aspect_ratio = aspect_ratio;
+        self.update_projection_matrix();
     }
 
     pub fn update_projection_matrix(&mut self) {

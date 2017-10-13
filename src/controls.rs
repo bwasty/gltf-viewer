@@ -3,6 +3,8 @@ use std::f32::consts::PI;
 use cgmath::{vec3};
 use cgmath::prelude::*;
 
+use num_traits::clamp;
+
 // type Point3 = cgmath::Point3<f32>;
 // type Vector3 = cgmath::Vector3<f32>;
 // type Matrix4 = cgmath::Matrix4<f32>;
@@ -233,8 +235,8 @@ pub struct OrbitControls {
     rotate_end: Vector2,
     rotate_delta: Vector2,
 
-    screen_width: f32,
-    screen_height: f32,
+    pub screen_width: f32,
+    pub screen_height: f32,
 
     //
     offset: Vector3,
@@ -331,7 +333,11 @@ impl OrbitControls {
         self.spherical.theta += self.spherical_delta.theta;
         self.spherical.phi += self.spherical_delta.phi;
 
-        // TODO!: left out restrictions / make_safe for now
+        // TODO!: left out theta restrictions / make_safe for now
+
+        // restrict phi to be between desired limits
+        let epsilon = 0.0001;
+        self.spherical.phi = clamp(self.spherical.phi, epsilon, PI - epsilon);
 
         self.spherical.radius *= self.scale;
 
