@@ -13,6 +13,7 @@ dependencies = [
  "image 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "mikktspace 0.1.0 (git+https://github.com/gltf-rs/mikktspace)",
+ "num-traits 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
  "simplelog 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

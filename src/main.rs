@@ -12,15 +12,15 @@ extern crate glutin;
 
 extern crate gltf;
 extern crate gltf_importer;
-
 extern crate gltf_utils;
+
 extern crate image;
+extern crate num_traits;
 
 #[macro_use]
 extern crate bitflags;
 
 use clap::{Arg, App, AppSettings};
-
 
 #[macro_use]extern crate log;
 extern crate simplelog;

@@ -4,6 +4,8 @@ use cgmath;
 pub use cgmath::prelude::*;
 pub use cgmath::{vec3, vec4};
 
+use num_traits::clamp;
+
 pub type Vector2 = cgmath::Vector2<f32>;
 pub type Vector3 = cgmath::Vector3<f32>;
 pub type Vector4 = cgmath::Vector4<f32>;
@@ -103,5 +105,41 @@ impl From<gltf::mesh::Bounds<[f32; 3]>> for Bounds {
             min: bounds.min.into(),
             max: bounds.max.into()
         }
+    }
+}
+
+// A point's spherical coordinates, inspired by ThreeJS version
+pub struct Spherical {
+    pub radius: f32,
+    pub phi: f32,
+    pub theta: f32,
+}
+
+impl Default for Spherical {
+    fn default() -> Self {
+        Spherical { radius: 1.0, phi: 0.0, theta: 0.0 }
+    }
+}
+
+impl Spherical {
+    pub fn from_vec3(vec3: Vector3) -> Self {
+        let radius = vec3.magnitude();
+        let (theta, phi) = if radius == 0.0 {
+            (0.0, 0.0)
+        } else {
+            (
+                vec3.x.atan2(vec3.z), // equator angle around y-up axis
+                clamp(vec3.y / radius, -1.0, 1.0).acos() // polar angle
+            )
+        };
+        Self {
+            radius,
+            theta,
+            phi
+        }
+    }
+
+    pub fn to_vec3(&self) -> Vector3 {
+
     }
 }

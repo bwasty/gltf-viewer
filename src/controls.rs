@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use cgmath::{vec3};
 use cgmath::prelude::*;
 
@@ -193,5 +195,140 @@ impl CameraControls {
         self.camera = camera;
 
         self.update_camera_vectors();
+    }
+}
+
+/// Inspirted by ThreeJS OrbitControls
+pub struct OrbitControls {
+    position: Vector3,
+
+    // "target" sets the location of focus, where the object orbits around
+	target: Vector3,
+
+	// current position in spherical coordinates
+	spherical: Spherical,
+	spherical_delta: Spherical,
+
+    scale: f32,
+    pan_offset: Vector3,
+
+    rotate_start: Vector2,
+    rotate_end: Vector2,
+    rotate_delta: Vector2,
+
+    screen_width: f32,
+    screen_height: f32,
+
+    //
+    offset: Vector3,
+
+    quat: Quaternion,
+    quat_inverse: Quaternion,
+
+    last_position: Vector3,
+    last_quaternion: Quaternion,
+}
+
+impl OrbitControls {
+    fn new(position: Vector3, screen_width: f32, screen_height: f32) -> Self {
+        OrbitControls {
+            position,
+            target: Vector3::zero(),
+
+            // current position in spherical coordinates
+            spherical: Spherical::default(),
+            spherical_delta: Spherical::default(),
+
+            scale: 1.0,
+            pan_offset: Vector3::zero(),
+
+            rotate_start: Vector2::zero(),
+            rotate_end: Vector2::zero(),
+            rotate_delta: Vector2::zero(),
+
+            screen_width,
+            screen_height,
+
+            //
+            offset: Vector3::zero(),
+
+            // TODO!: works? different object.up? Quaternion::from_arc?
+            quat: Quaternion::one(),
+            quat_inverse: Quaternion::one(),
+
+            last_position: Vector3::zero(),
+            last_quaternion: Quaternion::zero(),
+        }
+    }
+
+    fn handle_mouse_move_rotate(&mut self, x: f32, y: f32) {
+        self.rotate_end.x = x;
+        self.rotate_end.y = y;
+        self.rotate_delta = self.rotate_end - self.rotate_start;
+
+        // rotating across whole screen goes 360 degrees around
+        let rotate_speed = 1.0; // TODO: const/param/remove?
+        let angle = 2.0 * PI * self.rotate_delta.x / self.screen_width * rotate_speed;
+        self.rotate_left(angle);
+
+        // rotating up and down along whole screen attempts to go 360, but limited to 180
+        let angle = 2.0 * PI * self.rotate_delta.y / self.screen_height * rotate_speed;
+		self.rotate_up(angle);
+
+        self.rotate_start = self.rotate_end;
+
+		self.update();
+    }
+
+    fn rotate_left(&mut self, angle: f32) {
+        self.spherical_delta.theta -= angle;
+    }
+
+    fn rotate_up(&mut self, angle: f32) {
+        self.spherical_delta.phi -= angle;
+    }
+
+    fn update(&mut self) {
+        self.offset = self.position - self.target;
+
+        // rotate offset to "y-axis-is-up" space
+        self.offset = self.quat.rotate_vector(self.offset);
+
+        // angle from z-axis around y-axis
+        self.spherical = Spherical::from_vec3(self.offset);
+
+        self.spherical.theta += self.spherical_delta.theta;
+        self.spherical.phi += self.spherical_delta.phi;
+
+        // TODO!: left out restrictions / make_safe for now
+
+        self.spherical.radius *= self.scale;
+
+        // TODO!: restrict radius to be between desired limits
+
+        // move target to panned location
+        self.target += self.pan_offset;
+
+        self.offset = self.spherical.to_vec3();
+
+        // rotate offset back to "camera-up-vector-is-up" space
+        self.quat_inverse.rotate_vector(self.offset);
+
+        self.position = self.target + self.offset;
+
+        // TODO!!: how to do this?
+        // scope.object.lookAt( scope.target );
+
+        // TODO!: if enable_damping...?
+        self.spherical_delta.radius = 0.0;
+        self.spherical_delta.phi = 0.0;
+        self.spherical_delta.theta = 0.0;
+
+        self.scale = 1.0;
+        self.pan_offset = Vector3::zero();
+
+        // TODO!: zoomChanged stuff
+
+        // TODO!!!
     }
 }
