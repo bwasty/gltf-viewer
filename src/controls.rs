@@ -215,6 +215,13 @@ impl CameraControls {
     }
 }
 
+#[derive(Clone)]
+pub enum NavState {
+    None,
+    Rotating,
+    Panning,
+}
+
 /// Inspirted by ThreeJS OrbitControls
 pub struct OrbitControls {
     pub camera: Camera,
@@ -224,6 +231,8 @@ pub struct OrbitControls {
     // "target" sets the location of focus, where the object orbits around
 	pub target: Point3,
 
+    pub state: NavState,
+
 	// current position in spherical coordinates
 	spherical: Spherical,
 	spherical_delta: Spherical,
@@ -231,7 +240,7 @@ pub struct OrbitControls {
     scale: f32,
     pan_offset: Vector3,
 
-    rotate_start: Vector2,
+    rotate_start: Option<Vector2>,
     rotate_end: Vector2,
     rotate_delta: Vector2,
 
@@ -256,6 +265,8 @@ impl OrbitControls {
             position,
             target: Point3::new(0.0, 0.0, 0.0),
 
+            state: NavState::None,
+
             // current position in spherical coordinates
             spherical: Spherical::default(),
             spherical_delta: Spherical::default(),
@@ -263,7 +274,7 @@ impl OrbitControls {
             scale: 1.0,
             pan_offset: Vector3::zero(),
 
-            rotate_start: Vector2::zero(),
+            rotate_start: None,
             rotate_end: Vector2::zero(),
             rotate_delta: Vector2::zero(),
 
@@ -290,14 +301,26 @@ impl OrbitControls {
         }
     }
 
-    pub fn view_matrix(&self) -> Matrix4 {
+    fn view_matrix(&self) -> Matrix4 {
         Matrix4::look_at(self.position, self.target, vec3(0.0, 1.0, 0.0))
     }
 
-    pub fn handle_mouse_move_rotate(&mut self, x: f32, y: f32) {
+    pub fn handle_mouse_move(&mut self, x: f32, y: f32) {
+        match self.state {
+            NavState::Rotating => self.handle_mouse_move_rotate(x, y),
+            NavState::Panning => (),
+            NavState::None => ()
+        }
+    }
+
+    fn handle_mouse_move_rotate(&mut self, x: f32, y: f32) {
         self.rotate_end.x = x;
         self.rotate_end.y = y;
-        self.rotate_delta = self.rotate_end - self.rotate_start;
+        if let Some(rotate_start) = self.rotate_start {
+            self.rotate_delta = self.rotate_end - rotate_start;
+        } else {
+            self.rotate_delta = Vector2::zero();
+        }
 
         // rotating across whole screen goes 360 degrees around
         let rotate_speed = 1.0; // TODO: const/param/remove?
@@ -308,9 +331,14 @@ impl OrbitControls {
         let angle = 2.0 * PI * self.rotate_delta.y / self.screen_height * rotate_speed;
 		self.rotate_up(angle);
 
-        self.rotate_start = self.rotate_end;
+        self.rotate_start = Some(self.rotate_end);
 
 		self.update();
+    }
+
+    pub fn handle_mouse_up(&mut self) {
+        self.rotate_start = None;
+        // TODO!!: pan?
     }
 
     fn rotate_left(&mut self, angle: f32) {

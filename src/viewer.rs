@@ -8,19 +8,20 @@ use cgmath::{ Point3 };
 use gl;
 use glutin;
 use glutin::{
-    CursorState,
-    ElementState,
     MouseScrollDelta,
+    MouseButton,
     GlContext,
     VirtualKeyCode,
     WindowEvent,
 };
+use glutin::ElementState::*;
+
 use gltf_importer;
 use gltf_importer::config::ValidationStrategy;
 use image::{DynamicImage, ImageFormat};
 
 
-use controls::{CameraControls, OrbitControls};
+use controls::{CameraControls, OrbitControls, NavState};
 use controls::CameraMovement::*;
 use framebuffer::Framebuffer;
 use render::*;
@@ -89,13 +90,6 @@ impl GltfViewer {
                 let (real_width, real_height) = gl_window.get_inner_size_pixels().unwrap();
 
                 unsafe { gl_window.make_current().unwrap(); }
-
-                // TODO!: capturing - on click or uncapture somehow?
-                // TODO!: find solution for macOS - see https://github.com/tomaka/glutin/issues/226
-                #[cfg(target_os = "macos")]
-                let _ = gl_window.set_cursor_state(CursorState::Hide);
-                #[cfg(not(target_os = "macos"))]
-                let _ = gl_window.set_cursor_state(CursorState::Grab);
 
                 // gl: load all OpenGL function pointers
                 gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
@@ -335,9 +329,31 @@ fn process_events(
                     orbit_controls.screen_height = h;
                 },
                 WindowEvent::DroppedFile(_path_buf) => (), // TODO: drag file in
-                WindowEvent::MouseInput { button, state, ..} => {
-
+                WindowEvent::MouseInput { button, state: Pressed, ..} => {
+                    match button {
+                        MouseButton::Left => {
+                            orbit_controls.state = NavState::Rotating;
+                        },
+                        MouseButton::Right => {
+                            orbit_controls.state = NavState::Panning;
+                        },
+                        _ => ()
+                    }
                 },
+                WindowEvent::MouseInput { button, state: Released, ..} => {
+                    match (button, orbit_controls.state.clone()) {
+                        (MouseButton::Left, NavState::Rotating) => {
+                            orbit_controls.state = NavState::None;
+                            orbit_controls.handle_mouse_up();
+                        },
+                        (MouseButton::Right, NavState::Panning) => {
+                            orbit_controls.state = NavState::None;
+                            orbit_controls.handle_mouse_up();
+
+                        },
+                        _ => ()
+                    }
+                }
                 WindowEvent::MouseMoved { position: (xpos, ypos), .. } => {
                     let (xpos, ypos) = (xpos as f32, ypos as f32);
                     // if *first_mouse {
@@ -354,7 +370,7 @@ fn process_events(
 
                     // controls.process_mouse_movement(xoffset, yoffset, true);
 
-                    orbit_controls.handle_mouse_move_rotate(xpos, ypos);
+                    orbit_controls.handle_mouse_move(xpos, ypos);
                 },
                 WindowEvent::MouseWheel { delta: MouseScrollDelta::PixelDelta(_xoffset, yoffset), .. } => {
                     // TODO: need to handle LineDelta case too?
@@ -374,8 +390,8 @@ fn process_events(
 
 fn process_input(input: glutin::KeyboardInput, camera: &mut CameraControls) -> bool {
     let pressed = match input.state {
-        ElementState::Pressed => true,
-        ElementState::Released => false
+        Pressed => true,
+        Released => false
     };
     if let Some(code) = input.virtual_keycode {
         match code {
