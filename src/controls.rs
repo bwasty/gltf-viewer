@@ -39,6 +39,7 @@ pub const ZOOM: f32 = 45.0;
 const MIN_ZOOM: f32 = 1.0;
 const MAZ_ZOOM: f32 = 170.0;
 
+/// NOTE: superceded by OrbitControls. Keeping the parts of it not (yet?) added there.
 pub struct CameraControls {
     // Camera Attributes
     pub position: Point3,
@@ -69,7 +70,7 @@ pub struct CameraControls {
 
 impl Default for CameraControls {
     fn default() -> CameraControls {
-        let mut controls = CameraControls {
+        let controls = CameraControls {
             position: Point3::new(0.0, 0.0, 0.0),
             front: vec3(0.0, 0.0, -1.0),
             center: None,
@@ -91,7 +92,7 @@ impl Default for CameraControls {
             moving_backward: false,
         };
         // TODO!!: overriding default order...? -> NO!
-        controls.update_camera_vectors();
+        // controls.update_camera_vectors();
         controls
     }
 }
@@ -140,48 +141,6 @@ impl CameraControls {
         }
     }
 
-    /// Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
-    pub fn process_mouse_movement(&mut self, mut xoffset: f32, mut yoffset: f32, constrain_pitch: bool) {
-        xoffset *= self.mouse_sensitivity;
-        yoffset *= self.mouse_sensitivity;
-
-        self.yaw += xoffset;
-        self.pitch += yoffset;
-
-        // Make sure that when pitch is out of bounds, screen doesn't get flipped
-        if constrain_pitch {
-            if self.pitch > 89.0 {
-                self.pitch = 89.0;
-            }
-            if self.pitch < -89.0 {
-                self.pitch = -89.0;
-            }
-        }
-
-        // Update front, Right and Up Vectors using the updated Eular angles
-        self.update_camera_vectors();
-    }
-
-
-
-    /// Calculates the front vector from the Camera's (updated) Eular Angles
-    fn update_camera_vectors(&mut self) {
-        if let Some(center) = self.center {
-            self.front = center - self.position; // TODO!!!: overwritten again immediately...
-            self.center = None;
-        }
-        // Calculate the new front vector
-        let front = Vector3 {
-            x: self.yaw.to_radians().cos() * self.pitch.to_radians().cos(),
-            y: self.pitch.to_radians().sin(),
-            z: self.yaw.to_radians().sin() * self.pitch.to_radians().cos(),
-        };
-        self.front = front.normalize();
-        // Also re-calculate the Right and Up vector
-        self.right = self.front.cross(self.world_up).normalize(); // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
-        self.up = self.right.cross(self.front).normalize();
-    }
-
     pub fn set_camera(&mut self, camera: &Camera, transform: &Matrix4) {
         // spec: If no transformation is specified, the location of the camera is at the origin.
         let pos = transform * Vector4::zero();
@@ -197,7 +156,7 @@ impl CameraControls {
         camera.fovy = self.camera.fovy;
         self.camera = camera;
 
-        self.update_camera_vectors();
+        // self.update_camera_vectors();
     }
 }
 
@@ -234,12 +193,6 @@ pub struct OrbitControls {
 
     pub screen_width: f32,
     pub screen_height: f32,
-
-    // quat: Quaternion,
-
-    // TODO!!: unused?
-    last_position: Vector3,
-    last_quaternion: Quaternion,
 }
 
 impl OrbitControls {
@@ -256,7 +209,7 @@ impl OrbitControls {
             spherical: Spherical::default(),
             spherical_delta: Spherical::default(),
 
-            scale: 1.0,
+            scale: 1.0, // TODO!: not really used
             pan_offset: Vector3::zero(),
 
             rotate_start: None,
@@ -267,15 +220,6 @@ impl OrbitControls {
 
             screen_width,
             screen_height,
-
-            //
-
-            // NOTE: original uses sth like Quaternion::from_arc from "up" to "y up"
-            // and stores inverse quaternion
-            // quat: Quaternion::one(),
-
-            last_position: Vector3::zero(),
-            last_quaternion: Quaternion::zero(),
         }
     }
 
@@ -367,7 +311,8 @@ impl OrbitControls {
             let distance = 2.0 * delta.y * target_distance / self.screen_height;
             self.pan_up(distance);
         } else {
-            unimplemented!("orthographic camera zoom")
+            // TODO!: orthographic camera pan
+            unimplemented!("orthographic camera pan")
         }
     }
 
@@ -397,8 +342,7 @@ impl OrbitControls {
     fn update(&mut self) {
         let mut offset = self.position - self.target;
 
-        // rotate offset to "y-axis-is-up" space
-        // self.offset = self.quat.rotate_vector(self.offset);
+        // NOTE: skipping rotate offset to "y-axis-is-up" space
 
         // angle from z-axis around y-axis
         self.spherical = Spherical::from_vec3(offset);
@@ -406,7 +350,7 @@ impl OrbitControls {
         self.spherical.theta += self.spherical_delta.theta;
         self.spherical.phi += self.spherical_delta.phi;
 
-        // TODO!: left out theta restrictions / make_safe for now
+        // NOTE!: left out theta restrictions / make_safe for now
 
         // restrict phi to be between desired limits
         let epsilon = 0.0001;
@@ -417,25 +361,27 @@ impl OrbitControls {
         // TODO?: restrict radius to be between desired limits?
 
         // move target to panned location
-        self.target += self.pan_offset;
-
-        offset = self.spherical.to_vec3();
-
+        // NOTE: quite different from original
         // NOTE: skipped from original: rotate offset back to "camera-up-vector-is-up" space
+        let pan_speed = 2.0; // TODO!!: test on non-retina display
+        self.pan_offset *= pan_speed;
+        let right = offset.cross(Vector3::unit_y()).normalize();
+        let up = right.cross(offset).normalize();
+        self.position += right * self.pan_offset.x;
+        self.position += up * self.pan_offset.y;
+        self.target += right * self.pan_offset.x;
+        self.target += up * self.pan_offset.y;
 
+        // apply rotation
+        offset = self.spherical.to_vec3();
         self.position = self.target + offset;
 
-        // TODO!!: how to do this?
-        // scope.object.lookAt( scope.target );
-
-        // TODO!: if enable_damping...?
+        // TODO?: if enable_damping...?
         self.spherical_delta = Spherical::from_vec3(Vector3::zero());
 
         self.scale = 1.0;
         self.pan_offset = Vector3::zero();
 
-        // TODO!: zoomChanged stuff
-
-        // TODO!!!
+        // NOTE: skip zoomChanged stuff
     }
 }
