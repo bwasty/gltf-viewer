@@ -235,9 +235,6 @@ pub struct OrbitControls {
     pub screen_width: f32,
     pub screen_height: f32,
 
-    //
-    offset: Vector3,
-
     // quat: Quaternion,
 
     // TODO!!: unused?
@@ -272,7 +269,6 @@ impl OrbitControls {
             screen_height,
 
             //
-            offset: Vector3::zero(),
 
             // NOTE: original uses sth like Quaternion::from_arc from "up" to "y up"
             // and stores inverse quaternion
@@ -359,8 +355,8 @@ impl OrbitControls {
 
     fn pan(&mut self, delta: &Vector2) {
         if self.camera.is_perspective() {
-            self.offset = self.position - self.target;
-            let mut target_distance = self.offset.magnitude();
+            let offset = self.position - self.target;
+            let mut target_distance = offset.magnitude();
 
             // half of the fov is center to top of screen
             target_distance *= (self.camera.fovy / 2.0).tan() * PI / 180.0;
@@ -399,13 +395,13 @@ impl OrbitControls {
     }
 
     fn update(&mut self) {
-        self.offset = self.position - self.target;
+        let mut offset = self.position - self.target;
 
         // rotate offset to "y-axis-is-up" space
         // self.offset = self.quat.rotate_vector(self.offset);
 
         // angle from z-axis around y-axis
-        self.spherical = Spherical::from_vec3(self.offset);
+        self.spherical = Spherical::from_vec3(offset);
 
         self.spherical.theta += self.spherical_delta.theta;
         self.spherical.phi += self.spherical_delta.phi;
@@ -423,21 +419,17 @@ impl OrbitControls {
         // move target to panned location
         self.target += self.pan_offset;
 
-        self.offset = self.spherical.to_vec3();
+        offset = self.spherical.to_vec3();
 
         // NOTE: skipped from original: rotate offset back to "camera-up-vector-is-up" space
 
-        self.position = self.target + self.offset;
-
-        // self.position += self.pan_offset;
+        self.position = self.target + offset;
 
         // TODO!!: how to do this?
         // scope.object.lookAt( scope.target );
 
         // TODO!: if enable_damping...?
-        self.spherical_delta.radius = 0.0;
-        self.spherical_delta.phi = 0.0;
-        self.spherical_delta.theta = 0.0;
+        self.spherical_delta = Spherical::from_vec3(Vector3::zero());
 
         self.scale = 1.0;
         self.pan_offset = Vector3::zero();
