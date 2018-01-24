@@ -118,7 +118,7 @@ impl GltfViewer {
         let last_y: f32 = height as f32 / 2.0;
 
         unsafe {
-            gl::ClearColor(1.0, 1.0, 0.0, 1.0); // green for debugging
+            gl::ClearColor(0.0, 1.0, 0.0, 1.0); // green for debugging
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             gl::Enable(gl::DEPTH_TEST);
