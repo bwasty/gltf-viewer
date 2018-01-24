@@ -297,8 +297,8 @@ impl GltfViewer {
         }
     }
     pub fn multiscreenshot(&mut self, filename: &str, _width: u32, _height: u32, _number: u32) {
-        for x in 0.._number {
-            let mut prefixer: String = (x+1).to_string();
+        for x in 1.._number {
+            let mut prefixer: String = x.to_string();
             prefixer.to_owned();
             prefixer.push_str(filename);
             self.screenshot(&prefixer[..], _width,_height); // x: i32
