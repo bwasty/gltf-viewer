@@ -70,10 +70,17 @@ pub fn main() {
             .default_value("600")
             .help("Height in pixels")
             .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
+        .arg(Arg::with_name("NUMBER")
+            .long("number")
+            .short("n")
+            .default_value("1")
+            .help("Number of images")
+            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
         .get_matches();
     let source = args.value_of("FILE").unwrap();
     let width: u32 = args.value_of("WIDTH").unwrap().parse().unwrap();
     let height: u32 = args.value_of("HEIGHT").unwrap().parse().unwrap();
+    let number: u32 = args.value_of("NUMBER").unwrap().parse().unwrap();
 
     let log_level = match args.occurrences_of("verbose") {
         0 => LogLevelFilter::Warn,
@@ -93,10 +100,13 @@ pub fn main() {
 
     if args.is_present("screenshot") {
         let filename = args.value_of("screenshot").unwrap();
+
         if !filename.to_lowercase().ends_with(".png") {
             warn!("filename should end with .png");
         }
-        viewer.screenshot(filename, width, height);
+        
+        viewer.multiscreenshot(filename, width, height, number);
+            //   viewer.screenshot(filename, width, height);
         return;
     }
 

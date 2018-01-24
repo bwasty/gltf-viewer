@@ -118,7 +118,7 @@ impl GltfViewer {
         let last_y: f32 = height as f32 / 2.0;
 
         unsafe {
-            gl::ClearColor(0.0, 1.0, 0.0, 1.0); // green for debugging
+            gl::ClearColor(1.0, 1.0, 0.0, 1.0); // green for debugging
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             gl::Enable(gl::DEPTH_TEST);
@@ -273,7 +273,6 @@ impl GltfViewer {
             self.render_timer.end();
         }
     }
-
     pub fn screenshot(&mut self, filename: &str, _width: u32, _height: u32) {
         self.draw();
 
@@ -296,6 +295,15 @@ impl GltfViewer {
         else {
             println!("Saved {}x{} screenshot to {}", width, height, filename);
         }
+    }
+    pub fn multiscreenshot(&mut self, filename: &str, _width: u32, _height: u32, _number: u32) {
+        for x in 0.._number {
+            let mut prefixer: String = (x+1).to_string();
+            prefixer.to_owned();
+            prefixer.push_str(filename);
+            self.screenshot(&prefixer[..], _width,_height); // x: i32
+        }
+        
     }
 }
 
