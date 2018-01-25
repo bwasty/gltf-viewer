@@ -265,11 +265,10 @@ impl GltfViewer {
 
             gl::ClearColor(0.1, 0.2, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-
-            // let cam_params = self.controls.camera_params();
+            
+            println!("{:?}",self.orbit_controls.camera_params());
             let cam_params = self.orbit_controls.camera_params();
             self.scene.draw(&mut self.root, &cam_params);
-
             self.render_timer.end();
         }
     }
@@ -297,7 +296,11 @@ impl GltfViewer {
         }
     }
     pub fn multiscreenshot(&mut self, filename: &str, _width: u32, _height: u32, _number: u32) {
-        for x in 1.._number {
+        for x in 1..(_number+1) {
+            let rotate_by_degree : f32 = 6.0 * (x as f32);
+            let rotate_by_radian : f32 = rotate_by_degree * 0.01746031746031746;
+            println!("angle   : {:?}",rotate_by_radian);
+            self.orbit_controls.angle_me(rotate_by_radian);
             let mut prefixer: String = x.to_string();
             prefixer.to_owned();
             prefixer.push_str(filename);
@@ -361,6 +364,7 @@ fn process_events(
                 WindowEvent::MouseMoved { position: (xpos, ypos), .. } => {
                     let (xpos, ypos) = (xpos as f32, ypos as f32);
                     orbit_controls.handle_mouse_move(xpos, ypos);
+                    
                 },
                 WindowEvent::MouseWheel { delta: MouseScrollDelta::PixelDelta(_xoffset, yoffset), .. } => {
                     // TODO: need to handle LineDelta case too?

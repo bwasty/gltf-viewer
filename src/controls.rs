@@ -257,11 +257,11 @@ impl OrbitControls {
         let rotate_speed = 1.0; // TODO: const/param/remove?
         let angle = 2.0 * PI * rotate_delta.x / self.screen_width * rotate_speed;
         self.rotate_left(angle);
+        println!("{:?}",angle);
 
         // rotating up and down along whole screen attempts to go 360, but limited to 180
         let angle = 2.0 * PI * rotate_delta.y / self.screen_height * rotate_speed;
 		self.rotate_up(angle);
-
         self.rotate_start = Some(self.rotate_end);
 
 		self.update();
@@ -275,7 +275,10 @@ impl OrbitControls {
     fn rotate_left(&mut self, angle: f32) {
         self.spherical_delta.theta -= angle;
     }
-
+    pub fn angle_me(&mut self, angle: f32) {
+        self.rotate_left(angle);
+        self.update();
+    }
     fn rotate_up(&mut self, angle: f32) {
         self.spherical_delta.phi -= angle;
     }
