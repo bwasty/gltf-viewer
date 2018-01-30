@@ -266,7 +266,6 @@ impl GltfViewer {
             gl::ClearColor(0.1, 0.2, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
             
-            println!("{:?}",self.orbit_controls.camera_params());
             let cam_params = self.orbit_controls.camera_params();
             self.scene.draw(&mut self.root, &cam_params);
             self.render_timer.end();
@@ -299,12 +298,14 @@ impl GltfViewer {
         for x in 1..(_number+1) {
             let rotate_by_degree : f32 = 6.0 * (x as f32);
             let rotate_by_radian : f32 = rotate_by_degree * 0.01746031746031746;
-            println!("angle   : {:?}",rotate_by_radian);
             self.orbit_controls.angle_me(rotate_by_radian);
-            let mut prefixer: String = x.to_string();
-            prefixer.to_owned();
-            prefixer.push_str(filename);
-            self.screenshot(&prefixer[..], _width,_height); // x: i32
+            let iterator: String = x.to_string();
+            let mut actualname : String = filename.split(".png").nth(0).unwrap().to_string();
+            actualname.to_owned();
+            actualname.push_str("_");
+            actualname.push_str(&iterator[..]);
+            actualname.push_str(".png");
+            self.screenshot(&actualname[..], _width,_height); 
         }
         
     }

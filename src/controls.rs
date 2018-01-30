@@ -257,7 +257,6 @@ impl OrbitControls {
         let rotate_speed = 1.0; // TODO: const/param/remove?
         let angle = 2.0 * PI * rotate_delta.x / self.screen_width * rotate_speed;
         self.rotate_left(angle);
-        println!("{:?}",angle);
 
         // rotating up and down along whole screen attempts to go 360, but limited to 180
         let angle = 2.0 * PI * rotate_delta.y / self.screen_height * rotate_speed;
