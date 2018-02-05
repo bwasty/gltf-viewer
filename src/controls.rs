@@ -13,7 +13,7 @@ use render::Camera;
 use render::math::*;
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum CameraMovement {
     FORWARD,
     BACKWARD,
@@ -39,7 +39,7 @@ pub const ZOOM: f32 = 45.0;
 const MIN_ZOOM: f32 = 1.0;
 const MAZ_ZOOM: f32 = 170.0;
 
-/// NOTE: superceded by OrbitControls. Keeping the parts of it not (yet?) added there.
+/// NOTE: superceded by `OrbitControls`. Keeping the parts of it not (yet?) added there.
 pub struct CameraControls {
     // Camera Attributes
     pub position: Point3,
@@ -167,7 +167,7 @@ pub enum NavState {
     Panning,
 }
 
-/// Inspirted by ThreeJS OrbitControls
+/// Inspirted by `ThreeJS` `OrbitControls`
 pub struct OrbitControls {
     pub camera: Camera,
 

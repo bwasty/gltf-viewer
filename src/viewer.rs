@@ -73,7 +73,7 @@ impl GltfViewer {
             }
             else {
                 // glutin: initialize and configure
-                let events_loop = glutin::EventsLoop::new().into();
+                let events_loop = glutin::EventsLoop::new();
 
                 // TODO?: hints for 4.1, core profile, forward compat
                 let window = glutin::WindowBuilder::new()
@@ -87,7 +87,7 @@ impl GltfViewer {
                 let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
 
                 // Real dimensions might be much higher on High-DPI displays
-                let (real_width, real_height) = gl_window.get_inner_size_pixels().unwrap();
+                let (real_width, real_height) = gl_window.get_inner_size().unwrap();
 
                 unsafe { gl_window.make_current().unwrap(); }
 
@@ -198,7 +198,7 @@ impl GltfViewer {
         }
         let base_path = Path::new(source);
         let mut root = Root::from_gltf(&gltf, &buffers, base_path);
-        let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap(), &mut root);
+        let scene = Scene::from_gltf(&gltf.scenes().nth(0).unwrap(), &mut root);
         print_elapsed(&format!("Loaded scene with {} nodes, {} meshes in ",
                 gltf.nodes().count(), root.meshes.len()), &start_time);
 
@@ -278,7 +278,7 @@ impl GltfViewer {
         self.draw();
 
         // TODO!: headless case...
-        let (width, height) = self.gl_window.as_ref().unwrap().get_inner_size_pixels().unwrap();
+        let (width, height) = self.gl_window.as_ref().unwrap().get_inner_size().unwrap();
         let mut img = DynamicImage::new_rgb8(width, height);
         unsafe {
             let pixels = img.as_mut_rgb8().unwrap();
@@ -338,19 +338,14 @@ fn process_events(
                 },
                 WindowEvent::MouseInput { button, state: Released, ..} => {
                     match (button, orbit_controls.state.clone()) {
-                        (MouseButton::Left, NavState::Rotating) => {
+                        (MouseButton::Left, NavState::Rotating) | (MouseButton::Right, NavState::Panning) => {
                             orbit_controls.state = NavState::None;
                             orbit_controls.handle_mouse_up();
-                        },
-                        (MouseButton::Right, NavState::Panning) => {
-                            orbit_controls.state = NavState::None;
-                            orbit_controls.handle_mouse_up();
-
                         },
                         _ => ()
                     }
                 }
-                WindowEvent::MouseMoved { position: (xpos, ypos), .. } => {
+                WindowEvent::CursorMoved { position: (xpos, ypos), .. } => {
                     let (xpos, ypos) = (xpos as f32, ypos as f32);
                     orbit_controls.handle_mouse_move(xpos, ypos);
                 },

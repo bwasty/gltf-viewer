@@ -69,7 +69,7 @@ pub struct Primitive {
 impl Primitive {
     pub fn new(
         bounds: Bounds,
-        vertices: Vec<Vertex>,
+        vertices: &[Vertex],
         indices: Option<Vec<u32>>,
         material: Rc<Material>,
         shader: Rc<PbrShader>,
@@ -90,7 +90,7 @@ impl Primitive {
     }
 
     pub fn from_gltf(
-        g_primitive: gltf::Primitive,
+        g_primitive: &gltf::Primitive,
         primitive_index: usize,
         mesh_index: usize,
         root: &mut Root,
@@ -119,7 +119,7 @@ impl Primitive {
             for (i, normal) in normals.enumerate() {
                 vertices[i].normal = Vector3::from(normal);
             }
-            shader_flags |= HAS_NORMALS;
+            shader_flags |= ShaderFlags::HAS_NORMALS;
         }
         else {
             debug!("Found no NORMALs for primitive {} of mesh {} \
@@ -131,7 +131,7 @@ impl Primitive {
             for (i, tangent) in tangents.enumerate() {
                 vertices[i].tangent = Vector4::from(tangent);
             }
-            shader_flags |= HAS_TANGENTS;
+            shader_flags |= ShaderFlags::HAS_TANGENTS;
         }
         else {
             debug!("Found no TANGENTS for primitive {} of mesh {} \
@@ -155,7 +155,7 @@ impl Primitive {
                     _ => unreachable!()
                 }
             }
-            shader_flags |= HAS_UV;
+            shader_flags |= ShaderFlags::HAS_UV;
             tex_coord_set += 1;
         }
 
@@ -164,7 +164,7 @@ impl Primitive {
             for (i, c) in colors.enumerate() {
                 vertices[i].color_0 = c.into();
             }
-            shader_flags |= HAS_COLORS;
+            shader_flags |= ShaderFlags::HAS_COLORS;
         }
         if g_primitive.colors_rgba_f32(1, 1.0, buffers).is_some() {
             warn!("Ignoring further color attributes, only supporting COLOR_0. (mesh: {}, primitive: {})",
@@ -224,7 +224,7 @@ impl Primitive {
             root.shaders.insert(shader_flags, Rc::clone(&shader));
         }
 
-        Primitive::new(bounds.into(), vertices, indices, material, shader)
+        Primitive::new(bounds.into(), &vertices, indices, material, shader)
     }
 
     /// render the mesh
@@ -298,7 +298,7 @@ impl Primitive {
         }
     }
 
-    unsafe fn setup_primitive(&mut self, vertices: Vec<Vertex>, indices: Option<Vec<u32>>) {
+    unsafe fn setup_primitive(&mut self, vertices: &[Vertex], indices: Option<Vec<u32>>) {
         // create buffers/arrays
         gl::GenVertexArrays(1, &mut self.vao);
         gl::GenBuffers(1, &mut self.vbo);
