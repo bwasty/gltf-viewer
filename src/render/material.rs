@@ -96,19 +96,19 @@ impl Material {
     pub fn shader_flags(&self) -> ShaderFlags {
         let mut flags = ShaderFlags::empty();
         if self.base_color_texture.is_some() {
-            flags |= HAS_BASECOLORMAP;
+            flags |= ShaderFlags::HAS_BASECOLORMAP;
         }
         if self.normal_texture.is_some() {
-            flags |= HAS_NORMALMAP;
+            flags |= ShaderFlags::HAS_NORMALMAP;
         }
         if self.emissive_texture.is_some() {
-            flags |= HAS_EMISSIVEMAP;
+            flags |= ShaderFlags::HAS_EMISSIVEMAP;
         }
         if self.metallic_roughness_texture.is_some() {
-            flags |= HAS_METALROUGHNESSMAP;
+            flags |= ShaderFlags::HAS_METALROUGHNESSMAP;
         }
         if self.occlusion_texture.is_some() {
-            flags |= HAS_OCCLUSIONMAP;
+            flags |= ShaderFlags::HAS_OCCLUSIONMAP;
         }
         flags
     }

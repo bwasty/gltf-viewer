@@ -87,7 +87,7 @@ impl GltfViewer {
                 let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
 
                 // Real dimensions might be much higher on High-DPI displays
-                let (real_width, real_height) = gl_window.get_inner_size_pixels().unwrap();
+                let (real_width, real_height) = gl_window.get_inner_size().unwrap();
 
                 unsafe { gl_window.make_current().unwrap(); }
 
@@ -278,7 +278,7 @@ impl GltfViewer {
         self.draw();
 
         // TODO!: headless case...
-        let (width, height) = self.gl_window.as_ref().unwrap().get_inner_size_pixels().unwrap();
+        let (width, height) = self.gl_window.as_ref().unwrap().get_inner_size().unwrap();
         let mut img = DynamicImage::new_rgb8(width, height);
         unsafe {
             let pixels = img.as_mut_rgb8().unwrap();
@@ -350,7 +350,7 @@ fn process_events(
                         _ => ()
                     }
                 }
-                WindowEvent::MouseMoved { position: (xpos, ypos), .. } => {
+                WindowEvent::CursorMoved { position: (xpos, ypos), .. } => {
                     let (xpos, ypos) = (xpos as f32, ypos as f32);
                     orbit_controls.handle_mouse_move(xpos, ypos);
                 },

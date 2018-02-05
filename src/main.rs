@@ -24,7 +24,7 @@ use clap::{Arg, App, AppSettings};
 
 #[macro_use]extern crate log;
 extern crate simplelog;
-use simplelog::{TermLogger, LogLevelFilter, Config as LogConfig};
+use simplelog::{TermLogger, LevelFilter, Config as LogConfig};
 
 mod utils;
 mod viewer;
@@ -76,10 +76,10 @@ pub fn main() {
     let height: u32 = args.value_of("HEIGHT").unwrap().parse().unwrap();
 
     let log_level = match args.occurrences_of("verbose") {
-        0 => LogLevelFilter::Warn,
-        1 => LogLevelFilter::Info,
-        2 => LogLevelFilter::Debug,
-        _ => LogLevelFilter::Trace
+        0 => LevelFilter::Warn,
+        1 => LevelFilter::Info,
+        2 => LevelFilter::Debug,
+        _ => LevelFilter::Trace
     };
 
     let _ = TermLogger::init(log_level, LogConfig { time: None, target: None, ..LogConfig::default() });
