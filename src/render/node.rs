@@ -32,7 +32,7 @@ impl Node {
     // TODO!: refactor transformations using mint and non-deprecated functions
     #[allow(deprecated)]
     pub fn from_gltf(
-        g_node: gltf::Node,
+        g_node: &gltf::Node,
         root: &mut Root,
         buffers: &gltf_importer::Buffers,
         base_path: &Path
@@ -52,7 +52,7 @@ impl Node {
             }
 
             if mesh.is_none() { // not using else due to borrow-checking madness
-                mesh = Some(Rc::new(Mesh::from_gltf(g_mesh, root, buffers, base_path)));
+                mesh = Some(Rc::new(Mesh::from_gltf(&g_mesh, root, buffers, base_path)));
                 root.meshes.push(mesh.clone().unwrap());
             }
         }

@@ -73,7 +73,7 @@ impl GltfViewer {
             }
             else {
                 // glutin: initialize and configure
-                let events_loop = glutin::EventsLoop::new().into();
+                let events_loop = glutin::EventsLoop::new();
 
                 // TODO?: hints for 4.1, core profile, forward compat
                 let window = glutin::WindowBuilder::new()
@@ -198,7 +198,7 @@ impl GltfViewer {
         }
         let base_path = Path::new(source);
         let mut root = Root::from_gltf(&gltf, &buffers, base_path);
-        let scene = Scene::from_gltf(gltf.scenes().nth(0).unwrap(), &mut root);
+        let scene = Scene::from_gltf(&gltf.scenes().nth(0).unwrap(), &mut root);
         print_elapsed(&format!("Loaded scene with {} nodes, {} meshes in ",
                 gltf.nodes().count(), root.meshes.len()), &start_time);
 
@@ -338,14 +338,9 @@ fn process_events(
                 },
                 WindowEvent::MouseInput { button, state: Released, ..} => {
                     match (button, orbit_controls.state.clone()) {
-                        (MouseButton::Left, NavState::Rotating) => {
+                        (MouseButton::Left, NavState::Rotating) | (MouseButton::Right, NavState::Panning) => {
                             orbit_controls.state = NavState::None;
                             orbit_controls.handle_mouse_up();
-                        },
-                        (MouseButton::Right, NavState::Panning) => {
-                            orbit_controls.state = NavState::None;
-                            orbit_controls.handle_mouse_up();
-
                         },
                         _ => ()
                     }

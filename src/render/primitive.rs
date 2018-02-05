@@ -69,7 +69,7 @@ pub struct Primitive {
 impl Primitive {
     pub fn new(
         bounds: Bounds,
-        vertices: Vec<Vertex>,
+        vertices: &[Vertex],
         indices: Option<Vec<u32>>,
         material: Rc<Material>,
         shader: Rc<PbrShader>,
@@ -90,7 +90,7 @@ impl Primitive {
     }
 
     pub fn from_gltf(
-        g_primitive: gltf::Primitive,
+        g_primitive: &gltf::Primitive,
         primitive_index: usize,
         mesh_index: usize,
         root: &mut Root,
@@ -224,7 +224,7 @@ impl Primitive {
             root.shaders.insert(shader_flags, Rc::clone(&shader));
         }
 
-        Primitive::new(bounds.into(), vertices, indices, material, shader)
+        Primitive::new(bounds.into(), &vertices, indices, material, shader)
     }
 
     /// render the mesh
@@ -298,7 +298,7 @@ impl Primitive {
         }
     }
 
-    unsafe fn setup_primitive(&mut self, vertices: Vec<Vertex>, indices: Option<Vec<u32>>) {
+    unsafe fn setup_primitive(&mut self, vertices: &[Vertex], indices: Option<Vec<u32>>) {
         // create buffers/arrays
         gl::GenVertexArrays(1, &mut self.vao);
         gl::GenBuffers(1, &mut self.vbo);

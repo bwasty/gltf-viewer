@@ -48,8 +48,8 @@ impl Material {
             base_color_factor: pbr.base_color_factor().into(),
             // TODO: perhaps RC only the underlying image? no, also opengl id...
             base_color_texture: None,
-            metallic_factor: pbr.metallic_factor().into(),
-            roughness_factor: pbr.roughness_factor().into(),
+            metallic_factor: pbr.metallic_factor(),
+            roughness_factor: pbr.roughness_factor(),
             metallic_roughness_texture: None,
 
             normal_texture: None,
