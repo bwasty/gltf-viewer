@@ -91,11 +91,7 @@ pub fn main() {
 
     let _ = TermLogger::init(log_level, LogConfig { time: None, target: None, ..LogConfig::default() });
 
-    // TODO!: headless rendering doesn't work (only clearcolor)
-    let mut viewer = GltfViewer::new(source, width, height,
-        false,
-        !args.is_present("screenshot")
-    );
+    let mut viewer = GltfViewer::new(source, width, height, args.is_present("screenshot"));
 
     if args.is_present("screenshot") {
         let filename = args.value_of("screenshot").unwrap();

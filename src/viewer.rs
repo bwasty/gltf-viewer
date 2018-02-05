@@ -59,9 +59,7 @@ pub struct GltfViewer {
 }
 
 impl GltfViewer {
-    pub fn new(source: &str, width: u32, height: u32, headless: bool, visible: bool) -> GltfViewer {
-
-
+    pub fn new(source: &str, width: u32, height: u32, headless: bool) -> GltfViewer {
         let (events_loop, gl_window, width, height) =
             if headless {
                 let headless_context = glutin::HeadlessRendererBuilder::new(width, height).build().unwrap();
@@ -69,6 +67,7 @@ impl GltfViewer {
                 gl::load_with(|symbol| headless_context.get_proc_address(symbol) as *const _);
                 let framebuffer = Framebuffer::new(width, height);
                 framebuffer.bind();
+                unsafe { gl::Viewport(0, 0, width as i32, height as i32); }
 
                 (None, None, width, height) // TODO: real height (retina?)
             }
@@ -80,8 +79,7 @@ impl GltfViewer {
                 let window = glutin::WindowBuilder::new()
                         .with_title("gltf-viewer")
                         .with_dimensions(width, height)
-                        .with_visibility(visible);
-
+                        .with_visibility(true);
 
                 let context = glutin::ContextBuilder::new()
                     .with_vsync(true);
@@ -274,11 +272,9 @@ impl GltfViewer {
         }
     }
 
-    pub fn screenshot(&mut self, filename: &str, _width: u32, _height: u32) {
+    pub fn screenshot(&mut self, filename: &str, width: u32, height: u32) {
         self.draw();
 
-        // TODO!: headless case...
-        let (width, height) = self.gl_window.as_ref().unwrap().get_inner_size().unwrap();
         let mut img = DynamicImage::new_rgb8(width, height);
         unsafe {
             let pixels = img.as_mut_rgb8().unwrap();
