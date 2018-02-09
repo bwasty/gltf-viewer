@@ -1,3 +1,4 @@
+use std::f32::consts::PI;
 use std::fs::File;
 use std::os::raw::c_void;
 use std::path::Path;
@@ -118,7 +119,7 @@ impl GltfViewer {
         let last_y: f32 = height as f32 / 2.0;
 
         unsafe {
-            gl::ClearColor(1.0, 0.0, 0.0, 1.0); // green for debugging
+            gl::ClearColor(0.0, 1.0, 0.0, 1.0); // green for debugging
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             gl::Enable(gl::DEPTH_TEST);
@@ -265,12 +266,14 @@ impl GltfViewer {
 
             gl::ClearColor(0.1, 0.2, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-            
+
             let cam_params = self.orbit_controls.camera_params();
             self.scene.draw(&mut self.root, &cam_params);
+
             self.render_timer.end();
         }
     }
+
     pub fn screenshot(&mut self, filename: &str, _width: u32, _height: u32) {
         self.draw();
 
@@ -295,9 +298,8 @@ impl GltfViewer {
         }
     }
     pub fn multiscreenshot(&mut self, filename: &str, width: u32, height: u32, count: u32) {
-        const PI : f32 = 22.0/7.0 ; 
         let min_angle : f32 = 0.0 ;
-        let max_angle : f32=  2.0*PI ;
+        let max_angle : f32 =  2.0 * PI ;
         let increment_angle : f32 = ((max_angle - min_angle)/(count as f32)) as f32;
         for i in 1..(count+1) {
             self.orbit_controls.rotate_object(increment_angle);
@@ -363,7 +365,6 @@ fn process_events(
                 WindowEvent::MouseMoved { position: (xpos, ypos), .. } => {
                     let (xpos, ypos) = (xpos as f32, ypos as f32);
                     orbit_controls.handle_mouse_move(xpos, ypos);
-                    
                 },
                 WindowEvent::MouseWheel { delta: MouseScrollDelta::PixelDelta(_xoffset, yoffset), .. } => {
                     // TODO: need to handle LineDelta case too?

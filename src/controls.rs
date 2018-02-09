@@ -174,13 +174,13 @@ pub struct OrbitControls {
     pub position: Point3,
 
     // "target" sets the location of focus, where the object orbits around
-	pub target: Point3,
+    pub target: Point3,
 
     pub state: NavState,
 
-	// current position in spherical coordinates
-	spherical: Spherical,
-	spherical_delta: Spherical,
+    // current position in spherical coordinates
+    spherical: Spherical,
+    spherical_delta: Spherical,
 
     scale: f32,
     pan_offset: Vector3,
@@ -188,8 +188,8 @@ pub struct OrbitControls {
     rotate_start: Option<Vector2>,
     rotate_end: Vector2,
 
-	pan_start: Option<Vector2>,
-	pan_end: Vector2,
+    pan_start: Option<Vector2>,
+    pan_end: Vector2,
 
     pub screen_width: f32,
     pub screen_height: f32,
@@ -260,10 +260,11 @@ impl OrbitControls {
 
         // rotating up and down along whole screen attempts to go 360, but limited to 180
         let angle = 2.0 * PI * rotate_delta.y / self.screen_height * rotate_speed;
-		self.rotate_up(angle);
+        self.rotate_up(angle);
+
         self.rotate_start = Some(self.rotate_end);
 
-		self.update();
+        self.update();
     }
 
     pub fn handle_mouse_up(&mut self) {
@@ -274,6 +275,7 @@ impl OrbitControls {
     fn rotate_left(&mut self, angle: f32) {
         self.spherical_delta.theta -= angle;
     }
+
     pub fn rotate_object(&mut self, angle: f32) {
         self.rotate_left(angle);
         self.update();

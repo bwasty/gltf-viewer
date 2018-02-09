@@ -103,9 +103,9 @@ pub fn main() {
         if !filename.to_lowercase().ends_with(".png") {
             warn!("filename should end with .png");
         }
-        if count>1 {
+        if count > 1 {
             viewer.multiscreenshot(filename, width, height, count)
-        }else{
+        } else {
             viewer.screenshot(filename,width,height)
         }
         return;
