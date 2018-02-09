@@ -70,17 +70,17 @@ pub fn main() {
             .default_value("600")
             .help("Height in pixels")
             .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
-        .arg(Arg::with_name("NUMBER")
-            .long("number")
-            .short("n")
+        .arg(Arg::with_name("COUNT")
+            .long("count")
+            .short("c")
             .default_value("1")
-            .help("Number of images")
+            .help("Saves N screenshots of size WxH, rotating evenly spaced around the object")
             .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
         .get_matches();
     let source = args.value_of("FILE").unwrap();
     let width: u32 = args.value_of("WIDTH").unwrap().parse().unwrap();
     let height: u32 = args.value_of("HEIGHT").unwrap().parse().unwrap();
-    let number: u32 = args.value_of("NUMBER").unwrap().parse().unwrap();
+    let count: u32 = args.value_of("COUNT").unwrap().parse().unwrap();
 
     let log_level = match args.occurrences_of("verbose") {
         0 => LogLevelFilter::Warn,
@@ -93,7 +93,6 @@ pub fn main() {
 
     // TODO!: headless rendering doesn't work (only clearcolor)
     let mut viewer = GltfViewer::new(source, width, height,
-        // args.is_present("screenshot")
         false,
         !args.is_present("screenshot")
     );
@@ -104,9 +103,11 @@ pub fn main() {
         if !filename.to_lowercase().ends_with(".png") {
             warn!("filename should end with .png");
         }
-        
-        viewer.multiscreenshot(filename, width, height, number);
-            //   viewer.screenshot(filename, width, height);
+        if count>1 {
+            viewer.multiscreenshot(filename, width, height, count)
+        }else{
+            viewer.screenshot(filename,width,height)
+        }
         return;
     }
 

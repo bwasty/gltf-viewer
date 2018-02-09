@@ -274,7 +274,7 @@ impl OrbitControls {
     fn rotate_left(&mut self, angle: f32) {
         self.spherical_delta.theta -= angle;
     }
-    pub fn angle_me(&mut self, angle: f32) {
+    pub fn rotate_object(&mut self, angle: f32) {
         self.rotate_left(angle);
         self.update();
     }

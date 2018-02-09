@@ -118,7 +118,7 @@ impl GltfViewer {
         let last_y: f32 = height as f32 / 2.0;
 
         unsafe {
-            gl::ClearColor(0.0, 1.0, 0.0, 1.0); // green for debugging
+            gl::ClearColor(1.0, 0.0, 0.0, 1.0); // green for debugging
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             gl::Enable(gl::DEPTH_TEST);
@@ -294,20 +294,18 @@ impl GltfViewer {
             println!("Saved {}x{} screenshot to {}", width, height, filename);
         }
     }
-    pub fn multiscreenshot(&mut self, filename: &str, _width: u32, _height: u32, _number: u32) {
-        for x in 1..(_number+1) {
-            let rotate_by_degree : f32 = 6.0 * (x as f32);
-            let rotate_by_radian : f32 = rotate_by_degree * 0.01746031746031746;
-            self.orbit_controls.angle_me(rotate_by_radian);
-            let iterator: String = x.to_string();
-            let mut actualname : String = filename.split(".png").nth(0).unwrap().to_string();
-            actualname.to_owned();
-            actualname.push_str("_");
-            actualname.push_str(&iterator[..]);
-            actualname.push_str(".png");
-            self.screenshot(&actualname[..], _width,_height); 
+    pub fn multiscreenshot(&mut self, filename: &str, width: u32, height: u32, count: u32) {
+        const PI : f32 = 22.0/7.0 ; 
+        let min_angle : f32 = 0.0 ;
+        let max_angle : f32=  2.0*PI ;
+        let increment_angle : f32 = ((max_angle - min_angle)/(count as f32)) as f32;
+        for i in 1..(count+1) {
+            self.orbit_controls.rotate_object(increment_angle);
+            let dot = filename.rfind(".").unwrap_or_else(|| filename.len());
+            let mut actual_name = filename.to_string();
+            actual_name.insert_str(dot, &format!("_{}", i));
+            self.screenshot(&actual_name[..], width,height);
         }
-        
     }
 }
 
