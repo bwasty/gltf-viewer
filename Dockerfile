@@ -8,10 +8,10 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 COPY src src
 COPY Cargo.toml Cargo.toml
 COPY Cargo.lock Cargo.lock
-COPY run_xvfb.sh run_xvfb.sh
 
 RUN cargo install --debug
 
+COPY run_xvfb.sh run_xvfb.sh
 VOLUME /input
-WORKDIR /input
-ENTRYPOINT /run_xvfb.sh
+# WORKDIR /input
+# CMD [ "./run_xvfb.sh" ]
