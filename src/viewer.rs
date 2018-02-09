@@ -1,3 +1,4 @@
+use std::f32::consts::PI;
 use std::fs::File;
 use std::os::raw::c_void;
 use std::path::Path;
@@ -266,7 +267,6 @@ impl GltfViewer {
             gl::ClearColor(0.1, 0.2, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-            // let cam_params = self.controls.camera_params();
             let cam_params = self.orbit_controls.camera_params();
             self.scene.draw(&mut self.root, &cam_params);
 
@@ -295,6 +295,18 @@ impl GltfViewer {
         }
         else {
             println!("Saved {}x{} screenshot to {}", width, height, filename);
+        }
+    }
+    pub fn multiscreenshot(&mut self, filename: &str, width: u32, height: u32, count: u32) {
+        let min_angle : f32 = 0.0 ;
+        let max_angle : f32 =  2.0 * PI ;
+        let increment_angle : f32 = ((max_angle - min_angle)/(count as f32)) as f32;
+        for i in 1..(count+1) {
+            self.orbit_controls.rotate_object(increment_angle);
+            let dot = filename.rfind(".").unwrap_or_else(|| filename.len());
+            let mut actual_name = filename.to_string();
+            actual_name.insert_str(dot, &format!("_{}", i));
+            self.screenshot(&actual_name[..], width,height);
         }
     }
 }
