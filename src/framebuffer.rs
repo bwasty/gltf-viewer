@@ -17,8 +17,8 @@ impl Framebuffer {
             let mut texture_colorbuffer = 0;
             gl::GenTextures(1, &mut texture_colorbuffer);
             gl::BindTexture(gl::TEXTURE_2D, texture_colorbuffer);
-            gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32, width as i32, height as i32,
-                0, gl::RGB, gl::UNSIGNED_BYTE, ptr::null());
+            gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32, width as i32, height as i32,
+                0, gl::RGBA, gl::UNSIGNED_BYTE, ptr::null());
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
             gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D, texture_colorbuffer, 0);

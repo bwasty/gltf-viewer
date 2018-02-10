@@ -120,6 +120,14 @@ impl GltfViewer {
             gl::ClearColor(0.0, 1.0, 0.0, 1.0); // green for debugging
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
+            if headless {
+                // transparent background for screenshots
+                gl::ClearColor(0.0, 0.0, 0.0, 0.0);
+            }
+            else {
+                gl::ClearColor(0.1, 0.2, 0.3, 1.0);
+            }
+
             gl::Enable(gl::DEPTH_TEST);
 
             // TODO: keyboard switch?
@@ -262,7 +270,6 @@ impl GltfViewer {
         unsafe {
             self.render_timer.start();
 
-            gl::ClearColor(0.1, 0.2, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             let cam_params = self.orbit_controls.camera_params();
@@ -275,11 +282,11 @@ impl GltfViewer {
     pub fn screenshot(&mut self, filename: &str, width: u32, height: u32) {
         self.draw();
 
-        let mut img = DynamicImage::new_rgb8(width, height);
+        let mut img = DynamicImage::new_rgba8(width, height);
         unsafe {
-            let pixels = img.as_mut_rgb8().unwrap();
+            let pixels = img.as_mut_rgba8().unwrap();
             gl::PixelStorei(gl::PACK_ALIGNMENT, 1);
-            gl::ReadPixels(0, 0, width as i32, height as i32, gl::RGB,
+            gl::ReadPixels(0, 0, width as i32, height as i32, gl::RGBA,
                 gl::UNSIGNED_BYTE, pixels.as_mut_ptr() as *mut c_void);
         }
 
