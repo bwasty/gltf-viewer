@@ -70,8 +70,8 @@ impl GltfViewer {
         let (events_loop, gl_window, width, height) =
             if headless {
                 let headless_context = glutin::HeadlessRendererBuilder::new(width, height)
-                    .with_gl(gl_request)
-                    .with_gl_profile(gl_profile)
+                    // .with_gl(gl_request)
+                    // .with_gl_profile(gl_profile)
                     .build()
                     .unwrap();
                 unsafe { headless_context.make_current().unwrap() }
