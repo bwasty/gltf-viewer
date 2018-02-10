@@ -9,9 +9,12 @@ use cgmath::{ Point3 };
 use gl;
 use glutin;
 use glutin::{
+    Api,
     MouseScrollDelta,
     MouseButton,
     GlContext,
+    GlRequest,
+    GlProfile,
     VirtualKeyCode,
     WindowEvent,
 };
@@ -60,9 +63,15 @@ pub struct GltfViewer {
 
 impl GltfViewer {
     pub fn new(source: &str, width: u32, height: u32, headless: bool) -> GltfViewer {
+        let gl_request = GlRequest::Specific(Api::OpenGl, (3, 3));
+        let gl_profile = GlProfile::Core;
         let (events_loop, gl_window, width, height) =
             if headless {
-                let headless_context = glutin::HeadlessRendererBuilder::new(width, height).build().unwrap();
+                let headless_context = glutin::HeadlessRendererBuilder::new(width, height)
+                    .with_gl(gl_request)
+                    .with_gl_profile(gl_profile)
+                    .build()
+                    .unwrap();
                 unsafe { headless_context.make_current().unwrap() }
                 gl::load_with(|symbol| headless_context.get_proc_address(symbol) as *const _);
                 let framebuffer = Framebuffer::new(width, height);
@@ -82,6 +91,8 @@ impl GltfViewer {
                         .with_visibility(true);
 
                 let context = glutin::ContextBuilder::new()
+                    .with_gl(gl_request)
+                    .with_gl_profile(gl_profile)
                     .with_vsync(true);
                 let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
 
