@@ -61,8 +61,10 @@ pub struct GltfViewer {
     render_timer: FrameTimer,
 }
 
+/// Note about `headless` and `visible`: True headless rendering doesn't work on
+/// all operating systems, but an invisible window usually works
 impl GltfViewer {
-    pub fn new(source: &str, width: u32, height: u32, headless: bool) -> GltfViewer {
+    pub fn new(source: &str, width: u32, height: u32, headless: bool, visible: bool) -> GltfViewer {
         let gl_request = GlRequest::Specific(Api::OpenGl, (3, 3));
         let gl_profile = GlProfile::Core;
         let (events_loop, gl_window, width, height) =
@@ -88,7 +90,7 @@ impl GltfViewer {
                 let window = glutin::WindowBuilder::new()
                         .with_title("gltf-viewer")
                         .with_dimensions(width, height)
-                        .with_visibility(true);
+                        .with_visibility(visible);
 
                 let context = glutin::ContextBuilder::new()
                     .with_gl(gl_request)
