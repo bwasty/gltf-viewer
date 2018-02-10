@@ -30,7 +30,7 @@ use controls::CameraMovement::*;
 use framebuffer::Framebuffer;
 use render::*;
 use render::math::*;
-use utils::{print_elapsed, FrameTimer, gl_check_error};
+use utils::{print_elapsed, FrameTimer, gl_check_error, print_context_info};
 
 // TODO!: complete and pass through draw calls? or get rid of multiple shaders?
 // How about state ordering anyway?
@@ -128,6 +128,8 @@ impl GltfViewer {
         let last_y: f32 = height as f32 / 2.0;
 
         unsafe {
+            print_context_info();
+
             gl::ClearColor(0.0, 1.0, 0.0, 1.0); // green for debugging
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
