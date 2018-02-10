@@ -2,6 +2,7 @@
 #![allow(unknown_lints)]
 // #![allow(unused_features)]
 // #![feature(test)]
+use std::fs::File;
 #[macro_use] extern crate clap;
 extern crate cgmath;
 // use cgmath::prelude::*;
@@ -24,7 +25,7 @@ use clap::{Arg, App, AppSettings};
 
 #[macro_use]extern crate log;
 extern crate simplelog;
-use simplelog::{TermLogger, LevelFilter, Config as LogConfig};
+use simplelog::{TermLogger, WriteLogger, LevelFilter, Config as LogConfig};
 
 mod utils;
 mod viewer;
@@ -79,6 +80,12 @@ pub fn main() {
         .arg(Arg::with_name("headless")
             .long("headless")
             .help("Use real headless rendering for screenshots (Default is a hidden window) [EXPERIMENTAL]"))
+        .arg(Arg::with_name("LOGFILE")
+            .long("logfile")
+            .short("l")
+            .takes_value(true)
+            .help("Log to file instead of stderr")
+        )
         .get_matches();
     let source = args.value_of("FILE").unwrap();
     let width: u32 = args.value_of("WIDTH").unwrap().parse().unwrap();
@@ -92,7 +99,12 @@ pub fn main() {
         _ => LevelFilter::Trace
     };
 
-    let _ = TermLogger::init(log_level, LogConfig { time: None, target: None, ..LogConfig::default() });
+    if args.is_present("LOGFILE") {
+        let _ = WriteLogger::init(log_level, LogConfig { time: None, target: None, ..LogConfig::default() },
+            File::create(args.value_of("LOGFILE").unwrap()).unwrap());
+    } else {
+        let _ = TermLogger::init(log_level, LogConfig { time: None, target: None, ..LogConfig::default() });
+    }
 
     let mut viewer = GltfViewer::new(source, width, height,
         args.is_present("headless"),

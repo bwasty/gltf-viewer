@@ -13,9 +13,9 @@ gltf_file=$(basename "$gltf_path")
 model_name=${gltf_file%.*}
 output_file="$gltf_dir/$model_name.png"
 
-docker build -t gltf-viewer .
+# docker build -t gltf-viewer .
 rm "$output_file" || true
-docker run -v "$(pwd)/$gltf_dir:/input" gltf-viewer "/input/$gltf_file" -s "/input/$model_name.png" "${@:2}"
+docker run -t -v "$(pwd)/$gltf_dir:/input" gltf-viewer "/input/$gltf_file" -s "/input/$model_name.png" "${@:2}"
 # uncomment to run bash interactively
 # docker run -it -v "$(pwd)/$gltf_dir:/input" --entrypoint bash gltf-viewer
 [ -f "$HOME/.iterm2/imgcat" ] && "$HOME/.iterm2/imgcat" "$output_file"
