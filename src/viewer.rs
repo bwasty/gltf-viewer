@@ -288,6 +288,7 @@ impl GltfViewer {
             gl::PixelStorei(gl::PACK_ALIGNMENT, 1);
             gl::ReadPixels(0, 0, width as i32, height as i32, gl::RGBA,
                 gl::UNSIGNED_BYTE, pixels.as_mut_ptr() as *mut c_void);
+            gl_check_error!();
         }
 
         let img = img.flipv();
