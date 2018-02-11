@@ -76,6 +76,9 @@ pub fn main() {
             .default_value("1")
             .help("Saves N screenshots of size WxH, rotating evenly spaced around the object")
             .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
+        .arg(Arg::with_name("headless")
+            .long("headless")
+            .help("Use real headless rendering for screenshots (Default is a hidden window) [EXPERIMENTAL]"))
         .get_matches();
     let source = args.value_of("FILE").unwrap();
     let width: u32 = args.value_of("WIDTH").unwrap().parse().unwrap();
@@ -91,11 +94,9 @@ pub fn main() {
 
     let _ = TermLogger::init(log_level, LogConfig { time: None, target: None, ..LogConfig::default() });
 
-    // TODO!: headless rendering doesn't work (only clearcolor)
     let mut viewer = GltfViewer::new(source, width, height,
-        false,
-        !args.is_present("screenshot")
-    );
+        args.is_present("headless"),
+        !args.is_present("screenshot"));
 
     if args.is_present("screenshot") {
         let filename = args.value_of("screenshot").unwrap();
@@ -106,7 +107,7 @@ pub fn main() {
         if count > 1 {
             viewer.multiscreenshot(filename, width, height, count)
         } else {
-            viewer.screenshot(filename,width,height)
+            viewer.screenshot(filename, width, height)
         }
         return;
     }

@@ -9,9 +9,12 @@ use cgmath::{ Point3 };
 use gl;
 use glutin;
 use glutin::{
+    Api,
     MouseScrollDelta,
     MouseButton,
     GlContext,
+    GlRequest,
+    GlProfile,
     VirtualKeyCode,
     WindowEvent,
 };
@@ -27,7 +30,7 @@ use controls::CameraMovement::*;
 use framebuffer::Framebuffer;
 use render::*;
 use render::math::*;
-use utils::{print_elapsed, FrameTimer, gl_check_error};
+use utils::{print_elapsed, FrameTimer, gl_check_error, print_context_info};
 
 // TODO!: complete and pass through draw calls? or get rid of multiple shaders?
 // How about state ordering anyway?
@@ -58,17 +61,24 @@ pub struct GltfViewer {
     render_timer: FrameTimer,
 }
 
+/// Note about `headless` and `visible`: True headless rendering doesn't work on
+/// all operating systems, but an invisible window usually works
 impl GltfViewer {
     pub fn new(source: &str, width: u32, height: u32, headless: bool, visible: bool) -> GltfViewer {
-
-
+        let gl_request = GlRequest::Specific(Api::OpenGl, (3, 3));
+        let gl_profile = GlProfile::Core;
         let (events_loop, gl_window, width, height) =
             if headless {
-                let headless_context = glutin::HeadlessRendererBuilder::new(width, height).build().unwrap();
+                let headless_context = glutin::HeadlessRendererBuilder::new(width, height)
+                    .with_gl(gl_request)
+                    .with_gl_profile(gl_profile)
+                    .build()
+                    .unwrap();
                 unsafe { headless_context.make_current().unwrap() }
                 gl::load_with(|symbol| headless_context.get_proc_address(symbol) as *const _);
                 let framebuffer = Framebuffer::new(width, height);
                 framebuffer.bind();
+                unsafe { gl::Viewport(0, 0, width as i32, height as i32); }
 
                 (None, None, width, height) // TODO: real height (retina?)
             }
@@ -82,8 +92,9 @@ impl GltfViewer {
                         .with_dimensions(width, height)
                         .with_visibility(visible);
 
-
                 let context = glutin::ContextBuilder::new()
+                    .with_gl(gl_request)
+                    .with_gl_profile(gl_profile)
                     .with_vsync(true);
                 let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
 
@@ -119,8 +130,18 @@ impl GltfViewer {
         let last_y: f32 = height as f32 / 2.0;
 
         unsafe {
+            print_context_info();
+
             gl::ClearColor(0.0, 1.0, 0.0, 1.0); // green for debugging
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+
+            if headless {
+                // transparent background for screenshots
+                gl::ClearColor(0.0, 0.0, 0.0, 0.0);
+            }
+            else {
+                gl::ClearColor(0.1, 0.2, 0.3, 1.0);
+            }
 
             gl::Enable(gl::DEPTH_TEST);
 
@@ -264,7 +285,6 @@ impl GltfViewer {
         unsafe {
             self.render_timer.start();
 
-            gl::ClearColor(0.1, 0.2, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             let cam_params = self.orbit_controls.camera_params();
@@ -274,17 +294,16 @@ impl GltfViewer {
         }
     }
 
-    pub fn screenshot(&mut self, filename: &str, _width: u32, _height: u32) {
+    pub fn screenshot(&mut self, filename: &str, width: u32, height: u32) {
         self.draw();
 
-        // TODO!: headless case...
-        let (width, height) = self.gl_window.as_ref().unwrap().get_inner_size().unwrap();
-        let mut img = DynamicImage::new_rgb8(width, height);
+        let mut img = DynamicImage::new_rgba8(width, height);
         unsafe {
-            let pixels = img.as_mut_rgb8().unwrap();
+            let pixels = img.as_mut_rgba8().unwrap();
             gl::PixelStorei(gl::PACK_ALIGNMENT, 1);
-            gl::ReadPixels(0, 0, width as i32, height as i32, gl::RGB,
+            gl::ReadPixels(0, 0, width as i32, height as i32, gl::RGBA,
                 gl::UNSIGNED_BYTE, pixels.as_mut_ptr() as *mut c_void);
+            gl_check_error!();
         }
 
         let img = img.flipv();
