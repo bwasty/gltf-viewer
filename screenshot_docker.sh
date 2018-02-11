@@ -26,6 +26,7 @@ fi
 rm "$output_file" || true
 docker run -t --rm -v "$(pwd)/$gltf_dir:/input" \
     $image "/input/$gltf_file" -s "/input/$model_name.png" "${@:2}"
-# uncomment to run bash interactively
-# docker run -it -v "$(pwd)/$gltf_dir:/input" --entrypoint bash $image
-[ -f "$HOME/.iterm2/imgcat" ] && "$HOME/.iterm2/imgcat" "$output_file"
+echo "Running bash on container for debugging"
+docker run -it -v "$(pwd)/$gltf_dir:/input" --entrypoint bash $image
+# -> xvfb-run --auto-servernum --server-args="-screen 0 640x480x24" glxinfo | grep OpenGL
+# [ -f "$HOME/.iterm2/imgcat" ] && "$HOME/.iterm2/imgcat" "$output_file"
