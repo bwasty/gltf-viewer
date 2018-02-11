@@ -269,7 +269,10 @@ impl GltfViewer {
                 &mut self.events_loop.as_mut().unwrap(), self.gl_window.as_mut().unwrap(),
                 &mut self.controls, &mut self.orbit_controls,
                 &mut self.width, &mut self.height);
-            if !keep_running { break }
+            if !keep_running {
+                unsafe { gl_check_error!(); } // final error check so errors don't go unnoticed
+                break
+            }
 
             self.controls.update(self.delta_time); // navigation
 

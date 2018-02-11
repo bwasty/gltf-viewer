@@ -294,7 +294,7 @@ impl Primitive {
             gl::ActiveTexture(gl::TEXTURE4);
             gl::BindTexture(gl::TEXTURE_2D, occlusion_texture.id);
 
-            shader.set_float(uniforms.u_OcclusionSampler, mat.occlusion_strength);
+            shader.set_float(uniforms.u_OcclusionStrength, mat.occlusion_strength);
         }
     }
 
