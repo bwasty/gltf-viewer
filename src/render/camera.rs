@@ -16,7 +16,7 @@ pub struct Camera {
     // perspective camera
     // TODO!: setters that update...
     pub fovy: f32,
-    pub aspect_ratio: f32,
+    aspect_ratio: f32,
 
     // orthographic camera
     pub xmag: Option<f32>,
@@ -70,6 +70,11 @@ impl Camera {
         camera
     }
 
+    pub fn update_aspect_ratio(&mut self, aspect_ratio: f32) {
+        self.aspect_ratio = aspect_ratio;
+        self.update_projection_matrix();
+    }
+
     pub fn update_projection_matrix(&mut self) {
         if let Some(_xmag) = self.xmag {
             unimplemented!("orthographic camera") // TODO!!!: ortho camera
@@ -82,5 +87,9 @@ impl Camera {
             // TODO!!: inifinite perspective (missing sample models)
             unimplemented!("infinite perspective")
         }
+    }
+
+    pub fn is_perspective(&self) -> bool {
+        self.xmag.is_none()
     }
 }

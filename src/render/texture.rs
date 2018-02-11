@@ -30,7 +30,7 @@ impl Texture {
             gl::BindTexture(gl::TEXTURE_2D, texture_id);
         }
         let (needs_power_of_two, generate_mip_maps) =
-            unsafe { Self::set_sampler_params(g_texture.sampler()) };
+            unsafe { Self::set_sampler_params(&g_texture.sampler()) };
 
         // TODO!: share images via Rc? detect if occurs?
         // TODO!!: better I/O abstraction...
@@ -111,7 +111,7 @@ impl Texture {
 
     // Returns whether image needs to be Power-Of-Two-sized and whether mip maps should be generated
     // TODO: refactor return type into enum?
-    unsafe fn set_sampler_params(sampler: gltf::texture::Sampler) -> (bool, bool) {
+    unsafe fn set_sampler_params(sampler: &gltf::texture::Sampler) -> (bool, bool) {
         // **Mipmapping Implementation Note**: When a sampler's minification filter (`minFilter`)
         // uses mipmapping (`NEAREST_MIPMAP_NEAREST`, `NEAREST_MIPMAP_LINEAR`, `LINEAR_MIPMAP_NEAREST`,
         // or `LINEAR_MIPMAP_LINEAR`), any texture referencing the sampler needs to have mipmaps,

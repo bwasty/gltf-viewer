@@ -1,7 +1,7 @@
 
 use gltf;
 
-use controls::CameraControls;
+use controls::CameraParams;
 use render::{Root};
 use render::math::*;
 
@@ -13,7 +13,7 @@ pub struct Scene {
 }
 
 impl Scene {
-    pub fn from_gltf(g_scene: gltf::Scene, root: &mut Root) -> Scene {
+    pub fn from_gltf(g_scene: &gltf::Scene, root: &mut Root) -> Scene {
         let mut scene = Scene {
             name: g_scene.name().map(|s| s.to_owned()),
             ..Default::default()
@@ -36,10 +36,10 @@ impl Scene {
     }
 
     // TODO: flatten draw call hierarchy (global Vec<Primitive>?)
-    pub fn draw(&mut self, root: &mut Root, controls: &CameraControls) {
+    pub fn draw(&mut self, root: &mut Root, cam_params: &CameraParams) {
         for node_id in &self.nodes {
             let node = root.unsafe_get_node_mut(*node_id);
-            node.draw(root, controls);
+            node.draw(root, cam_params);
         }
     }
 }

@@ -26,7 +26,7 @@ impl Root {
     pub fn from_gltf(gltf: &gltf::Gltf, buffers: &gltf_importer::Buffers, base_path: &Path) -> Self {
         let mut root = Root::default();
         let nodes = gltf.nodes()
-            .map(|g_node| Node::from_gltf(g_node, &mut root, buffers, base_path).into())
+            .map(|g_node| Node::from_gltf(&g_node, &mut root, buffers, base_path))
             .collect();
         root.nodes = nodes;
         root.camera_nodes = root.nodes.iter()

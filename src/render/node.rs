@@ -4,7 +4,7 @@ use std::path::Path;
 use gltf;
 use gltf_importer;
 
-use controls::CameraControls;
+use controls::CameraParams;
 use render::math::*;
 use render::mesh::Mesh;
 use render::Root;
@@ -32,7 +32,7 @@ impl Node {
     // TODO!: refactor transformations using mint and non-deprecated functions
     #[allow(deprecated)]
     pub fn from_gltf(
-        g_node: gltf::Node,
+        g_node: &gltf::Node,
         root: &mut Root,
         buffers: &gltf_importer::Buffers,
         base_path: &Path
@@ -52,7 +52,7 @@ impl Node {
             }
 
             if mesh.is_none() { // not using else due to borrow-checking madness
-                mesh = Some(Rc::new(Mesh::from_gltf(g_mesh, root, buffers, base_path)));
+                mesh = Some(Rc::new(Mesh::from_gltf(&g_mesh, root, buffers, base_path)));
                 root.meshes.push(mesh.clone().unwrap());
             }
         }
@@ -119,15 +119,15 @@ impl Node {
         }
     }
 
-    pub fn draw(&mut self, root: &mut Root, controls: &CameraControls) {
+    pub fn draw(&mut self, root: &mut Root, cam_params: &CameraParams) {
         if let Some(ref mesh) = self.mesh {
-            let mvp_matrix = controls.camera.projection_matrix * controls.view_matrix() * self.final_transform;
+            let mvp_matrix = cam_params.projection_matrix * cam_params.view_matrix * self.final_transform;
 
-            (*mesh).draw(&self.final_transform, &mvp_matrix, &controls.position.to_vec());
+            (*mesh).draw(&self.final_transform, &mvp_matrix, &cam_params.position);
         }
         for node_id in &self.children {
             let node = root.unsafe_get_node_mut(*node_id);
-            node.draw(root, controls);
+            node.draw(root, cam_params);
         }
     }
 }

@@ -12,19 +12,19 @@ extern crate glutin;
 
 extern crate gltf;
 extern crate gltf_importer;
-
 extern crate gltf_utils;
+
 extern crate image;
+extern crate num_traits;
 
 #[macro_use]
 extern crate bitflags;
 
 use clap::{Arg, App, AppSettings};
 
-
 #[macro_use]extern crate log;
 extern crate simplelog;
-use simplelog::{TermLogger, LogLevelFilter, Config as LogConfig};
+use simplelog::{TermLogger, LevelFilter, Config as LogConfig};
 
 mod utils;
 mod viewer;
@@ -70,33 +70,45 @@ pub fn main() {
             .default_value("600")
             .help("Height in pixels")
             .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
+        .arg(Arg::with_name("COUNT")
+            .long("count")
+            .short("c")
+            .default_value("1")
+            .help("Saves N screenshots of size WxH, rotating evenly spaced around the object")
+            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
+        .arg(Arg::with_name("headless")
+            .long("headless")
+            .help("Use real headless rendering for screenshots (Default is a hidden window) [EXPERIMENTAL]"))
         .get_matches();
     let source = args.value_of("FILE").unwrap();
     let width: u32 = args.value_of("WIDTH").unwrap().parse().unwrap();
     let height: u32 = args.value_of("HEIGHT").unwrap().parse().unwrap();
+    let count: u32 = args.value_of("COUNT").unwrap().parse().unwrap();
 
     let log_level = match args.occurrences_of("verbose") {
-        0 => LogLevelFilter::Warn,
-        1 => LogLevelFilter::Info,
-        2 => LogLevelFilter::Debug,
-        _ => LogLevelFilter::Trace
+        0 => LevelFilter::Warn,
+        1 => LevelFilter::Info,
+        2 => LevelFilter::Debug,
+        _ => LevelFilter::Trace
     };
 
     let _ = TermLogger::init(log_level, LogConfig { time: None, target: None, ..LogConfig::default() });
 
-    // TODO!: headless rendering doesn't work (only clearcolor)
     let mut viewer = GltfViewer::new(source, width, height,
-        // args.is_present("screenshot")
-        false,
-        !args.is_present("screenshot")
-    );
+        args.is_present("headless"),
+        !args.is_present("screenshot"));
 
     if args.is_present("screenshot") {
         let filename = args.value_of("screenshot").unwrap();
+
         if !filename.to_lowercase().ends_with(".png") {
             warn!("filename should end with .png");
         }
-        viewer.screenshot(filename, width, height);
+        if count > 1 {
+            viewer.multiscreenshot(filename, width, height, count)
+        } else {
+            viewer.screenshot(filename, width, height)
+        }
         return;
     }
 
