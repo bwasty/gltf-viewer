@@ -14,8 +14,7 @@ name = "gltf-viewer"
 readme = "README.md"
 repository = "https://github.com/bwasty/gltf-viewer"
 version = "0.1.1-pre"
-# uncomment to avoid rebuilding on every `cargo run`
-# build = false
+build = false # TODO: git-version doesn't work on Travis
 
 [badges]
 
