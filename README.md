@@ -3,11 +3,8 @@
 [![GitHub release](https://img.shields.io/github/release/bwasty/gltf-viewer.svg)](https://github.com/bwasty/gltf-viewer/releases/latest)
  [![](https://tokei.rs/b1/github/bwasty/gltf-viewer)](https://github.com/Aaronepower/tokei)
  [![Build Status](https://travis-ci.org/bwasty/gltf-viewer.svg?branch=master)](https://travis-ci.org/bwasty/gltf-viewer)
- [![Build status](https://ci.appveyor.com/api/projects/status/51ukh02thpb0r9cf/branch/master?svg=true)](https://ci.appveyor.com/project/bwasty/gltf-viewer/branch/master) <br>
- <!--
- [![Crates.io](https://img.shields.io/crates/d/gltf-viewer.svg)](https://crates.io/crates/gltf-viewer)
- [![Github All Releases](https://img.shields.io/github/downloads/bwasty/gltf-viewer/total.svg)](https://github.com/bwasty/gltf-viewer/releases)
--->
+ [![Build status](https://ci.appveyor.com/api/projects/status/51ukh02thpb0r9cf/branch/master?svg=true)](https://ci.appveyor.com/project/bwasty/gltf-viewer/branch/master)
+ [![Docker build status](https://img.shields.io/docker/build/bwasty/gltf-viewer.svg)](https://hub.docker.com/r/bwasty/gltf-viewer/tags/)
 
 Rust [glTF 2.0](https://github.com/KhronosGroup/glTF) viewer, written using the [gltf](https://github.com/gltf-rs/gltf) crate and plain OpenGL.
 
@@ -64,9 +61,14 @@ $ gltf-viewer Box.glb
 Proper headless screenshot generation with the `--headless` flag currently only works on macOS.
 To work around that, a Docker setup that uses `xvfb` is provided. Usage examples:
 ```
+# Build docker image and run it with the gltf mounted in a volume.
+# The image will be saved next to the gltf file.
 ./screenshot_docker.sh Box.glb
-./screenshot_docker.sh Box.glb -w 1920 -h 1080 --count 3 -vv
+./screenshot_docker.sh ../models/Box.gltf -w 1920 -h 1080 --count 3 -vv
+# Use pre-built docker image from Docker Hub
+DOCKER_IMAGE=bwasty/gltf-viewer ./screenshot_docker.sh Box.glb
 ```
+
 Alternatively, you can also install `xvfb` and use `./run_xvfb.sh` directly (Linux only).
 
 ## Goals
