@@ -41,7 +41,7 @@ mod render;
 
 pub fn main() {
     let args = App::new("gltf-viewer")
-        .version(format!("{} ({})", crate_version!(), option_env!("VERSION").unwrap_or("")).as_str())
+        .version(option_env!("VERSION").unwrap_or(crate_version!()))
         .setting(AppSettings::UnifiedHelpMessage)
         .setting(AppSettings::DeriveDisplayOrder)
         .arg(Arg::with_name("FILE") // TODO!: re-add URL when fixed...
