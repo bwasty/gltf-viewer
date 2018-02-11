@@ -135,7 +135,7 @@ impl GltfViewer {
             gl::ClearColor(0.0, 1.0, 0.0, 1.0); // green for debugging
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-            if headless {
+            if headless || !visible {
                 // transparent background for screenshots
                 gl::ClearColor(0.0, 0.0, 0.0, 0.0);
             }
