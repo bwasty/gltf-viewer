@@ -14,6 +14,8 @@ name = "gltf-viewer"
 readme = "README.md"
 repository = "https://github.com/bwasty/gltf-viewer"
 version = "0.1.1-pre"
+# uncomment to avoid rebuilding on every `cargo run`
+# build = false
 
 [badges]
 
@@ -48,6 +50,9 @@ version = "0.9.3"
 
 # [dependencies.mikktspace]
 # git = "https://github.com/gltf-rs/mikktspace"
+
+[build-dependencies]
+git-version = "0.1.2"
 
 # [profile.dev]
 # opt-level = 2
