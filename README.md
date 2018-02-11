@@ -39,23 +39,35 @@ USAGE:
 
 OPTIONS:
     -s, --screenshot <FILE>    Create screenshot (PNG)
-    -v, --verbose              Enable verbose logging (log level INFO). Can be repeated multiple times to increase log level to DEBUG/TRACE
+    -v, --verbose              Enable verbose logging (log level INFO). Can be repeated multiple times to increase log
+                               level to DEBUG/TRACE)
     -w, --width <WIDTH>        Width in pixels [default: 800]
     -h, --height <HEIGHT>      Height in pixels [default: 600]
+    -c, --count <COUNT>        Saves N screenshots of size WxH, rotating evenly spaced around the object [default: 1]
+        --headless             Use real headless rendering for screenshots (Default is a hidden window) [EXPERIMENTAL]
         --help                 Prints help information
     -V, --version              Prints version information
 
 ARGS:
     <FILE>    glTF file name
 ```
-Both .gltf and .glb files are supported. 
-Navigate the scene with `WASD` + Mouse.
+Both .gltf and .glb files are supported.
+Navigate the scene with the mouse: Rotate with left click + drag, pan with right click + drag, zoom with mouse wheel.
 
 ### Example
 ```
 $ curl -O https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Box/glTF-Binary/Box.glb
 $ gltf-viewer Box.glb
 ```
+
+### Headless screenshot generation
+Proper headless screenshot generation with the `--headless` flag currently only works on macOS.
+To work around that, a Docker setup that uses `xvfb` is provided. Usage examples:
+```
+./screenshot_docker.sh Box.glb
+./screenshot_docker.sh Box.glb -w 1920 -h 1080 --count 3 -vv
+```
+Alternatively, you can also install `xvfb` and use `./run_xvfb.sh` directly (Linux only).
 
 ## Goals
 * Complete gltF 2.0 support
