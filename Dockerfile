@@ -16,6 +16,3 @@ ENTRYPOINT [ "./run_xvfb.sh" ]
 # toggle comments on the previous and following block and use the `--headless` parameter
 # RUN apt-get install -y libosmesa6-dev
 # ENTRYPOINT [ "gltf-viewer" ]
-
-# Cleanup to keep the image "small"
-RUN rm -rf target /usr/local/cargo/registry /var/lib/apt/lists/*

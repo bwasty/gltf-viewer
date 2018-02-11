@@ -67,6 +67,7 @@ To work around that, a Docker setup that uses `xvfb` is provided. Usage examples
 ./screenshot_docker.sh Box.glb
 ./screenshot_docker.sh Box.glb -w 1920 -h 1080 --count 3 -vv
 ```
+Alternatively, you can also install `xvfb` and use `./run_xvfb.sh` directly (Linux only).
 
 ## Goals
 * Complete gltF 2.0 support
