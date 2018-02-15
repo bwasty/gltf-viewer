@@ -25,7 +25,7 @@ use gltf_importer::config::ValidationStrategy;
 use image::{DynamicImage, ImageFormat};
 
 
-use controls::{CameraControls, OrbitControls, NavState};
+use controls::{OrbitControls, NavState};
 use controls::CameraMovement::*;
 use framebuffer::Framebuffer;
 use render::*;
@@ -43,7 +43,6 @@ pub struct GltfViewer {
     width: u32,
     height: u32,
 
-    controls: CameraControls,
     orbit_controls: OrbitControls,
     first_mouse: bool,
     last_x: f32,
@@ -109,15 +108,6 @@ impl GltfViewer {
                 (Some(events_loop), Some(gl_window), real_width, real_height)
             };
 
-        // TODO!!: tmp duplicated camera controls
-        let mut controls = CameraControls {
-            position: Point3::new(0.0, 0.0, 2.0),
-            camera: Camera::default(),
-            ..CameraControls::default()
-        };
-        controls.camera.fovy = 60.0;
-        controls.camera.update_aspect_ratio(width as f32 / height as f32); // updates projection matrix
-
         let mut orbit_controls = OrbitControls::new(
             Point3::new(0.0, 0.0, 2.0), width as f32, height as f32
         );
@@ -155,7 +145,6 @@ impl GltfViewer {
             width,
             height,
 
-            controls,
             orbit_controls,
             first_mouse, last_x, last_y,
 
@@ -172,11 +161,12 @@ impl GltfViewer {
         };
         unsafe { gl_check_error!(); }
 
-        // TODO!!!: completely broken (using gltf camera)
-        if false && !viewer.root.camera_nodes.is_empty() {
+        // TODO!!!: test more, create cli param / print num available cameras
+        if !viewer.root.camera_nodes.is_empty() {
+            info!("Using first gltf camera");
             // Take first camera node
             let cam_node = &viewer.root.get_camera_node(0);
-            viewer.controls.set_camera(
+            viewer.orbit_controls.set_camera(
                 cam_node.camera.as_ref().unwrap(),
                 &cam_node.final_transform);
         } else {
@@ -247,12 +237,8 @@ impl GltfViewer {
         let _near = size / 100.0;
         let _far = size * 100.0;
 
-        // TODO!! TMP duplication (orbit controls)
         self.orbit_controls.position = cam_pos;
         self.orbit_controls.target = Point3::from_vec(center);
-
-        self.controls.position = cam_pos;
-        self.controls.center = Some(Point3::from_vec(center));
 
         // TODO!: set near, far, max_distance, obj_pos_modifier...
     }
@@ -325,7 +311,7 @@ impl GltfViewer {
         let increment_angle : f32 = ((max_angle - min_angle)/(count as f32)) as f32;
         for i in 1..(count+1) {
             self.orbit_controls.rotate_object(increment_angle);
-            let dot = filename.rfind(".").unwrap_or_else(|| filename.len());
+            let dot = filename.rfind('.').unwrap_or_else(|| filename.len());
             let mut actual_name = filename.to_string();
             actual_name.insert_str(dot, &format!("_{}", i));
             self.screenshot(&actual_name[..], width,height);

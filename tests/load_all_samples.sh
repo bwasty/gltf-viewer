@@ -3,7 +3,7 @@
 # NOTE: should be called from crate root!
 # Parameters:
 mode=${1:-release} # pass `debug` instead to test a debug build
-base_dir={2:-../../glTF-Sample-Models/2.0}
+base_dir=${2:-../../glTF-Sample-Models/2.0}
 
 # set -e
 mkdir -p target/screenshots

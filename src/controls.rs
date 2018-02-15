@@ -39,84 +39,6 @@ pub const ZOOM: f32 = 45.0;
 const MIN_ZOOM: f32 = 1.0;
 const MAZ_ZOOM: f32 = 170.0;
 
-/// NOTE: superceded by `OrbitControls`. Keeping the parts of it not (yet?) added there.
-pub struct CameraControls {
-    // Camera Attributes
-    pub position: Point3,
-
-    /// mutually exlusive: if center is set, it is used
-    pub front: Vector3,
-    pub center: Option<Point3>,
-
-    pub up: Vector3,
-    pub right: Vector3,
-    pub world_up: Vector3,
-    // Euler Angles
-    pub yaw: f32,
-    pub pitch: f32,
-    // Camera options
-    pub movement_speed: f32,
-    pub mouse_sensitivity: f32,
-
-    pub camera: Camera,
-
-    // pub moving_up: bool,
-    pub moving_left: bool,
-    // pub moving_down: bool,
-    pub moving_right: bool,
-    pub moving_forward: bool,
-    pub moving_backward: bool,
-}
-
-impl Default for CameraControls {
-    fn default() -> CameraControls {
-        let controls = CameraControls {
-            position: Point3::new(0.0, 0.0, 0.0),
-            front: vec3(0.0, 0.0, -1.0),
-            center: None,
-            up: Vector3::zero(), // initialized later
-            right: Vector3::zero(), // initialized later
-            world_up: Vector3::unit_y(),
-            yaw: YAW,
-            pitch: PITCH,
-            movement_speed: SPEED,
-            mouse_sensitivity: SENSITIVTY,
-
-            camera: Camera::default(),
-
-            // moving_up: false,
-            moving_left: false,
-            // moving_down: false,
-            moving_right: false,
-            moving_forward: false,
-            moving_backward: false,
-        };
-        // TODO!!: overriding default order...? -> NO!
-        // controls.update_camera_vectors();
-        controls
-    }
-}
-
-impl CameraControls {
-    pub fn set_camera(&mut self, camera: &Camera, transform: &Matrix4) {
-        // spec: If no transformation is specified, the location of the camera is at the origin.
-        let pos = transform * Vector4::zero();
-
-        // spec: ... the lens looks towards the local -Z axis ...
-        let look_at = transform * vec4(0.0, 0.0, -1.0, 0.0);
-
-        self.position = Point3::new(pos.x, pos.y, pos.z);
-        self.center = Some(Point3::new(look_at.x, look_at.y, look_at.z));
-
-        // TODO!!: handle better (camera zoom/fovy)
-        let mut camera = camera.clone();
-        camera.fovy = self.camera.fovy;
-        self.camera = camera;
-
-        // self.update_camera_vectors();
-    }
-}
-
 #[derive(Clone)]
 pub enum NavState {
     None,
@@ -394,5 +316,23 @@ impl OrbitControls {
             self.position += right * velocity;
             self.target += right * velocity;
         }
+    }
+
+    pub fn set_camera(&mut self, camera: &Camera, transform: &Matrix4) {
+        // spec: If no transformation is specified, the location of the camera is at the origin.
+        let pos = transform * Vector4::zero();
+
+        // spec: ... the lens looks towards the local -Z axis ...
+        let look_at = transform * vec4(0.0, 0.0, -1.0, 0.0);
+
+        self.position = Point3::new(pos.x, pos.y, pos.z);
+        self.target = Point3::new(look_at.x, look_at.y, look_at.z);
+
+        // TODO!!: handle better (camera zoom/fovy)
+        let mut camera = camera.clone();
+        camera.fovy = self.camera.fovy;
+        self.camera = camera;
+
+        self.camera.update_projection_matrix();
     }
 }
