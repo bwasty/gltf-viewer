@@ -267,14 +267,14 @@ impl GltfViewer {
             // events
             let keep_running = process_events(
                 &mut self.events_loop.as_mut().unwrap(), self.gl_window.as_mut().unwrap(),
-                &mut self.controls, &mut self.orbit_controls,
+                &mut self.orbit_controls,
                 &mut self.width, &mut self.height);
             if !keep_running {
                 unsafe { gl_check_error!(); } // final error check so errors don't go unnoticed
                 break
             }
 
-            self.controls.update(self.delta_time); // navigation
+            self.orbit_controls.frame_update(self.delta_time); // keyboard navigation
 
             self.draw();
 
@@ -337,8 +337,7 @@ impl GltfViewer {
 fn process_events(
     events_loop: &mut glutin::EventsLoop,
     gl_window: &glutin::GlWindow,
-    mut controls: &mut CameraControls,
-    orbit_controls: &mut OrbitControls,
+    mut orbit_controls: &mut OrbitControls,
     width: &mut u32,
     height: &mut u32) -> bool
 {
@@ -388,7 +387,7 @@ fn process_events(
                     orbit_controls.process_mouse_scroll(yoffset);
                 }
                 WindowEvent::KeyboardInput { input, .. } => {
-                    keep_running = process_input(input, &mut controls);
+                    keep_running = process_input(input, &mut orbit_controls);
                 }
                 _ => ()
             },
@@ -399,7 +398,7 @@ fn process_events(
     keep_running
 }
 
-fn process_input(input: glutin::KeyboardInput, camera: &mut CameraControls) -> bool {
+fn process_input(input: glutin::KeyboardInput, controls: &mut OrbitControls) -> bool {
     let pressed = match input.state {
         Pressed => true,
         Released => false
@@ -407,10 +406,10 @@ fn process_input(input: glutin::KeyboardInput, camera: &mut CameraControls) -> b
     if let Some(code) = input.virtual_keycode {
         match code {
             VirtualKeyCode::Escape if pressed => return false,
-            VirtualKeyCode::W => camera.process_keyboard(FORWARD, pressed),
-            VirtualKeyCode::S => camera.process_keyboard(BACKWARD, pressed),
-            VirtualKeyCode::A => camera.process_keyboard(LEFT, pressed),
-            VirtualKeyCode::D => camera.process_keyboard(RIGHT, pressed),
+            VirtualKeyCode::W => controls.process_keyboard(FORWARD, pressed),
+            VirtualKeyCode::S => controls.process_keyboard(BACKWARD, pressed),
+            VirtualKeyCode::A => controls.process_keyboard(LEFT, pressed),
+            VirtualKeyCode::D => controls.process_keyboard(RIGHT, pressed),
             _ => ()
         }
     }

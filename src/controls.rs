@@ -98,49 +98,6 @@ impl Default for CameraControls {
 }
 
 impl CameraControls {
-    pub fn camera_params(&self) -> CameraParams {
-        CameraParams {
-            position: self.position.to_vec(),
-            view_matrix: self.view_matrix(),
-            projection_matrix: self.camera.projection_matrix,
-        }
-    }
-
-    /// Returns the view matrix calculated using Euler Angles and the LookAt Matrix
-    pub fn view_matrix(&self) -> Matrix4 {
-        if let Some(center) = self.center {
-            Matrix4::look_at(self.position, center, self.up)
-        }
-        else {
-            Matrix4::look_at(self.position, self.position + self.front, self.up)
-        }
-    }
-
-    pub fn update(&mut self, delta_time: f64) {
-        let velocity = self.movement_speed * delta_time as f32;
-        if self.moving_forward {
-            self.position += self.front * velocity;
-        }
-        if self.moving_backward {
-            self.position += -(self.front * velocity);
-        }
-        if self.moving_left {
-            self.position += -(self.right * velocity);
-        }
-        if self.moving_right {
-            self.position += self.right * velocity;
-        }
-    }
-
-    pub fn process_keyboard(&mut self, direction: CameraMovement, pressed: bool) {
-        match direction {
-            FORWARD => self.moving_forward = pressed,
-            BACKWARD => self.moving_backward= pressed,
-            LEFT => self.moving_left = pressed,
-            RIGHT => self.moving_right = pressed,
-        }
-    }
-
     pub fn set_camera(&mut self, camera: &Camera, transform: &Matrix4) {
         // spec: If no transformation is specified, the location of the camera is at the origin.
         let pos = transform * Vector4::zero();
@@ -191,6 +148,14 @@ pub struct OrbitControls {
     pan_start: Option<Vector2>,
     pan_end: Vector2,
 
+    // for keyboard nav
+    // pub moving_up: bool,
+    pub moving_left: bool,
+    // pub moving_down: bool,
+    pub moving_right: bool,
+    pub moving_forward: bool,
+    pub moving_backward: bool,
+
     pub screen_width: f32,
     pub screen_height: f32,
 }
@@ -217,6 +182,13 @@ impl OrbitControls {
 
             pan_start: None,
             pan_end: Vector2::zero(),
+
+            // moving_up: false,
+            moving_left: false,
+            // moving_down: false,
+            moving_right: false,
+            moving_forward: false,
+            moving_backward: false,
 
             screen_width,
             screen_height,
@@ -343,6 +315,7 @@ impl OrbitControls {
         self.camera.update_projection_matrix();
     }
 
+    /// Update camera after processing mouse events
     fn update(&mut self) {
         let mut offset = self.position - self.target;
 
@@ -387,5 +360,39 @@ impl OrbitControls {
         self.pan_offset = Vector3::zero();
 
         // NOTE: skip zoomChanged stuff
+    }
+
+    pub fn process_keyboard(&mut self, direction: CameraMovement, pressed: bool) {
+        match direction {
+            FORWARD => self.moving_forward = pressed,
+            BACKWARD => self.moving_backward= pressed,
+            LEFT => self.moving_left = pressed,
+            RIGHT => self.moving_right = pressed,
+        }
+    }
+
+    /// Do frame-based updates that require delta_time
+    pub fn frame_update(&mut self, delta_time: f64) {
+        let velocity = SPEED * delta_time as f32;
+
+        let front = (self.target - self.position).normalize();
+        if self.moving_forward {
+            self.position += front * velocity;
+            self.target += front * velocity;
+        }
+        if self.moving_backward {
+            self.position += -(front * velocity);
+            self.target += -(front * velocity);
+        }
+
+        let right = front.cross(Vector3::unit_y()).normalize();
+        if self.moving_left {
+            self.position += -(right * velocity);
+            self.target += -(right * velocity);
+        }
+        if self.moving_right {
+            self.position += right * velocity;
+            self.target += right * velocity;
+        }
     }
 }
