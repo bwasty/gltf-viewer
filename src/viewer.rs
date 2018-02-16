@@ -39,6 +39,13 @@ use utils::{print_elapsed, FrameTimer, gl_check_error, print_context_info};
 //     back_face_culling_enabled: bool
 // }
 
+pub struct CameraOptions {
+    pub index: Option<u32>,
+    pub position: Option<Vector3>,
+    pub target: Option<Vector3>,
+    pub fovy: f32,
+}
+
 pub struct GltfViewer {
     width: u32,
     height: u32,
@@ -63,7 +70,7 @@ pub struct GltfViewer {
 /// Note about `headless` and `visible`: True headless rendering doesn't work on
 /// all operating systems, but an invisible window usually works
 impl GltfViewer {
-    pub fn new(source: &str, width: u32, height: u32, headless: bool, visible: bool, camera_index: Option<u32>) -> GltfViewer {
+    pub fn new(source: &str, width: u32, height: u32, headless: bool, visible: bool, camera_options: CameraOptions) -> GltfViewer {
         let gl_request = GlRequest::Specific(Api::OpenGl, (3, 3));
         let gl_profile = GlProfile::Core;
         let (events_loop, gl_window, width, height) =
@@ -112,7 +119,7 @@ impl GltfViewer {
             Point3::new(0.0, 0.0, 2.0), width as f32, height as f32
         );
         orbit_controls.camera = Camera::default();
-        orbit_controls.camera.fovy = 60.0;
+        orbit_controls.camera.fovy = camera_options.fovy;
         orbit_controls.camera.update_aspect_ratio(width as f32 / height as f32); // updates projection matrix
 
         let first_mouse = true;
@@ -161,7 +168,7 @@ impl GltfViewer {
         };
         unsafe { gl_check_error!(); };
 
-        if let Some(cam_index) = camera_index {
+        if let Some(cam_index) = camera_options.index {
             if cam_index >= viewer.root.camera_nodes.len() as u32 {
                 error!("No camera with index {} found in glTF file (max: {})",
                     cam_index, viewer.root.camera_nodes.len() - 1);
@@ -171,8 +178,19 @@ impl GltfViewer {
             viewer.orbit_controls.set_camera(
                 cam_node.camera.as_ref().unwrap(),
                 &cam_node.final_transform);
+
+            if camera_options.position.is_some() || camera_options.target.is_some() {
+                warn!("Ignoring --cam-pos / --cam-target since --cam-index is given.")
+            }
         } else {
             viewer.set_camera_from_bounds();
+
+            if let Some(p) = camera_options.position {
+                viewer.orbit_controls.position = Point3::from_vec(p)
+            }
+            if let Some(target) = camera_options.target {
+                viewer.orbit_controls.target = Point3::from_vec(target)
+            }
         }
 
         viewer
@@ -344,6 +362,8 @@ fn process_events(
                     orbit_controls.camera.update_aspect_ratio(w / h);
                     orbit_controls.screen_width = w;
                     orbit_controls.screen_height = h;
+
+                    trace!("Resized to {}x{}", w, h);
                 },
                 WindowEvent::DroppedFile(_path_buf) => (), // TODO: drag file in
                 WindowEvent::MouseInput { button, state: Pressed, ..} => {

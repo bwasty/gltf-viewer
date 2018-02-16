@@ -28,7 +28,7 @@ use simplelog::{TermLogger, LevelFilter, Config as LogConfig};
 
 mod utils;
 mod viewer;
-use viewer::{GltfViewer};
+use viewer::{GltfViewer, CameraOptions};
 
 mod shader;
 mod controls;
@@ -38,6 +38,7 @@ mod macros;
 // mod http_source;
 // use http_source::HttpSource;
 mod render;
+use render::math::*;
 
 pub fn main() {
     let args = App::new("gltf-viewer")
@@ -80,17 +81,39 @@ pub fn main() {
             .long("headless")
             .help("Use real headless rendering for screenshots (Default is a hidden window) [EXPERIMENTAL]"))
         .arg(Arg::with_name("CAM-INDEX")
-            .long("camera")
+            .long("cam-index")
             .takes_value(true)
             .help("Use the glTF camera with the given index (starting at 0). \n\
-                Default: Determine 'nice' camera position based on the scene's bounding box.")
+                Default: Determine 'nice' camera position based on the scene's bounding box.
+                All other camera options are ignored if this one is given.")
+            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
+        .arg(Arg::with_name("CAM-POS")
+            .long("cam-pos")
+            .takes_value(true)
+            .help("Camera (aka eye) position override as comma-separated Vector3. Example: 1.2,3.4,5.6"))
+        .arg(Arg::with_name("CAM-TARGET")
+            .long("cam-target")
+            .takes_value(true)
+            .help("Camera target (aka center) override as comma-separated Vector3. Example: 1.2,3.4,5.6"))
+        .arg(Arg::with_name("CAM-FOVY")
+            .long("cam-fovy")
+            .takes_value(true)
+            .default_value("60")
+            .help("Vertical field of view ('zoom') in degrees.")
             .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
         .get_matches();
     let source = args.value_of("FILE").unwrap();
+
     let width: u32 = args.value_of("WIDTH").unwrap().parse().unwrap();
     let height: u32 = args.value_of("HEIGHT").unwrap().parse().unwrap();
     let count: u32 = args.value_of("COUNT").unwrap().parse().unwrap();
-    let camera_index: Option<u32> = args.value_of("CAM-INDEX").map(|n| n.parse().unwrap());
+
+    let camera_options = CameraOptions {
+        index: args.value_of("CAM-INDEX").map(|n| n.parse().unwrap()),
+        position: args.value_of("CAM-POS").map(|v| parse_vec3(v).unwrap()),
+        target: args.value_of("CAM-TARGET").map(|v| parse_vec3(v).unwrap()),
+        fovy: args.value_of("CAM-FOVY").map(|n| n.parse().unwrap()).unwrap(),
+    };
 
     let log_level = match args.occurrences_of("verbose") {
         0 => LevelFilter::Warn,
@@ -104,7 +127,7 @@ pub fn main() {
     let mut viewer = GltfViewer::new(source, width, height,
         args.is_present("headless"),
         !args.is_present("screenshot"),
-        camera_index);
+        camera_options);
 
     if args.is_present("screenshot") {
         let filename = args.value_of("screenshot").unwrap();

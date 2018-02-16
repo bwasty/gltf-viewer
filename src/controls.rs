@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use cgmath::{vec3};
+use cgmath::{vec3, Deg};
 use cgmath::prelude::*;
 
 use num_traits::clamp;
@@ -282,6 +282,8 @@ impl OrbitControls {
         self.pan_offset = Vector3::zero();
 
         // NOTE: skip zoomChanged stuff
+
+        trace!("Position: {:?}\tTarget: {:?}\tfovy: {:?}", self.position, self.target, Deg(self.camera.fovy));
     }
 
     pub fn process_keyboard(&mut self, direction: CameraMovement, pressed: bool) {
