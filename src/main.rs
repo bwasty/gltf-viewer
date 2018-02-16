@@ -45,6 +45,8 @@ pub fn main() {
         .version(option_env!("VERSION").unwrap_or(crate_version!()))
         .setting(AppSettings::UnifiedHelpMessage)
         .setting(AppSettings::DeriveDisplayOrder)
+        .before_help("glTF 2.0 viewer\n\nNavigate with the mouse (left/right click + drag, mouse wheel) \
+                    or WASD/cursor keys.")
         .arg(Arg::with_name("FILE") // TODO!: re-add URL when fixed...
             .required(true)
             .takes_value(true)
@@ -90,10 +92,12 @@ pub fn main() {
         .arg(Arg::with_name("CAM-POS")
             .long("cam-pos")
             .takes_value(true)
+            .allow_hyphen_values(true)
             .help("Camera (aka eye) position override as comma-separated Vector3. Example: 1.2,3.4,5.6"))
         .arg(Arg::with_name("CAM-TARGET")
             .long("cam-target")
             .takes_value(true)
+            .allow_hyphen_values(true)
             .help("Camera target (aka center) override as comma-separated Vector3. Example: 1.2,3.4,5.6"))
         .arg(Arg::with_name("CAM-FOVY")
             .long("cam-fovy")
