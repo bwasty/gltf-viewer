@@ -50,7 +50,7 @@ pub struct Texture {
 }
 
 pub struct Primitive {
-    pub bounds: Bounds,
+    pub bounds: Aabb3,
 
     vao: u32,
     vbo: u32,
@@ -68,7 +68,7 @@ pub struct Primitive {
 
 impl Primitive {
     pub fn new(
-        bounds: Bounds,
+        bounds: Aabb3,
         vertices: &[Vertex],
         indices: Option<Vec<u32>>,
         material: Rc<Material>,
@@ -104,6 +104,11 @@ impl Primitive {
 
         let bounds = g_primitive.position_bounds()
             .unwrap(); // can't fail if validated "minimally"
+        let bounds = Aabb3 {
+            min: bounds.min.into(),
+            max: bounds.max.into()
+        };
+
         let mut vertices: Vec<Vertex> = positions
             .map(|position| {
                 Vertex {
@@ -224,12 +229,12 @@ impl Primitive {
             root.shaders.insert(shader_flags, Rc::clone(&shader));
         }
 
-        Primitive::new(bounds.into(), &vertices, indices, material, shader)
+        Primitive::new(bounds, &vertices, indices, material, shader)
     }
 
     /// render the mesh
     pub unsafe fn draw(&self, model_matrix: &Matrix4, mvp_matrix: &Matrix4, camera_position: &Vector3) {
-        // TODO!!: determine if shader+material already active to reduce work...
+        // TODO!: determine if shader+material already active to reduce work...
 
         if self.material.double_sided {
             gl::Disable(gl::CULL_FACE);

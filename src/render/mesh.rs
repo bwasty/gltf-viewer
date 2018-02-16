@@ -1,6 +1,8 @@
 // use std::rc::Rc;
 use std::path::Path;
 
+use collision::{Aabb, Aabb3, Union};
+
 use gltf;
 use gltf_importer;
 
@@ -14,7 +16,7 @@ pub struct Mesh {
     // pub weights: Vec<Rc<?>>
     pub name: Option<String>,
 
-    pub bounds: Bounds,
+    pub bounds: Aabb3<f32>,
 }
 
 impl Mesh {
@@ -32,7 +34,7 @@ impl Mesh {
             .collect();
 
         let bounds = primitives.iter()
-            .fold(Bounds::default(), |bounds, prim| prim.bounds.union(&bounds));
+            .fold(Aabb3::zero(), |bounds, prim| prim.bounds.union(&bounds));
 
         Mesh {
             index: g_mesh.index(),

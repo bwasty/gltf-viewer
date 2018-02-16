@@ -6,6 +6,7 @@ use std::process;
 use std::time::Instant;
 
 use cgmath::{ Point3 };
+use collision::Aabb;
 use gl;
 use glutin;
 use glutin::{
@@ -40,7 +41,7 @@ use utils::{print_elapsed, FrameTimer, gl_check_error, print_context_info};
 // }
 
 pub struct CameraOptions {
-    pub index: Option<u32>,
+    pub index: i32,
     pub position: Option<Vector3>,
     pub target: Option<Vector3>,
     pub fovy: f32,
@@ -168,13 +169,13 @@ impl GltfViewer {
         };
         unsafe { gl_check_error!(); };
 
-        if let Some(cam_index) = camera_options.index {
-            if cam_index >= viewer.root.camera_nodes.len() as u32 {
+        if !viewer.root.camera_nodes.is_empty() && !camera_options.index == -1 {
+            if camera_options.index >= viewer.root.camera_nodes.len() as i32 {
                 error!("No camera with index {} found in glTF file (max: {})",
-                    cam_index, viewer.root.camera_nodes.len() - 1);
+                    camera_options.index, viewer.root.camera_nodes.len() - 1);
                 process::exit(2)
             }
-            let cam_node = &viewer.root.get_camera_node(cam_index as usize);
+            let cam_node = &viewer.root.get_camera_node(camera_options.index as usize);
             viewer.orbit_controls.set_camera(
                 cam_node.camera.as_ref().unwrap(),
                 &cam_node.final_transform);
@@ -239,13 +240,9 @@ impl GltfViewer {
 
     /// determine "nice" camera perspective from bounding box. Inspired by donmccurdy/three-gltf-viewer
     fn set_camera_from_bounds(&mut self) {
-        // TODO!!: fix bounds/camera computation (many models NOT centered)
         let bounds = &self.scene.bounds;
-        let size = bounds.size().magnitude();
+        let size = (bounds.max - bounds.min).magnitude();
         let center = bounds.center();
-
-        // TODO!: move cam instead?
-        let _obj_pos_modifier = -center;
 
         let _max_distance = size * 10.0;
         // TODO: x,y addition optional, z optionally minus instead
@@ -258,7 +255,7 @@ impl GltfViewer {
         let _far = size * 100.0;
 
         self.orbit_controls.position = cam_pos;
-        self.orbit_controls.target = Point3::from_vec(center);
+        self.orbit_controls.target = center;
 
         // TODO!: set near, far, max_distance, obj_pos_modifier...
     }
@@ -391,8 +388,10 @@ fn process_events(
                     orbit_controls.handle_mouse_move(xpos, ypos);
                 },
                 WindowEvent::MouseWheel { delta: MouseScrollDelta::PixelDelta(_xoffset, yoffset), .. } => {
-                    // TODO: need to handle LineDelta case too?
                     orbit_controls.process_mouse_scroll(yoffset);
+                }
+                WindowEvent::MouseWheel { delta: MouseScrollDelta::LineDelta(_rows, lines), .. } => {
+                    orbit_controls.process_mouse_scroll(lines * 3.0);
                 }
                 WindowEvent::KeyboardInput { input, .. } => {
                     keep_running = process_input(input, &mut orbit_controls);

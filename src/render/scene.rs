@@ -1,15 +1,25 @@
-
 use gltf;
+
+use collision::{Aabb, Union};
 
 use controls::CameraParams;
 use render::{Root};
 use render::math::*;
 
-#[derive(Default)]
 pub struct Scene {
     pub name: Option<String>,
     pub nodes: Vec<usize>,
-    pub bounds: Bounds,
+    pub bounds: Aabb3,
+}
+
+impl Default for Scene {
+    fn default() -> Self {
+        Self {
+            name: None,
+            nodes: vec![],
+            bounds: Aabb3::zero()
+        }
+    }
 }
 
 impl Scene {

@@ -6,6 +6,8 @@
 extern crate cgmath;
 // use cgmath::prelude::*;
 
+extern crate collision;
+
 extern crate gl;
 
 extern crate glutin;
@@ -85,10 +87,13 @@ pub fn main() {
         .arg(Arg::with_name("CAM-INDEX")
             .long("cam-index")
             .takes_value(true)
+            .default_value("0")
+            .allow_hyphen_values(true)
             .help("Use the glTF camera with the given index (starting at 0). \n\
-                Default: Determine 'nice' camera position based on the scene's bounding box.
-                All other camera options are ignored if this one is given.")
-            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
+                Fallback if there is none: determine 'nice' camera position based on the scene's bounding box.
+                Can be forced by passing -1.
+                Note: All other camera options are ignored if this one is given.")
+            .validator(|value| value.parse::<i32>().map(|_| ()).map_err(|err| err.to_string())))
         .arg(Arg::with_name("CAM-POS")
             .long("cam-pos")
             .takes_value(true)
@@ -102,7 +107,7 @@ pub fn main() {
         .arg(Arg::with_name("CAM-FOVY")
             .long("cam-fovy")
             .takes_value(true)
-            .default_value("60")
+            .default_value("75")
             .help("Vertical field of view ('zoom') in degrees.")
             .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
         .get_matches();
@@ -113,7 +118,7 @@ pub fn main() {
     let count: u32 = args.value_of("COUNT").unwrap().parse().unwrap();
 
     let camera_options = CameraOptions {
-        index: args.value_of("CAM-INDEX").map(|n| n.parse().unwrap()),
+        index: args.value_of("CAM-INDEX").map(|n| n.parse().unwrap()).unwrap(),
         position: args.value_of("CAM-POS").map(|v| parse_vec3(v).unwrap()),
         target: args.value_of("CAM-TARGET").map(|v| parse_vec3(v).unwrap()),
         fovy: args.value_of("CAM-FOVY").map(|n| n.parse().unwrap()).unwrap(),
