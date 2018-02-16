@@ -63,7 +63,7 @@ pub struct GltfViewer {
 /// Note about `headless` and `visible`: True headless rendering doesn't work on
 /// all operating systems, but an invisible window usually works
 impl GltfViewer {
-    pub fn new(source: &str, width: u32, height: u32, headless: bool, visible: bool) -> GltfViewer {
+    pub fn new(source: &str, width: u32, height: u32, headless: bool, visible: bool, camera_index: Option<u32>) -> GltfViewer {
         let gl_request = GlRequest::Specific(Api::OpenGl, (3, 3));
         let gl_profile = GlProfile::Core;
         let (events_loop, gl_window, width, height) =
@@ -159,13 +159,15 @@ impl GltfViewer {
 
             render_timer: FrameTimer::new("rendering", 300),
         };
-        unsafe { gl_check_error!(); }
+        unsafe { gl_check_error!(); };
 
-        // TODO!!!: create cli param / print num available cameras
-        if !viewer.root.camera_nodes.is_empty() {
-            info!("Using first gltf camera");
-            // Take first camera node
-            let cam_node = &viewer.root.get_camera_node(0);
+        if let Some(cam_index) = camera_index {
+            if cam_index >= viewer.root.camera_nodes.len() as u32 {
+                error!("No camera with index {} found in glTF file (max: {})",
+                    cam_index, viewer.root.camera_nodes.len() - 1);
+                process::exit(2)
+            }
+            let cam_node = &viewer.root.get_camera_node(cam_index as usize);
             viewer.orbit_controls.set_camera(
                 cam_node.camera.as_ref().unwrap(),
                 &cam_node.final_transform);

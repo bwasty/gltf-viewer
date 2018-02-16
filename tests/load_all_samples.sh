@@ -25,12 +25,12 @@ done
 # for file in $base_dir/**/glTF-Binary/*.glb; do
 #     model_name=$(basename "$file" .glb)
 #     echo "$model_name"
-# shellcheck disable=SC2086
+#     # shellcheck disable=SC2086
 #     target/"$mode"/gltf-viewer "$file" -s "$result_dir"/"$model_name"-Binary.png $rest_gltf_arguments
 # done
 
 # for file in $base_dir/**/glTF-Embedded/*.gltf; do
 #     model_name=$(basename "$file" .gltf)
-# shellcheck disable=SC2086
+#     # shellcheck disable=SC2086
 #     target/"$mode"/gltf-viewer "$file" -s "$result_dir"/"$model_name"-Embedded.png $rest_gltf_arguments
 # done

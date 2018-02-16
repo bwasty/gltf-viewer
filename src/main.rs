@@ -79,11 +79,18 @@ pub fn main() {
         .arg(Arg::with_name("headless")
             .long("headless")
             .help("Use real headless rendering for screenshots (Default is a hidden window) [EXPERIMENTAL]"))
+        .arg(Arg::with_name("CAM-INDEX")
+            .long("camera")
+            .takes_value(true)
+            .help("Use the glTF camera with the given index (starting at 0). \n\
+                Default: Determine 'nice' camera position based on the scene's bounding box.")
+            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
         .get_matches();
     let source = args.value_of("FILE").unwrap();
     let width: u32 = args.value_of("WIDTH").unwrap().parse().unwrap();
     let height: u32 = args.value_of("HEIGHT").unwrap().parse().unwrap();
     let count: u32 = args.value_of("COUNT").unwrap().parse().unwrap();
+    let camera_index: Option<u32> = args.value_of("CAM-INDEX").map(|n| n.parse().unwrap());
 
     let log_level = match args.occurrences_of("verbose") {
         0 => LevelFilter::Warn,
@@ -96,7 +103,8 @@ pub fn main() {
 
     let mut viewer = GltfViewer::new(source, width, height,
         args.is_present("headless"),
-        !args.is_present("screenshot"));
+        !args.is_present("screenshot"),
+        camera_index);
 
     if args.is_present("screenshot") {
         let filename = args.value_of("screenshot").unwrap();
