@@ -414,10 +414,10 @@ fn process_input(input: glutin::KeyboardInput, controls: &mut OrbitControls) -> 
     if let Some(code) = input.virtual_keycode {
         match code {
             VirtualKeyCode::Escape if pressed => return false,
-            VirtualKeyCode::W => controls.process_keyboard(FORWARD, pressed),
-            VirtualKeyCode::S => controls.process_keyboard(BACKWARD, pressed),
-            VirtualKeyCode::A => controls.process_keyboard(LEFT, pressed),
-            VirtualKeyCode::D => controls.process_keyboard(RIGHT, pressed),
+            VirtualKeyCode::W | VirtualKeyCode::Up    => controls.process_keyboard(FORWARD, pressed),
+            VirtualKeyCode::S | VirtualKeyCode::Down  => controls.process_keyboard(BACKWARD, pressed),
+            VirtualKeyCode::A | VirtualKeyCode::Left  => controls.process_keyboard(LEFT, pressed),
+            VirtualKeyCode::D | VirtualKeyCode::Right => controls.process_keyboard(RIGHT, pressed),
             _ => ()
         }
     }
