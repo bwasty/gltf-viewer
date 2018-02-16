@@ -4,9 +4,11 @@
 # Parameters:
 mode=${1:-release} # pass `debug` instead to test a debug build
 base_dir=${2:-../../glTF-Sample-Models/2.0}
+rest_gltf_arguments="${@:3}"
 
 # set -e
-mkdir -p target/screenshots
+result_dir=target/screenshots/$(date '+%Y-%m-%d_%H-%M-%S')
+mkdir -p "$result_dir"
 export CARGO_INCREMENTAL=1
 if [[ "$mode" == "release" ]]; then
     cargo build --release
@@ -16,17 +18,19 @@ fi
 
 for file in $base_dir/**/glTF/*.gltf; do
     model_name=$(basename "$file" .gltf)
-    echo "$model_name"
-    target/"$mode"/gltf-viewer "$file" -s target/screenshots/"$model_name".png --headless
+    # shellcheck disable=SC2086
+    target/"$mode"/gltf-viewer "$file" -s "$result_dir"/"$model_name".png $rest_gltf_arguments
 done
 
 # for file in $base_dir/**/glTF-Binary/*.glb; do
 #     model_name=$(basename "$file" .glb)
 #     echo "$model_name"
-#     target/"$mode"/gltf-viewer "$file" -s target/screenshots/"$model_name"-Binary.png --headless
+# shellcheck disable=SC2086
+#     target/"$mode"/gltf-viewer "$file" -s "$result_dir"/"$model_name"-Binary.png $rest_gltf_arguments
 # done
 
 # for file in $base_dir/**/glTF-Embedded/*.gltf; do
 #     model_name=$(basename "$file" .gltf)
-#     target/"$mode"/gltf-viewer "$file" -s target/screenshots/"$model_name"-Embedded.png --headless
+# shellcheck disable=SC2086
+#     target/"$mode"/gltf-viewer "$file" -s "$result_dir"/"$model_name"-Embedded.png $rest_gltf_arguments
 # done

@@ -320,7 +320,7 @@ impl OrbitControls {
 
     pub fn set_camera(&mut self, camera: &Camera, transform: &Matrix4) {
         // spec: If no transformation is specified, the location of the camera is at the origin.
-        let pos = transform * Vector4::zero();
+        let pos = transform * vec4(0.0, 0.0, 0.0, 1.0);
 
         // spec: ... the lens looks towards the local -Z axis ...
         let look_at = transform * vec4(0.0, 0.0, -1.0, 0.0);
@@ -328,9 +328,9 @@ impl OrbitControls {
         self.position = Point3::new(pos.x, pos.y, pos.z);
         self.target = Point3::new(look_at.x, look_at.y, look_at.z);
 
-        // TODO!!: handle better (camera zoom/fovy)
+        // TODO!!: retaining current window aspect ratio for now... later maybe resize window accordingly?
         let mut camera = camera.clone();
-        camera.fovy = self.camera.fovy;
+        camera.update_aspect_ratio(self.camera.aspect_ratio());
         self.camera = camera;
 
         self.camera.update_projection_matrix();

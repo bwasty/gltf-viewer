@@ -161,7 +161,7 @@ impl GltfViewer {
         };
         unsafe { gl_check_error!(); }
 
-        // TODO!!!: test more, create cli param / print num available cameras
+        // TODO!!!: create cli param / print num available cameras
         if !viewer.root.camera_nodes.is_empty() {
             info!("Using first gltf camera");
             // Take first camera node

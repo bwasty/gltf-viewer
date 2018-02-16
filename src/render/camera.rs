@@ -1,4 +1,4 @@
-use cgmath::{Deg, perspective};
+use cgmath::{Deg, Rad, perspective};
 
 use gltf;
 use gltf::camera::Projection;
@@ -15,7 +15,7 @@ pub struct Camera {
 
     // perspective camera
     // TODO!: setters that update...
-    pub fovy: f32,
+    pub fovy: f32, // degrees
     aspect_ratio: f32,
 
     // orthographic camera
@@ -53,9 +53,9 @@ impl Camera {
         };
         match g_camera.projection() {
             Projection::Perspective(persp) => {
-                // TODO!: ignoring aspect ratio for now as it would require window resizing...
+                // TODO!!: ignoring aspect ratio for now as it would require window resizing...
                 let _aspect = persp.aspect_ratio();
-                camera.fovy = persp.yfov();
+                camera.fovy = Deg::from(Rad(persp.yfov())).0;
                 camera.znear = persp.znear();
                 camera.zfar = persp.zfar();
             },
@@ -73,6 +73,10 @@ impl Camera {
     pub fn update_aspect_ratio(&mut self, aspect_ratio: f32) {
         self.aspect_ratio = aspect_ratio;
         self.update_projection_matrix();
+    }
+
+    pub fn aspect_ratio(&self) -> f32 {
+        self.aspect_ratio
     }
 
     pub fn update_projection_matrix(&mut self) {
