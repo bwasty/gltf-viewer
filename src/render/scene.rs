@@ -1,6 +1,6 @@
 use gltf;
 
-use collision::Union;
+use collision::{Aabb, Union};
 
 use controls::CameraParams;
 use render::{Root};
@@ -17,7 +17,7 @@ impl Default for Scene {
         Self {
             name: None,
             nodes: vec![],
-            bounds: infinite_bounds()
+            bounds: Aabb3::zero()
         }
     }
 }

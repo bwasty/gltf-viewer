@@ -75,7 +75,7 @@ impl Node {
 
             final_transform: Matrix4::identity(),
 
-            bounds: infinite_bounds(),
+            bounds: Aabb3::zero(),
         }
     }
 
@@ -101,7 +101,7 @@ impl Node {
 
     /// Should be called after update_transforms
     pub fn update_bounds(&mut self, root: &mut Root) {
-        self.bounds = infinite_bounds();
+        self.bounds = Aabb3::zero();
         if let Some(ref mesh) = self.mesh {
             self.bounds = mesh.bounds
                 .transform(&self.final_transform);

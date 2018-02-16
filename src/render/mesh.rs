@@ -1,7 +1,7 @@
 // use std::rc::Rc;
 use std::path::Path;
 
-use collision::{Aabb3, Union};
+use collision::{Aabb, Aabb3, Union};
 
 use gltf;
 use gltf_importer;
@@ -34,7 +34,7 @@ impl Mesh {
             .collect();
 
         let bounds = primitives.iter()
-            .fold(infinite_bounds(), |bounds, prim| prim.bounds.union(&bounds));
+            .fold(Aabb3::zero(), |bounds, prim| prim.bounds.union(&bounds));
 
         Mesh {
             index: g_mesh.index(),
