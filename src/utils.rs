@@ -108,7 +108,7 @@ macro_rules! gl_check_error {
 }
 
 /// Prints information about the current OpenGL context
-/// Based on glium's context::capabilities::get_capabilities
+/// Based on glium's `context::capabilities::get_capabilities`
 pub unsafe fn print_context_info() {
     debug!("Renderer     : {}", gl_string(gl::GetString(gl::RENDERER)));
     debug!("Vendor       : {}", gl_string(gl::GetString(gl::VENDOR)));
@@ -146,6 +146,6 @@ pub unsafe fn print_context_info() {
 
 pub unsafe fn gl_string(raw_string: *const GLubyte) -> String {
     if raw_string.is_null() { return "(NULL)".into() }
-    String::from_utf8(CStr::from_ptr(raw_string as *const _).to_bytes().to_vec()).ok()
+    String::from_utf8(CStr::from_ptr(raw_string as *const _).to_bytes().to_vec())
                                 .expect("gl_string: non-UTF8 string")
 }

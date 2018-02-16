@@ -147,3 +147,14 @@ impl Spherical {
         vec3(x, y, z)
     }
 }
+
+use std::num::ParseFloatError;
+pub fn parse_vec3(s: &str) -> Result<Vector3, ParseFloatError> {
+    let coords: Vec<&str> = s.split(',').collect();
+    coords.len() != 3 && panic!("Failed to parse Vector3 ({})", s);
+    let x = coords[0].parse::<f32>()?;
+    let y = coords[1].parse::<f32>()?;
+    let z = coords[2].parse::<f32>()?;
+
+    Ok(vec3(x, y, z))
+}
