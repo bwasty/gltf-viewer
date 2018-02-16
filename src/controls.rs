@@ -117,7 +117,7 @@ impl OrbitControls {
         }
     }
 
-    // TODO!!: cache/return reference? often many of them stay the same...
+    // NOTE: could be cached
     pub fn camera_params(&self) -> CameraParams {
         CameraParams {
             position: self.position.to_vec(),

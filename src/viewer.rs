@@ -388,8 +388,10 @@ fn process_events(
                     orbit_controls.handle_mouse_move(xpos, ypos);
                 },
                 WindowEvent::MouseWheel { delta: MouseScrollDelta::PixelDelta(_xoffset, yoffset), .. } => {
-                    // TODO: need to handle LineDelta case too?
                     orbit_controls.process_mouse_scroll(yoffset);
+                }
+                WindowEvent::MouseWheel { delta: MouseScrollDelta::LineDelta(_rows, lines), .. } => {
+                    orbit_controls.process_mouse_scroll(lines * 3.0);
                 }
                 WindowEvent::KeyboardInput { input, .. } => {
                     keep_running = process_input(input, &mut orbit_controls);

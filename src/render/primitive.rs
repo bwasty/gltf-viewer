@@ -234,7 +234,7 @@ impl Primitive {
 
     /// render the mesh
     pub unsafe fn draw(&self, model_matrix: &Matrix4, mvp_matrix: &Matrix4, camera_position: &Vector3) {
-        // TODO!!: determine if shader+material already active to reduce work...
+        // TODO!: determine if shader+material already active to reduce work...
 
         if self.material.double_sided {
             gl::Disable(gl::CULL_FACE);
