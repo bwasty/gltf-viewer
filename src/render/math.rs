@@ -6,6 +6,8 @@ pub use cgmath::{vec3, vec4};
 
 use num_traits::clamp;
 
+use collision;
+
 pub type Vector2 = cgmath::Vector2<f32>;
 pub type Vector3 = cgmath::Vector3<f32>;
 pub type Vector4 = cgmath::Vector4<f32>;
@@ -14,6 +16,15 @@ pub type Point3 = cgmath::Point3<f32>;
 
 pub type Matrix4 = cgmath::Matrix4<f32>;
 pub type Quaternion = cgmath::Quaternion<f32>;
+
+pub type Aabb3 = collision::Aabb3<f32>;
+
+pub fn infinite_bounds() -> Aabb3 {
+    Aabb3 {
+        min: Point3::from_value(f32::INFINITY),
+        max: Point3::from_value(f32::NEG_INFINITY)
+    }
+}
 
 // TODO!!: replace bounds with collision-rs AAbb3?
 /// Axis-aligned Bounding Box

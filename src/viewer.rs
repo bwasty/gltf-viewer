@@ -6,6 +6,7 @@ use std::process;
 use std::time::Instant;
 
 use cgmath::{ Point3 };
+use collision::Aabb;
 use gl;
 use glutin;
 use glutin::{
@@ -241,11 +242,13 @@ impl GltfViewer {
     fn set_camera_from_bounds(&mut self) {
         // TODO!!: fix bounds/camera computation (many models NOT centered)
         let bounds = &self.scene.bounds;
-        let size = bounds.size().magnitude();
+        let size = (bounds.max - bounds.min).magnitude();
         let center = bounds.center();
 
+        error!("{:?}\t{:?}", bounds.min, bounds.max);
+
         // TODO!: move cam instead?
-        let _obj_pos_modifier = -center;
+        // let _obj_pos_modifier = -center;
 
         let _max_distance = size * 10.0;
         // TODO: x,y addition optional, z optionally minus instead
@@ -258,7 +261,7 @@ impl GltfViewer {
         let _far = size * 100.0;
 
         self.orbit_controls.position = cam_pos;
-        self.orbit_controls.target = Point3::from_vec(center);
+        self.orbit_controls.target = center;
 
         // TODO!: set near, far, max_distance, obj_pos_modifier...
     }

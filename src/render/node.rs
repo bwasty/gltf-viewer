@@ -4,6 +4,8 @@ use std::path::Path;
 use gltf;
 use gltf_importer;
 
+use collision::{Aabb, Union};
+
 use controls::CameraParams;
 use render::math::*;
 use render::mesh::Mesh;
@@ -24,7 +26,7 @@ pub struct Node {
     pub name: Option<String>,
 
     pub final_transform: Matrix4, // including parent transforms
-    pub bounds: Bounds,
+    pub bounds: Aabb3,
 }
 
 
@@ -73,7 +75,7 @@ impl Node {
 
             final_transform: Matrix4::identity(),
 
-            bounds: Bounds::default(),
+            bounds: infinite_bounds(),
         }
     }
 
@@ -99,7 +101,7 @@ impl Node {
 
     /// Should be called after update_transforms
     pub fn update_bounds(&mut self, root: &mut Root) {
-        self.bounds = Default::default();
+        self.bounds = infinite_bounds();
         if let Some(ref mesh) = self.mesh {
             self.bounds = mesh.bounds
                 .transform(&self.final_transform);
@@ -107,7 +109,7 @@ impl Node {
         else if self.children.is_empty() {
             // Cameras (others?) have neither mesh nor children. Their position is the origin
             // TODO!: are there other cases? Do bounds matter for cameras?
-            self.bounds = Bounds { min: Vector3::zero(), max: Vector3::zero() };
+            self.bounds = Aabb3::zero();
             self.bounds = self.bounds.transform(&self.final_transform);
         }
         else {

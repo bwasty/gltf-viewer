@@ -6,6 +6,8 @@
 extern crate cgmath;
 // use cgmath::prelude::*;
 
+extern crate collision;
+
 extern crate gl;
 
 extern crate glutin;
