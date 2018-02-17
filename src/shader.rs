@@ -217,6 +217,9 @@ pub struct PbrUniformLocations {
     pub u_LightDirection: i32,
     pub u_LightColor: i32,
 
+    pub u_AmbientLightColor: i32,
+    pub u_AmbientLightIntensity: i32,
+
     // TODO!: set when integrating IBL (unused now)
     pub u_DiffuseEnvSampler: i32,
     pub u_SpecularEnvSampler: i32,
@@ -274,6 +277,9 @@ impl PbrShader {
                 u_LightDirection: shader.uniform_location("u_LightDirection"),
                 u_LightColor: shader.uniform_location("u_LightColor"),
 
+                u_AmbientLightColor: shader.uniform_location("u_AmbientLightColor"),
+                u_AmbientLightIntensity: shader.uniform_location("u_AmbientLightIntensity"),
+
                 u_DiffuseEnvSampler: shader.uniform_location("u_DiffuseEnvSampler"),
                 u_SpecularEnvSampler: shader.uniform_location("u_SpecularEnvSampler"),
                 u_brdfLUT: shader.uniform_location("u_brdfLUT"),
@@ -308,6 +314,9 @@ impl PbrShader {
             shader.set_vec3(uniforms.u_LightColor, 5.0, 5.0, 5.0);
             // TODO!: optional minus on z
             shader.set_vec3(uniforms.u_LightDirection, 0.0, 0.5, 0.5);
+
+            shader.set_vec3(uniforms.u_AmbientLightColor, 1.0, 1.0, 1.0);
+            shader.set_float(uniforms.u_AmbientLightIntensity, 0.2);
 
             uniforms
         };
