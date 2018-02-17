@@ -23,6 +23,9 @@ precision highp float;
 uniform vec3 u_LightDirection;
 uniform vec3 u_LightColor;
 
+uniform vec3 u_AmbientLightColor;
+uniform float u_AmbientLightIntensity;
+
 #ifdef USE_IBL
 uniform samplerCube u_DiffuseEnvSampler;
 uniform samplerCube u_SpecularEnvSampler;
@@ -284,6 +287,9 @@ void main()
     // Calculate lighting contribution from image based lighting source (IBL)
 #ifdef USE_IBL
     color += getIBLContribution(pbrInputs, n, reflection);
+#else
+    // Add simple ambient light
+    color += u_AmbientLightColor * u_AmbientLightIntensity * baseColor.xyz;
 #endif
 
     // Apply optional PBR terms for additional (optional) shading
