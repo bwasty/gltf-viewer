@@ -10,15 +10,19 @@ layout (location = 1) in vec4 a_Normal;
 layout (location = 2) in vec4 a_Tangent;
 #endif
 #ifdef HAS_UV
-layout (location = 3) in vec2 a_UV;
+layout (location = 3) in vec2 a_UV; // TEXCOORD_0
 #endif
-// TODO!: tex_coord_1, color_0, joints_0, weights_0
+// TODO!: tex_coord_1, joints_0, weights_0
+#ifdef HAS_COLORS
+layout (location = 5) in vec4 a_Color; // COLOR_0
+#endif
 
 uniform mat4 u_MVPMatrix;
 uniform mat4 u_ModelMatrix;
 
 out vec3 v_Position;
 out vec2 v_UV;
+out vec4 v_Color;
 
 #ifdef HAS_NORMALS
 #ifdef HAS_TANGENTS
@@ -49,6 +53,12 @@ void main()
   v_UV = a_UV;
   #else
   v_UV = vec2(0.,0.);
+  #endif
+
+  #ifdef HAS_COLORS
+  v_Color = a_Color;
+  #else
+  v_Color = vec4(1.0);
   #endif
 
   gl_Position = u_MVPMatrix * a_Position; // needs w for proper perspective correction

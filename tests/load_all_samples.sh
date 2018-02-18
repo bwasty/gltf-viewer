@@ -34,3 +34,9 @@ done
 #     # shellcheck disable=SC2086
 #     target/"$mode"/gltf-viewer "$file" -s "$result_dir"/"$model_name"-Embedded.png $rest_gltf_arguments
 # done
+
+(
+    cd "$result_dir" || exit
+    von
+    open index.html
+)

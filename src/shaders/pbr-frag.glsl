@@ -66,6 +66,8 @@ in vec3 v_Position;
 
 in vec2 v_UV;
 
+in vec4 v_Color;
+
 #ifdef HAS_NORMALS
 #ifdef HAS_TANGENTS
 in mat3 v_TBN;
@@ -232,6 +234,8 @@ void main()
 #else
     vec4 baseColor = u_BaseColorFactor;
 #endif
+    // spec: COLOR_0 ... acts as an additional linear multiplier to baseColor
+    baseColor *= v_Color;
 
     vec3 f0 = vec3(0.04);
     vec3 diffuseColor = baseColor.rgb * (vec3(1.0) - f0);
