@@ -5,7 +5,7 @@ use std::path::Path;
 use std::process;
 use std::time::Instant;
 
-use cgmath::{ Point3 };
+use cgmath::{ Deg, Point3 };
 use collision::Aabb;
 use gl;
 use glutin;
@@ -44,7 +44,7 @@ pub struct CameraOptions {
     pub index: i32,
     pub position: Option<Vector3>,
     pub target: Option<Vector3>,
-    pub fovy: f32,
+    pub fovy: Deg<f32>,
 }
 
 pub struct GltfViewer {

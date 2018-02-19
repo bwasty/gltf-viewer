@@ -15,7 +15,7 @@ pub struct Camera {
 
     // perspective camera
     // TODO!: setters that update...
-    pub fovy: f32, // degrees
+    pub fovy: Deg<f32>,
     aspect_ratio: f32,
 
     // orthographic camera
@@ -29,7 +29,7 @@ impl Default for Camera {
             znear: 0.01,
             zfar: Some(1000.0),
 
-            fovy: ZOOM,
+            fovy: Deg(ZOOM),
             aspect_ratio: 1.0,
 
             xmag: None,
@@ -46,7 +46,7 @@ impl Camera {
             projection_matrix: Matrix4::zero(),
             znear: 0.0,
             zfar: None,
-            fovy: 0.0,
+            fovy: Deg(0.0),
             aspect_ratio: 1.0,
             xmag: None,
             ymag: None,
@@ -55,7 +55,7 @@ impl Camera {
             Projection::Perspective(persp) => {
                 // TODO!!: ignoring aspect ratio for now as it would require window resizing...
                 let _aspect = persp.aspect_ratio();
-                camera.fovy = Deg::from(Rad(persp.yfov())).0;
+                camera.fovy = Deg::from(Rad(persp.yfov()));
                 camera.znear = persp.znear();
                 camera.zfar = persp.zfar();
             },
@@ -87,19 +87,28 @@ impl Camera {
             let f = self.zfar.unwrap();
             let n = self.znear;
             self.projection_matrix = Matrix4::new(
-                1.0/r, 0.0,   0.0,       0.0,
-                0.0,   1.0/t, 0.0,       0.0,
-                0.0,   0.0,   2.0/(n-f), (f+n)/(n-f),
-                0.0,   0.0,   0.0,       1.0
+                1.0/r, 0.0,   0.0,         0.0,   // NOTE: first column!
+                0.0,   1.0/t, 0.0,         0.0,   // 2nd
+                0.0,   0.0,   2.0/(n-f),   0.0,   // 3rd
+                0.0,   0.0,   (f+n)/(n-f), 1.0    // 4th
             );
         } else if let Some(zfar) = self.zfar {
             self.projection_matrix = perspective(
-                Deg(self.fovy),
+                self.fovy,
                 self.aspect_ratio,
                 self.znear, zfar)
         } else {
-            // TODO!!: inifinite perspective (missing sample models)
-            unimplemented!("infinite perspective")
+            // from https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#infinite-perspective-projection
+            let a = self.aspect_ratio;
+            let y = Rad::from(self.fovy).0;
+            let n = self.znear;
+
+            self.projection_matrix = Matrix4::new(
+                1.0/(a*(0.5*y).tan()), 0.0,               0.0,   0.0, // NOTE: first column!
+                0.0,                   1.0/(0.5*y).tan(), 0.0,   0.0,
+                0.0,                   0.0,              -1.0,  -1.0,
+                0.0,                   0.0,              -2.0*n, 0.0
+            );
         }
     }
 
