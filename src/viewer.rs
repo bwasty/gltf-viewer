@@ -175,6 +175,7 @@ impl GltfViewer {
                     camera_options.index, viewer.root.camera_nodes.len() - 1);
                 process::exit(2)
             }
+            // TODO!!: camera indices don't seem to match glTF file (-> Cameras sample)
             let cam_node = &viewer.root.get_camera_node(camera_options.index as usize);
             viewer.orbit_controls.set_camera(
                 cam_node.camera.as_ref().unwrap(),

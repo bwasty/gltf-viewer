@@ -80,8 +80,18 @@ impl Camera {
     }
 
     pub fn update_projection_matrix(&mut self) {
-        if let Some(_xmag) = self.xmag {
-            unimplemented!("orthographic camera") // TODO!!!: ortho camera
+        if let Some(xmag) = self.xmag {
+            // from https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#orthographic-projection
+            let r = xmag;
+            let t = self.ymag.unwrap();
+            let f = self.zfar.unwrap();
+            let n = self.znear;
+            self.projection_matrix = Matrix4::new(
+                1.0/r, 0.0,   0.0,       0.0,
+                0.0,   1.0/t, 0.0,       0.0,
+                0.0,   0.0,   2.0/(n-f), (f+n)/(n-f),
+                0.0,   0.0,   0.0,       1.0
+            );
         } else if let Some(zfar) = self.zfar {
             self.projection_matrix = perspective(
                 Deg(self.fovy),
