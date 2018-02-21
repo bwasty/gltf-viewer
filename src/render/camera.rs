@@ -8,6 +8,9 @@ use ::controls::{ZOOM};
 
 #[derive(Clone)]
 pub struct Camera {
+    pub index: usize, // gltf index
+    pub name: Option<String>,
+
     pub projection_matrix: Matrix4,
 
     pub znear: f32,
@@ -26,6 +29,9 @@ pub struct Camera {
 impl Default for Camera {
     fn default() -> Self {
         Camera {
+            index: 0,
+            name: None,
+
             znear: 0.01,
             zfar: Some(1000.0),
 
@@ -43,6 +49,8 @@ impl Default for Camera {
 impl Camera {
     pub fn from_gltf(g_camera: &gltf::Camera) -> Self {
         let mut camera = Camera {
+            index: g_camera.index(),
+            name: g_camera.name().map(|n| n.to_owned()),
             projection_matrix: Matrix4::zero(),
             znear: 0.0,
             zfar: None,
@@ -114,5 +122,17 @@ impl Camera {
 
     pub fn is_perspective(&self) -> bool {
         self.xmag.is_none()
+    }
+
+    pub fn description(&self) -> String {
+        let type_ = if !self.is_perspective() {
+            "ortho"
+        } else if self.zfar.is_none() {
+            "infinite perspective"
+        } else {
+            "perspective"
+        };
+
+        format!("{} ({:?}, {})", self.index, self.name, type_)
     }
 }

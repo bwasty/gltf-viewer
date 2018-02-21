@@ -169,22 +169,23 @@ impl GltfViewer {
         };
         unsafe { gl_check_error!(); };
 
-        if !viewer.root.camera_nodes.is_empty() && !camera_options.index == -1 {
-            if camera_options.index >= viewer.root.camera_nodes.len() as i32 {
-                error!("No camera with index {} found in glTF file (max: {})",
-                    camera_options.index, viewer.root.camera_nodes.len() - 1);
-                process::exit(2)
-            }
-            // TODO!!: camera indices don't seem to match glTF file (-> Cameras sample)
+        if camera_options.index >= viewer.root.camera_nodes.len() as i32 {
+            error!("No camera with index {} found in glTF file (max: {})",
+                camera_options.index, viewer.root.camera_nodes.len() as i32 - 1);
+            process::exit(2)
+        }
+        if !viewer.root.camera_nodes.is_empty() && camera_options.index != -1 {
             let cam_node = &viewer.root.get_camera_node(camera_options.index as usize);
-            viewer.orbit_controls.set_camera(
-                cam_node.camera.as_ref().unwrap(),
-                &cam_node.final_transform);
+            let cam_node_info = format!("{} ({:?})", cam_node.index, cam_node.name);
+            let cam = cam_node.camera.as_ref().unwrap();
+            info!("Using camera {} on node {}", cam.description(), cam_node_info);
+            viewer.orbit_controls.set_camera(cam, &cam_node.final_transform);
 
             if camera_options.position.is_some() || camera_options.target.is_some() {
                 warn!("Ignoring --cam-pos / --cam-target since --cam-index is given.")
             }
         } else {
+            info!("Determining camera view from bounding box");
             viewer.set_camera_from_bounds();
 
             if let Some(p) = camera_options.position {
