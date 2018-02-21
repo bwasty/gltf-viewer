@@ -169,7 +169,7 @@ impl GltfViewer {
         };
         unsafe { gl_check_error!(); };
 
-        if camera_options.index >= viewer.root.camera_nodes.len() as i32 {
+        if camera_options.index != 0 && camera_options.index >= viewer.root.camera_nodes.len() as i32 {
             error!("No camera with index {} found in glTF file (max: {})",
                 camera_options.index, viewer.root.camera_nodes.len() as i32 - 1);
             process::exit(2)
@@ -186,7 +186,7 @@ impl GltfViewer {
             }
         } else {
             info!("Determining camera view from bounding box");
-            viewer.set_camera_from_bounds();
+            viewer.set_camera_from_bounds(false);
 
             if let Some(p) = camera_options.position {
                 viewer.orbit_controls.position = Point3::from_vec(p)
@@ -241,25 +241,28 @@ impl GltfViewer {
     }
 
     /// determine "nice" camera perspective from bounding box. Inspired by donmccurdy/three-gltf-viewer
-    fn set_camera_from_bounds(&mut self) {
+    fn set_camera_from_bounds(&mut self, straight: bool) {
         let bounds = &self.scene.bounds;
         let size = (bounds.max - bounds.min).magnitude();
         let center = bounds.center();
 
-        let _max_distance = size * 10.0;
-        // TODO: x,y addition optional, z optionally minus instead
-        let cam_pos = Point3::new(
-            center.x + size / 2.0,
-            center.y + size / 5.0,
-            center.z + size / 2.0,
-        );
-        let _near = size / 100.0;
-        let _far = size * 100.0;
+        // TODO: x,y addition optional
+        let cam_pos = if straight {
+            Point3::new(
+                center.x,
+                center.y,
+                center.z + size * 0.75,
+            )
+        } else {
+            Point3::new(
+                center.x + size / 2.0,
+                center.y + size / 5.0,
+                center.z + size / 2.0,
+            )
+        };
 
         self.orbit_controls.position = cam_pos;
         self.orbit_controls.target = center;
-
-        // TODO!: set near, far, max_distance, obj_pos_modifier...
     }
 
     pub fn start_render_loop(&mut self) {
