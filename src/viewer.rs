@@ -276,7 +276,8 @@ impl GltfViewer {
             let keep_running = process_events(
                 &mut self.events_loop.as_mut().unwrap(), self.gl_window.as_mut().unwrap(),
                 &mut self.orbit_controls,
-                &mut self.width, &mut self.height);
+                &mut self.width, &mut self.height,
+                &mut self);
             if !keep_running {
                 unsafe { gl_check_error!(); } // final error check so errors don't go unnoticed
                 break
@@ -347,7 +348,9 @@ fn process_events(
     gl_window: &glutin::GlWindow,
     mut orbit_controls: &mut OrbitControls,
     width: &mut u32,
-    height: &mut u32) -> bool
+    height: &mut u32,
+    viewer: &mut GltfViewer,
+) -> bool
 {
     let mut keep_running = true;
     #[allow(single_match)]
@@ -367,7 +370,12 @@ fn process_events(
 
                     trace!("Resized to {}x{}", w, h);
                 },
-                WindowEvent::DroppedFile(_path_buf) => (), // TODO: drag file in
+                WindowEvent::DroppedFile(path_buf) => {
+                    let (root, scene) = GltfViewer::load(path_buf.to_str().unwrap());
+                    viewer.root = root;
+                    viewer.scene = scene;
+                    // println!("{:?}", _path_buf)
+                }, // TODO: drag file in
                 WindowEvent::MouseInput { button, state: Pressed, ..} => {
                     match button {
                         MouseButton::Left => {
