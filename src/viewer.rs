@@ -5,7 +5,7 @@ use std::path::Path;
 use std::process;
 use std::time::Instant;
 
-use cgmath::{ Point3 };
+use cgmath::{ Deg, Point3 };
 use collision::Aabb;
 use gl;
 use glutin;
@@ -44,7 +44,7 @@ pub struct CameraOptions {
     pub index: i32,
     pub position: Option<Vector3>,
     pub target: Option<Vector3>,
-    pub fovy: f32,
+    pub fovy: Deg<f32>,
 }
 
 pub struct GltfViewer {
@@ -169,22 +169,24 @@ impl GltfViewer {
         };
         unsafe { gl_check_error!(); };
 
-        if !viewer.root.camera_nodes.is_empty() && !camera_options.index == -1 {
-            if camera_options.index >= viewer.root.camera_nodes.len() as i32 {
-                error!("No camera with index {} found in glTF file (max: {})",
-                    camera_options.index, viewer.root.camera_nodes.len() - 1);
-                process::exit(2)
-            }
+        if camera_options.index != 0 && camera_options.index >= viewer.root.camera_nodes.len() as i32 {
+            error!("No camera with index {} found in glTF file (max: {})",
+                camera_options.index, viewer.root.camera_nodes.len() as i32 - 1);
+            process::exit(2)
+        }
+        if !viewer.root.camera_nodes.is_empty() && camera_options.index != -1 {
             let cam_node = &viewer.root.get_camera_node(camera_options.index as usize);
-            viewer.orbit_controls.set_camera(
-                cam_node.camera.as_ref().unwrap(),
-                &cam_node.final_transform);
+            let cam_node_info = format!("{} ({:?})", cam_node.index, cam_node.name);
+            let cam = cam_node.camera.as_ref().unwrap();
+            info!("Using camera {} on node {}", cam.description(), cam_node_info);
+            viewer.orbit_controls.set_camera(cam, &cam_node.final_transform);
 
             if camera_options.position.is_some() || camera_options.target.is_some() {
                 warn!("Ignoring --cam-pos / --cam-target since --cam-index is given.")
             }
         } else {
-            viewer.set_camera_from_bounds();
+            info!("Determining camera view from bounding box");
+            viewer.set_camera_from_bounds(false);
 
             if let Some(p) = camera_options.position {
                 viewer.orbit_controls.position = Point3::from_vec(p)
@@ -239,25 +241,28 @@ impl GltfViewer {
     }
 
     /// determine "nice" camera perspective from bounding box. Inspired by donmccurdy/three-gltf-viewer
-    fn set_camera_from_bounds(&mut self) {
+    fn set_camera_from_bounds(&mut self, straight: bool) {
         let bounds = &self.scene.bounds;
         let size = (bounds.max - bounds.min).magnitude();
         let center = bounds.center();
 
-        let _max_distance = size * 10.0;
-        // TODO: x,y addition optional, z optionally minus instead
-        let cam_pos = Point3::new(
-            center.x + size / 2.0,
-            center.y + size / 5.0,
-            center.z + size / 2.0,
-        );
-        let _near = size / 100.0;
-        let _far = size * 100.0;
+        // TODO: x,y addition optional
+        let cam_pos = if straight {
+            Point3::new(
+                center.x,
+                center.y,
+                center.z + size * 0.75,
+            )
+        } else {
+            Point3::new(
+                center.x + size / 2.0,
+                center.y + size / 5.0,
+                center.z + size / 2.0,
+            )
+        };
 
         self.orbit_controls.position = cam_pos;
         self.orbit_controls.target = center;
-
-        // TODO!: set near, far, max_distance, obj_pos_modifier...
     }
 
     pub fn start_render_loop(&mut self) {

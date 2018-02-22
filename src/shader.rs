@@ -182,7 +182,6 @@ bitflags! {
         const HAS_NORMALS           = 1;
         const HAS_TANGENTS          = 1 << 1;
         const HAS_UV                = 1 << 2;
-        // TODO!: the shader doesn't have colors yet
         const HAS_COLORS            = 1 << 3;
 
         // fragment shader only

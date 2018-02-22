@@ -4,7 +4,7 @@
 // #![feature(test)]
 #[macro_use] extern crate clap;
 extern crate cgmath;
-// use cgmath::prelude::*;
+use cgmath::Deg;
 
 extern crate collision;
 
@@ -121,7 +121,7 @@ pub fn main() {
         index: args.value_of("CAM-INDEX").map(|n| n.parse().unwrap()).unwrap(),
         position: args.value_of("CAM-POS").map(|v| parse_vec3(v).unwrap()),
         target: args.value_of("CAM-TARGET").map(|v| parse_vec3(v).unwrap()),
-        fovy: args.value_of("CAM-FOVY").map(|n| n.parse().unwrap()).unwrap(),
+        fovy: args.value_of("CAM-FOVY").map(|n| Deg(n.parse().unwrap())).unwrap(),
     };
 
     let log_level = match args.occurrences_of("verbose") {

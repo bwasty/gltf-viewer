@@ -38,7 +38,6 @@ impl Scene {
             let node = root.unsafe_get_node_mut(*node_id);
             node.update_transform(root, &root_transform);
             node.update_bounds(root);
-            // TODO!: visualize final bounds
             scene.bounds = scene.bounds.union(&node.bounds);
         }
 

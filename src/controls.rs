@@ -210,7 +210,7 @@ impl OrbitControls {
             self.pan_up(distance);
         } else {
             // TODO!: orthographic camera pan
-            unimplemented!("orthographic camera pan")
+            warn!("unimplemented: orthographic camera pan")
         }
     }
 
@@ -225,14 +225,14 @@ impl OrbitControls {
     // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     pub fn process_mouse_scroll(&mut self, mut yoffset: f32) {
         yoffset *= ZOOM_SENSITIVITY;
-        if self.camera.fovy >= MIN_ZOOM && self.camera.fovy <= MAZ_ZOOM {
-            self.camera.fovy -= yoffset;
+        if self.camera.fovy.0 >= MIN_ZOOM && self.camera.fovy.0 <= MAZ_ZOOM {
+            self.camera.fovy.0 -= yoffset;
         }
-        if self.camera.fovy <= MIN_ZOOM {
-            self.camera.fovy = MIN_ZOOM;
+        if self.camera.fovy.0 <= MIN_ZOOM {
+            self.camera.fovy.0 = MIN_ZOOM;
         }
-        if self.camera.fovy >= MAZ_ZOOM {
-            self.camera.fovy = MAZ_ZOOM;
+        if self.camera.fovy.0 >= MAZ_ZOOM {
+            self.camera.fovy.0 = MAZ_ZOOM;
         }
         self.camera.update_projection_matrix();
     }
