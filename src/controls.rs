@@ -210,7 +210,7 @@ impl OrbitControls {
             self.pan_up(distance);
         } else {
             // TODO!: orthographic camera pan
-            unimplemented!("orthographic camera pan")
+            warn!("unimplemented: orthographic camera pan")
         }
     }
 
