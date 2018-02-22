@@ -186,7 +186,7 @@ impl GltfViewer {
             }
         } else {
             info!("Determining camera view from bounding box");
-            viewer.set_camera_from_bounds(false);
+            viewer.set_camera_from_bounds(true);
 
             if let Some(p) = camera_options.position {
                 viewer.orbit_controls.position = Point3::from_vec(p)
