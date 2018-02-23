@@ -83,7 +83,7 @@ pub fn main() {
             .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
         .arg(Arg::with_name("headless")
             .long("headless")
-            .help("Use real headless rendering for screenshots (Default is a hidden window) [EXPERIMENTAL]"))
+            .help("Use real headless rendering for screenshots (default is a hidden window) [EXPERIMENTAL - see README for details]"))
         .arg(Arg::with_name("scene")
             .long("scene")
             .default_value("0")
