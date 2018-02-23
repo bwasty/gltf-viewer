@@ -381,7 +381,7 @@ dependencies = [
 
 [[package]]
 name = "gltf-viewer"
-version = "0.2.1-alpha.0"
+version = "0.3.0"
 dependencies = [
  "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cgmath 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",

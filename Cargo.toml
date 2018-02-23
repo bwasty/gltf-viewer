@@ -13,7 +13,7 @@ license = "Unlicense"
 name = "gltf-viewer"
 readme = "README.md"
 repository = "https://github.com/bwasty/gltf-viewer"
-version = "0.2.1-alpha.0"
+version = "0.3.0"
 build = false # TODO: git-version doesn't work on Travis
 
 [badges]
