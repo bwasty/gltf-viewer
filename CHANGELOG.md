@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.3.0] - 2018-02-23
 ### Added
 * re-add keyboard controls - `WASD` and cursor keys
 * remaining glTF camera options:
@@ -22,7 +22,7 @@
 * Initial 'nice' camera position (some models were not properly centered)
 * Zooming with real mouse wheel
 
-## [0.2.0] - 2018-11-02
+## [0.2.0] - 2018-02-11
 ### Changed
 * replace `WASD+mouse` navigation with `OrbitControls` based on three.js:
   - rotate: left click + drag
