@@ -71,7 +71,15 @@ pub struct GltfViewer {
 /// Note about `headless` and `visible`: True headless rendering doesn't work on
 /// all operating systems, but an invisible window usually works
 impl GltfViewer {
-    pub fn new(source: &str, width: u32, height: u32, headless: bool, visible: bool, camera_options: CameraOptions) -> GltfViewer {
+    pub fn new(
+        source: &str,
+        width: u32,
+        height: u32,
+        headless: bool,
+        visible: bool,
+        camera_options: CameraOptions,
+        scene_index: usize,
+    ) -> GltfViewer {
         let gl_request = GlRequest::Specific(Api::OpenGl, (3, 3));
         let gl_profile = GlProfile::Core;
         let (events_loop, gl_window, width, height) =
@@ -148,7 +156,7 @@ impl GltfViewer {
             // gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
         };
 
-        let (root, scene) = Self::load(source);
+        let (root, scene) = Self::load(source, scene_index);
         let mut viewer = GltfViewer {
             width,
             height,
@@ -199,7 +207,7 @@ impl GltfViewer {
         viewer
     }
 
-    pub fn load(source: &str) -> (Root, Scene) {
+    pub fn load(source: &str, scene_index: usize) -> (Root, Scene) {
         let mut start_time = Instant::now();
         // TODO!: http source
         // let gltf =
@@ -228,12 +236,13 @@ impl GltfViewer {
         start_time = Instant::now();
 
         // load first scene
-        if gltf.scenes().len() > 1 {
-            warn!("Found more than 1 scene, can only load first at the moment.")
+        if scene_index >= gltf.scenes().len() {
+            error!("Scene index too high - file has only {} scene(s)", gltf.scenes().len());
+            process::exit(3)
         }
         let base_path = Path::new(source);
         let mut root = Root::from_gltf(&gltf, &buffers, base_path);
-        let scene = Scene::from_gltf(&gltf.scenes().nth(0).unwrap(), &mut root);
+        let scene = Scene::from_gltf(&gltf.scenes().nth(scene_index).unwrap(), &mut root);
         print_elapsed(&format!("Loaded scene with {} nodes, {} meshes in ",
                 gltf.nodes().count(), root.meshes.len()), &start_time);
 

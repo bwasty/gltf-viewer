@@ -53,16 +53,16 @@ pub fn main() {
             .required(true)
             .takes_value(true)
             .help("glTF file name"))
+        .arg(Arg::with_name("verbose")
+            .long("verbose")
+            .short("v")
+            .multiple(true)
+            .help("Enable verbose logging (log level INFO). Can be repeated up to 3 times to increase log level to DEBUG/TRACE)"))
         .arg(Arg::with_name("screenshot")
             .long("screenshot")
             .short("s")
             .value_name("FILE")
             .help("Create screenshot (PNG)"))
-        .arg(Arg::with_name("verbose")
-            .long("verbose")
-            .short("v")
-            .multiple(true)
-            .help("Enable verbose logging (log level INFO). Can be repeated multiple times to increase log level to DEBUG/TRACE)"))
         .arg(Arg::with_name("WIDTH")
             .long("width")
             .short("w")
@@ -84,14 +84,19 @@ pub fn main() {
         .arg(Arg::with_name("headless")
             .long("headless")
             .help("Use real headless rendering for screenshots (Default is a hidden window) [EXPERIMENTAL]"))
+        .arg(Arg::with_name("scene")
+            .long("scene")
+            .default_value("0")
+            .help("Index of the scene to load")
+            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
         .arg(Arg::with_name("CAM-INDEX")
             .long("cam-index")
             .takes_value(true)
             .default_value("0")
             .allow_hyphen_values(true)
             .help("Use the glTF camera with the given index (starting at 0). \n\
-                Fallback if there is none: determine 'nice' camera position based on the scene's bounding box.
-                Can be forced by passing -1.
+                Fallback if there is none: determine 'nice' camera position based on the scene's bounding box. \
+                Can be forced by passing -1. \n\
                 Note: All other camera options are ignored if this one is given.")
             .validator(|value| value.parse::<i32>().map(|_| ()).map_err(|err| err.to_string())))
         .arg(Arg::with_name("CAM-POS")
@@ -117,6 +122,8 @@ pub fn main() {
     let height: u32 = args.value_of("HEIGHT").unwrap().parse().unwrap();
     let count: u32 = args.value_of("COUNT").unwrap().parse().unwrap();
 
+    let scene: usize = args.value_of("scene").unwrap().parse().unwrap();
+
     let camera_options = CameraOptions {
         index: args.value_of("CAM-INDEX").map(|n| n.parse().unwrap()).unwrap(),
         position: args.value_of("CAM-POS").map(|v| parse_vec3(v).unwrap()),
@@ -136,7 +143,8 @@ pub fn main() {
     let mut viewer = GltfViewer::new(source, width, height,
         args.is_present("headless"),
         !args.is_present("screenshot"),
-        camera_options);
+        camera_options,
+        scene);
 
     if args.is_present("screenshot") {
         let filename = args.value_of("screenshot").unwrap();
