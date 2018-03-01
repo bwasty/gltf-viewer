@@ -145,7 +145,7 @@ impl Primitive {
 
         // texture coordinates
         let mut tex_coord_set = 0;
-        while let Some(tex_coords) = g_primitive.tex_coords_f32(tex_coord_set, buffers) {
+        while let Some(tex_coords) = g_primitive.tex_coords(tex_coord_set, buffers) {
             if tex_coord_set > 1 {
                 warn!("Ignoring texture coordinate set {}, \
                         only supporting 2 sets at the moment. (mesh: {}, primitive: {})",
@@ -153,7 +153,7 @@ impl Primitive {
                 tex_coord_set += 1;
                 continue;
             }
-            for (i, tex_coord) in tex_coords.enumerate() {
+            for (i, tex_coord) in tex_coords.into_f32().enumerate() {
                 match tex_coord_set {
                     0 => vertices[i].tex_coord_0 = Vector2::from(tex_coord),
                     1 => vertices[i].tex_coord_1 = Vector2::from(tex_coord),
@@ -165,38 +165,39 @@ impl Primitive {
         }
 
         // colors
-        if let Some(colors) = g_primitive.colors_rgba_f32(0, 1.0, buffers) {
+        if let Some(colors) = g_primitive.colors(0, buffers) {
+            let colors = colors.into_rgba_f32();
             for (i, c) in colors.enumerate() {
                 vertices[i].color_0 = c.into();
             }
             shader_flags |= ShaderFlags::HAS_COLORS;
         }
-        if g_primitive.colors_rgba_f32(1, 1.0, buffers).is_some() {
+        if g_primitive.colors(1, buffers).is_some() {
             warn!("Ignoring further color attributes, only supporting COLOR_0. (mesh: {}, primitive: {})",
                 mesh_index, primitive_index);
         }
 
-        if let Some(joints) = g_primitive.joints_u16(0, buffers) {
-            for (i, joint) in joints.enumerate() {
+        if let Some(joints) = g_primitive.joints(0, buffers) {
+            for (i, joint) in joints.into_u16().enumerate() {
                 vertices[i].joints_0 = joint;
             }
         }
-        if g_primitive.joints_u16(1, buffers).is_some() {
+        if g_primitive.joints(1, buffers).is_some() {
             warn!("Ignoring further joint attributes, only supporting JOINTS_0. (mesh: {}, primitive: {})",
                 mesh_index, primitive_index);
         }
 
-        if let Some(weights) = g_primitive.weights_f32(0, buffers) {
-            for (i, weights) in weights.enumerate() {
+        if let Some(weights) = g_primitive.weights(0, buffers) {
+            for (i, weights) in weights.into_f32().enumerate() {
                 vertices[i].weights_0 = weights.into();
             }
         }
-        if g_primitive.weights_f32(1, buffers).is_some() {
+        if g_primitive.weights(1, buffers).is_some() {
             warn!("Ignoring further weight attributes, only supporting WEIGHTS_0. (mesh: {}, primitive: {})",
                 mesh_index, primitive_index);
         }
 
-        let indices: Option<Vec<u32>> = g_primitive.indices_u32(buffers).map(|indices| indices.collect());
+        let indices: Option<Vec<u32>> = <gltf::Primitive as PrimitiveIterators>::indices(&g_primitive, buffers).map(|indices| indices.into_u32().collect());
 
         assert_eq!(g_primitive.mode(), Mode::Triangles, "not yet implemented: primitive mode must be Triangles.");
 

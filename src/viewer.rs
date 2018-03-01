@@ -221,7 +221,7 @@ impl GltfViewer {
         }
         //     else {
         let config = gltf_importer::Config { validation_strategy: ValidationStrategy::Complete };
-        let (gltf, buffers) = match gltf_importer::import_with_config(source, config) {
+        let (gltf, buffers) = match gltf_importer::import_with_config(source, &config) {
             Ok((gltf, buffers)) => (gltf, buffers),
             Err(err) => {
                 error!("glTF import failed: {:?}", err);
