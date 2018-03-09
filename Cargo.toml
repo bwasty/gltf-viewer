@@ -39,14 +39,14 @@ simplelog = "0.5.0"
 # itertools = "0.6.3"
 
 [dependencies.gltf]
-version = "0.9.3"
+version = "0.10.1"
 features = ["names"]
 
 [dependencies.gltf-importer]
-version = "0.9.3"
+version = "0.10.1"
 
 [dependencies.gltf-utils]
-version = "0.9.3"
+version = "0.10.1"
 
 # [dependencies.mikktspace]
 # git = "https://github.com/gltf-rs/mikktspace"
