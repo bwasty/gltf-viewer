@@ -2,6 +2,7 @@ use std::os::raw::c_void;
 use std::path::Path;
 use std::{fs, io};
 
+use base64;
 use gl;
 use gltf;
 use gltf::json::texture::MinFilter;
@@ -46,20 +47,43 @@ impl Texture {
                 }
             },
             Data::Uri { uri, mime_type } => {
-                if let Some(mime_type) = mime_type {
-                    let path = base_path.parent().unwrap_or_else(|| Path::new("./")).join(uri);
-                    let file = fs::File::open(path).unwrap();
-                    let reader = io::BufReader::new(file);
+                if uri.starts_with("data:") {
+                    let encoded = uri.split(',').nth(1).unwrap();
+                    let data = base64::decode(&encoded).unwrap();
+                    let mime_type = if let Some(ty) = mime_type {
+                        ty
+                    } else {
+                        uri.split(',')
+                            .nth(0).unwrap()
+                            .split(':')
+                            .nth(1).unwrap()
+                            .split(';')
+                            .nth(0).unwrap()
+                    };
+
                     match mime_type {
-                        "image/jpeg" => image::load(reader, JPEG),
-                        "image/png" => image::load(reader, PNG),
+                        "image/jpeg" => image::load_from_memory_with_format(&data, JPEG),
+                        "image/png" => image::load_from_memory_with_format(&data, PNG),
                         _ => panic!(format!("unsupported image type (image: {}, mime_type: {})",
                             g_img.index(), mime_type)),
                     }
                 }
                 else {
-                    let path = base_path.parent().unwrap_or_else(||Path::new("./")).join(uri);
-                    image::open(path)
+                    if let Some(mime_type) = mime_type {
+                        let path = base_path.parent().unwrap_or_else(|| Path::new("./")).join(uri);
+                        let file = fs::File::open(path).unwrap();
+                        let reader = io::BufReader::new(file);
+                        match mime_type {
+                            "image/jpeg" => image::load(reader, JPEG),
+                            "image/png" => image::load(reader, PNG),
+                            _ => panic!(format!("unsupported image type (image: {}, mime_type: {})",
+                                g_img.index(), mime_type)),
+                        }
+                    }
+                    else {
+                        let path = base_path.parent().unwrap_or_else(||Path::new("./")).join(uri);
+                        image::open(path)
+                    }
                 }
             }
         };

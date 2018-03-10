@@ -6,6 +6,7 @@
 extern crate cgmath;
 use cgmath::Deg;
 
+extern crate base64;
 extern crate collision;
 
 extern crate gl;
