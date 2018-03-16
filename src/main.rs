@@ -154,9 +154,9 @@ pub fn main() {
             warn!("filename should end with .png");
         }
         if count > 1 {
-            viewer.multiscreenshot(filename, width, height, count)
+            viewer.multiscreenshot(filename, count)
         } else {
-            viewer.screenshot(filename, width, height)
+            viewer.screenshot(filename)
         }
         return;
     }

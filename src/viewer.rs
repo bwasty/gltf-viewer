@@ -114,7 +114,15 @@ impl GltfViewer {
                 let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
 
                 // Real dimensions might be much higher on High-DPI displays
-                let (real_width, real_height) = gl_window.get_inner_size().unwrap();
+                let (mut real_width, mut real_height) = gl_window.get_inner_size().unwrap();
+
+                // TODO!!: workaround for https://github.com/tomaka/winit/issues/399
+                #[cfg(target_os = "macos")]
+                {
+                    let factor = gl_window.hidpi_factor();
+                    real_width = (real_width as f32 * factor) as u32;
+                    real_height = (real_height as f32 * factor) as u32;
+                }
 
                 unsafe { gl_window.make_current().unwrap(); }
 
@@ -314,14 +322,14 @@ impl GltfViewer {
         }
     }
 
-    pub fn screenshot(&mut self, filename: &str, width: u32, height: u32) {
+    pub fn screenshot(&mut self, filename: &str) {
         self.draw();
 
-        let mut img = DynamicImage::new_rgba8(width, height);
+        let mut img = DynamicImage::new_rgba8(self.width, self.height);
         unsafe {
             let pixels = img.as_mut_rgba8().unwrap();
             gl::PixelStorei(gl::PACK_ALIGNMENT, 1);
-            gl::ReadPixels(0, 0, width as i32, height as i32, gl::RGBA,
+            gl::ReadPixels(0, 0, self.width as i32, self.height as i32, gl::RGBA,
                 gl::UNSIGNED_BYTE, pixels.as_mut_ptr() as *mut c_void);
             gl_check_error!();
         }
@@ -333,10 +341,10 @@ impl GltfViewer {
             error!("{}", err);
         }
         else {
-            println!("Saved {}x{} screenshot to {}", width, height, filename);
+            println!("Saved {}x{} screenshot to {}", self.width, self.height, filename);
         }
     }
-    pub fn multiscreenshot(&mut self, filename: &str, width: u32, height: u32, count: u32) {
+    pub fn multiscreenshot(&mut self, filename: &str, count: u32) {
         let min_angle : f32 = 0.0 ;
         let max_angle : f32 =  2.0 * PI ;
         let increment_angle : f32 = ((max_angle - min_angle)/(count as f32)) as f32;
@@ -345,7 +353,7 @@ impl GltfViewer {
             let dot = filename.rfind('.').unwrap_or_else(|| filename.len());
             let mut actual_name = filename.to_string();
             actual_name.insert_str(dot, &format!("_{}", i));
-            self.screenshot(&actual_name[..], width,height);
+            self.screenshot(&actual_name[..]);
         }
     }
 }
@@ -373,8 +381,6 @@ fn process_events(
                     orbit_controls.camera.update_aspect_ratio(w / h);
                     orbit_controls.screen_width = w;
                     orbit_controls.screen_height = h;
-
-                    trace!("Resized to {}x{}", w, h);
                 },
                 WindowEvent::DroppedFile(_path_buf) => (), // TODO: drag file in
                 WindowEvent::MouseInput { button, state: Pressed, ..} => {

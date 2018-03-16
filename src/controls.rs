@@ -204,10 +204,10 @@ impl OrbitControls {
             target_distance *= (self.camera.fovy / 2.0).tan() * PI / 180.0;
 
             // we actually don't use screen_width, since perspective camera is fixed to screen height
-            let distance = 2.0 * delta.x * target_distance / self.screen_height;
-            self.pan_left(distance);
-            let distance = 2.0 * delta.y * target_distance / self.screen_height;
-            self.pan_up(distance);
+            let distance = 50.0 * delta.x * target_distance / self.screen_height;
+            self.pan_left(-distance);
+            let distance = 50.0 * delta.y * target_distance / self.screen_height;
+            self.pan_up(-distance);
         } else {
             // TODO!: orthographic camera pan
             warn!("unimplemented: orthographic camera pan")
