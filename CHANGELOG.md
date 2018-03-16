@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.1] - 2018-03-16
+### Changed
+* update `gltf` crate (0.9.3 -> 0.10.1)
+  - partially fixes sparse accessor handling (-> https://github.com/gltf-rs/gltf/pull/148, https://github.com/gltf-rs/gltf/issues/154)
+
+### Fixed
+* Decode images from data URIs (fully support embedded glTF files, #26)
+* Fix non-headless screenshots on high DPI displays (#23)
+* Fix panning direction (#25)
+
 ## [0.3.0] - 2018-02-23
 ### Added
 * re-add keyboard controls - `WASD` and cursor keys
