@@ -280,6 +280,9 @@ impl GltfViewer {
 
         self.orbit_controls.position = cam_pos;
         self.orbit_controls.target = center;
+        self.orbit_controls.camera.znear = size / 100.0;
+        self.orbit_controls.camera.zfar = Some(size * 20.0);
+        self.orbit_controls.camera.update_projection_matrix();
     }
 
     pub fn start_render_loop(&mut self) {
