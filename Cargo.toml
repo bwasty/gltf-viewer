@@ -36,7 +36,7 @@ image = "0.18.0"
 # reqwest = "0.7.3"
 log = "0.4.1"
 num-traits = "0.1.42"
-simplelog = "0.5.0"
+simplelog = "0.5.1"
 # itertools = "0.6.3"
 
 [dependencies.gltf]
