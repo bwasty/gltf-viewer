@@ -35,7 +35,7 @@ glutin = "0.12.0" # NOTE: check macOS workaround in viewer.rs when upgrading
 image = "0.18.0"
 # reqwest = "0.7.3"
 log = "0.4.1"
-num-traits = "0.1.42"
+num-traits = "0.2.0"
 simplelog = "0.5.1"
 # itertools = "0.6.3"
 
