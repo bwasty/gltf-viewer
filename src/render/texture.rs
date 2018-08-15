@@ -6,14 +6,15 @@ use base64;
 use gl;
 use gltf;
 use gltf::json::texture::MinFilter;
-use gltf::image::Data;
-use gltf_importer;
+use gltf::image::Source;
 
 use image;
 use image::ImageFormat::{JPEG, PNG};
 use image::DynamicImage::*;
 use image::GenericImage;
 use image::FilterType;
+
+use importdata::ImportData;
 
 pub struct Texture {
     pub index: usize, // glTF index
@@ -24,7 +25,8 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn from_gltf(g_texture: &gltf::Texture, tex_coord: u32, buffers: &gltf_importer::Buffers, base_path: &Path) -> Texture {
+    pub fn from_gltf(g_texture: &gltf::Texture, tex_coord: u32, imp: &ImportData, base_path: &Path) -> Texture {
+        let buffers = &imp.buffers;
         let mut texture_id = 0;
         unsafe {
             gl::GenTextures(1, &mut texture_id);
@@ -36,9 +38,12 @@ impl Texture {
         // TODO!: share images via Rc? detect if occurs?
         // TODO!!: better I/O abstraction...
         let g_img = g_texture.source();
-        let img = match g_img.data() {
-            Data::View { view, mime_type } => {
-                let data = buffers.view(&view).expect("Failed to get buffer view for image");
+        let img = match g_img.source() {
+            Source::View { view, mime_type } => {
+                let parent_buffer_data = &buffers[view.buffer().index()].0;
+                let begin = view.offset();
+                let end = begin + view.length();
+                let data = &parent_buffer_data[begin..end];
                 match mime_type {
                     "image/jpeg" => image::load_from_memory_with_format(data, JPEG),
                     "image/png" => image::load_from_memory_with_format(data, PNG),
@@ -46,7 +51,7 @@ impl Texture {
                         g_img.index(), mime_type)),
                 }
             },
-            Data::Uri { uri, mime_type } => {
+            Source::Uri { uri, mime_type } => {
                 if uri.starts_with("data:") {
                     let encoded = uri.split(',').nth(1).unwrap();
                     let data = base64::decode(&encoded).unwrap();
@@ -90,7 +95,7 @@ impl Texture {
 
         // TODO: handle I/O problems
         let dyn_img = img.expect("Image loading failed.");
-
+        
         let format = match dyn_img {
             ImageLuma8(_) => gl::RED,
             ImageLumaA8(_) => gl::RG,
@@ -152,26 +157,26 @@ impl Texture {
         // **Default Filtering Implementation Note:** When filtering options are defined,
         // runtime must use them. Otherwise, it is free to adapt filtering to performance or quality goals.
         if let Some(min_filter) = sampler.min_filter() {
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, min_filter.as_gl_enum());
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, min_filter.as_gl_enum() as i32);
         }
         else {
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
         }
         if let Some(mag_filter) = sampler.mag_filter() {
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, mag_filter.as_gl_enum());
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, mag_filter.as_gl_enum() as i32);
         }
         else {
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
         }
 
         let wrap_s = sampler.wrap_s().as_gl_enum();
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, wrap_s);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, wrap_s as i32);
         let wrap_t = sampler.wrap_t().as_gl_enum();
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, wrap_t);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, wrap_t as i32);
 
         let needs_power_of_two =
-            wrap_s != gl::CLAMP_TO_EDGE as i32 ||
-            wrap_t != gl::CLAMP_TO_EDGE as i32 ||
+            wrap_s != gl::CLAMP_TO_EDGE ||
+            wrap_t != gl::CLAMP_TO_EDGE ||
             mip_maps;
         (needs_power_of_two, mip_maps)
     }

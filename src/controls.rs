@@ -12,6 +12,8 @@ use num_traits::clamp;
 use render::Camera;
 use render::math::*;
 
+use glutin::dpi::PhysicalSize;
+
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
 #[derive(PartialEq, Clone, Copy)]
 pub enum CameraMovement {
@@ -78,12 +80,11 @@ pub struct OrbitControls {
     pub moving_forward: bool,
     pub moving_backward: bool,
 
-    pub screen_width: f32,
-    pub screen_height: f32,
+    pub screen_size: PhysicalSize,
 }
 
 impl OrbitControls {
-    pub fn new(position: Point3, screen_width: f32, screen_height: f32) -> Self {
+    pub fn new(position: Point3, screen_size: PhysicalSize) -> Self {
         OrbitControls {
             camera: Camera::default(),
 
@@ -112,8 +113,7 @@ impl OrbitControls {
             moving_forward: false,
             moving_backward: false,
 
-            screen_width,
-            screen_height,
+            screen_size,
         }
     }
 
@@ -149,11 +149,11 @@ impl OrbitControls {
 
         // rotating across whole screen goes 360 degrees around
         let rotate_speed = 1.0; // TODO: const/param/remove?
-        let angle = 2.0 * PI * rotate_delta.x / self.screen_width * rotate_speed;
+        let angle = 2.0 * PI * rotate_delta.x / self.screen_size.width as f32 * rotate_speed;
         self.rotate_left(angle);
 
         // rotating up and down along whole screen attempts to go 360, but limited to 180
-        let angle = 2.0 * PI * rotate_delta.y / self.screen_height * rotate_speed;
+        let angle = 2.0 * PI * rotate_delta.y / self.screen_size.height as f32 * rotate_speed;
         self.rotate_up(angle);
 
         self.rotate_start = Some(self.rotate_end);
@@ -204,9 +204,9 @@ impl OrbitControls {
             target_distance *= (self.camera.fovy / 2.0).tan() * PI / 180.0;
 
             // we actually don't use screen_width, since perspective camera is fixed to screen height
-            let distance = 50.0 * delta.x * target_distance / self.screen_height;
+            let distance = 50.0 * delta.x * target_distance / self.screen_size.height as f32;
             self.pan_left(-distance);
-            let distance = 50.0 * delta.y * target_distance / self.screen_height;
+            let distance = 50.0 * delta.y * target_distance / self.screen_size.height as f32;
             self.pan_up(-distance);
         } else {
             // TODO!: orthographic camera pan

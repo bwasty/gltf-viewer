@@ -2,7 +2,6 @@ use std::rc::Rc;
 use std::path::Path;
 
 use gltf;
-use gltf_importer;
 
 use collision::{Aabb, Union};
 
@@ -11,6 +10,7 @@ use render::math::*;
 use render::mesh::Mesh;
 use render::Root;
 use render::camera::Camera;
+use importdata::ImportData;
 
 pub struct Node {
     pub index: usize, // glTF index
@@ -36,15 +36,16 @@ impl Node {
     pub fn from_gltf(
         g_node: &gltf::Node,
         root: &mut Root,
-        buffers: &gltf_importer::Buffers,
+        imp: &ImportData,
         base_path: &Path
     ) -> Node {
         // convert matrix in 3 steps due to type system weirdness
-        let matrix = &g_node.matrix();
+        let matrix = &g_node.transform().matrix();
         let matrix: &Matrix4 = matrix.into();
         let matrix = *matrix;
 
-        let r = &g_node.rotation();
+        let decomposed = &g_node.transform().decomposed();
+        let r = decomposed.1;
         let rotation = Quaternion::new(r[3], r[0], r[1], r[2]); // NOTE: different element order!
 
         let mut mesh = None;
@@ -54,7 +55,7 @@ impl Node {
             }
 
             if mesh.is_none() { // not using else due to borrow-checking madness
-                mesh = Some(Rc::new(Mesh::from_gltf(&g_mesh, root, buffers, base_path)));
+                mesh = Some(Rc::new(Mesh::from_gltf(&g_mesh, root, imp, base_path)));
                 root.meshes.push(mesh.clone().unwrap());
             }
         }
@@ -68,8 +69,8 @@ impl Node {
             matrix,
             mesh,
             rotation,
-            scale: g_node.scale().into(),
-            translation: g_node.translation().into(),
+            scale: decomposed.2.into(),
+            translation: decomposed.0.into(),
             camera: g_node.camera().as_ref().map(Camera::from_gltf),
             name: g_node.name().map(|s| s.into()),
 

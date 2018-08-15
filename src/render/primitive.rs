@@ -7,13 +7,12 @@ use std::rc::Rc;
 use gl;
 use gltf;
 use gltf::json::mesh::Mode;
-use gltf_importer;
-use gltf_utils::PrimitiveIterators;
 
 // use camera::Camera;
 use render::math::*;
 use render::{Material, Root};
 use shader::*;
+use importdata::ImportData;
 
 #[derive(Debug)]
 pub struct Vertex {
@@ -94,22 +93,33 @@ impl Primitive {
         primitive_index: usize,
         mesh_index: usize,
         root: &mut Root,
-        buffers: &gltf_importer::Buffers,
+        imp: &ImportData,
         base_path: &Path) -> Primitive
     {
         // positions
-        let positions = g_primitive.positions(buffers)
-            .expect(&format!("primitives must have the POSITION attribute (mesh: {}, primitive: {})",
-                mesh_index, primitive_index));
+        //let positions = g_primitive.positions(buffers)
+        //    .expect(&format!("primitives must have the POSITION attribute (mesh: {}, primitive: {})",
+        //        mesh_index, primitive_index));
 
-        let bounds = g_primitive.position_bounds()
-            .unwrap(); // can't fail if validated "minimally"
+        let buffers = &imp.buffers;
+        let reader = g_primitive.reader(|buffer| Some(&buffers[buffer.index()]));
+        let positions = {
+            let iter = reader
+                .read_positions()
+                .expect(&format!(
+                    "primitives must have the POSITION attribute (mesh: {}, primitive: {})",
+                    mesh_index, primitive_index));
+            iter.collect::<Vec<_>>()
+        };
+
+        let bounds = g_primitive.bounding_box();
         let bounds = Aabb3 {
             min: bounds.min.into(),
             max: bounds.max.into()
         };
 
         let mut vertices: Vec<Vertex> = positions
+            .into_iter()
             .map(|position| {
                 Vertex {
                     position: Vector3::from(position),
@@ -120,7 +130,7 @@ impl Primitive {
         let mut shader_flags = ShaderFlags::empty();
 
         // normals
-        if let Some(normals) = g_primitive.normals(buffers) {
+        if let Some(normals) = reader.read_normals() {
             for (i, normal) in normals.enumerate() {
                 vertices[i].normal = Vector3::from(normal);
             }
@@ -132,7 +142,7 @@ impl Primitive {
         }
 
         // tangents
-        if let Some(tangents) = g_primitive.tangents(buffers) {
+        if let Some(tangents) = reader.read_tangents() {
             for (i, tangent) in tangents.enumerate() {
                 vertices[i].tangent = Vector4::from(tangent);
             }
@@ -145,7 +155,7 @@ impl Primitive {
 
         // texture coordinates
         let mut tex_coord_set = 0;
-        while let Some(tex_coords) = g_primitive.tex_coords(tex_coord_set, buffers) {
+        while let Some(tex_coords) = reader.read_tex_coords(tex_coord_set) {
             if tex_coord_set > 1 {
                 warn!("Ignoring texture coordinate set {}, \
                         only supporting 2 sets at the moment. (mesh: {}, primitive: {})",
@@ -165,39 +175,43 @@ impl Primitive {
         }
 
         // colors
-        if let Some(colors) = g_primitive.colors(0, buffers) {
+        if let Some(colors) = reader.read_colors(0) {
             let colors = colors.into_rgba_f32();
             for (i, c) in colors.enumerate() {
                 vertices[i].color_0 = c.into();
             }
             shader_flags |= ShaderFlags::HAS_COLORS;
         }
-        if g_primitive.colors(1, buffers).is_some() {
+        if reader.read_colors(1).is_some() {
             warn!("Ignoring further color attributes, only supporting COLOR_0. (mesh: {}, primitive: {})",
                 mesh_index, primitive_index);
         }
 
-        if let Some(joints) = g_primitive.joints(0, buffers) {
+        if let Some(joints) = reader.read_joints(0) {
             for (i, joint) in joints.into_u16().enumerate() {
                 vertices[i].joints_0 = joint;
             }
         }
-        if g_primitive.joints(1, buffers).is_some() {
+        if reader.read_joints(1).is_some() {
             warn!("Ignoring further joint attributes, only supporting JOINTS_0. (mesh: {}, primitive: {})",
                 mesh_index, primitive_index);
         }
 
-        if let Some(weights) = g_primitive.weights(0, buffers) {
+        if let Some(weights) = reader.read_weights(0) {
             for (i, weights) in weights.into_f32().enumerate() {
                 vertices[i].weights_0 = weights.into();
             }
         }
-        if g_primitive.weights(1, buffers).is_some() {
+        if reader.read_weights(1).is_some() {
             warn!("Ignoring further weight attributes, only supporting WEIGHTS_0. (mesh: {}, primitive: {})",
                 mesh_index, primitive_index);
         }
 
-        let indices: Option<Vec<u32>> = <gltf::Primitive as PrimitiveIterators>::indices(&g_primitive, buffers).map(|indices| indices.into_u32().collect());
+        let indices = reader
+            .read_indices()
+            .map(|read_indices| {
+                read_indices.into_u32().collect::<Vec<_>>()
+            });
 
         assert_eq!(g_primitive.mode(), Mode::Triangles, "not yet implemented: primitive mode must be Triangles.");
 
@@ -209,7 +223,7 @@ impl Primitive {
         }
 
         if material.is_none() { // no else due to borrow checker madness
-            let mat = Rc::new(Material::from_gltf(&g_material, root, buffers, base_path));
+            let mat = Rc::new(Material::from_gltf(&g_material, root, imp, base_path));
             root.materials.push(Rc::clone(&mat));
             material = Some(mat);
         };
