@@ -106,6 +106,9 @@ impl Node {
             self.bounds = mesh.bounds
                 .transform(&self.final_transform);
         }
+        else if self.camera.is_some() {
+            // Skip updating bounds for Cameras, since they don't have bounds.
+        }
         else if self.children.is_empty() {
             // Cameras (others?) have neither mesh nor children. Their position is the origin
             // TODO!: are there other cases? Do bounds matter for cameras?
