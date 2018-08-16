@@ -5,6 +5,7 @@
  [![Build Status](https://travis-ci.org/bwasty/gltf-viewer.svg?branch=master)](https://travis-ci.org/bwasty/gltf-viewer)
  [![Build status](https://ci.appveyor.com/api/projects/status/51ukh02thpb0r9cf/branch/master?svg=true)](https://ci.appveyor.com/project/bwasty/gltf-viewer/branch/master)
  [![Docker build status](https://img.shields.io/docker/build/bwasty/gltf-viewer.svg)](https://hub.docker.com/r/bwasty/gltf-viewer/tags/)
+ [![Maintenance](https://img.shields.io/badge/maintenance-passively--maintained-yellowgreen.svg)](https://github.com/rust-lang/rfcs/blob/master/text/1824-crates.io-default-ranking.md#maintenance)
 
 Rust [glTF 2.0](https://github.com/KhronosGroup/glTF) viewer, written using the [gltf](https://github.com/gltf-rs/gltf) crate and plain OpenGL.
 
@@ -79,16 +80,3 @@ DOCKER_IMAGE=bwasty/gltf-viewer ./screenshot_docker.sh Box.glb
 ```
 
 Alternatively, you can also install `xvfb` and use `./run_xvfb.sh` directly (Linux only).
-
-## Goals
-* Complete gltF 2.0 support
-* Reusable & extensible renderer
-  - may be extracted later for a `gltf-engine` that can be used for 3D apps
-* Platforms: Windows, Linux, macOS, Browser (via WebAssembly)
-* Graphics backends:
-  - OpenGL ES 3.0 (-> WebGL 2.0 via WebAssembly)
-    - currently OpenGL 3.3 is used
-  - Vulkan?
-* VR support
-  * Focus: OpenVR (HTC Vive)
-  * WebVR?

@@ -17,6 +17,7 @@ version = "0.3.2-alpha.0"
 build = false # TODO: git-version doesn't work on Travis
 
 [badges]
+maintenance = { status = "passively-maintained" }
 
 [badges.travis-ci]
 branch = "master"
