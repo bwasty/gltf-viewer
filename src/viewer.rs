@@ -45,6 +45,7 @@ pub struct CameraOptions {
     pub position: Option<Vector3>,
     pub target: Option<Vector3>,
     pub fovy: Deg<f32>,
+    pub straight: bool,
 }
 
 pub struct GltfViewer {
@@ -202,7 +203,7 @@ impl GltfViewer {
             }
         } else {
             info!("Determining camera view from bounding box");
-            viewer.set_camera_from_bounds(false);
+            viewer.set_camera_from_bounds(camera_options.straight);
 
             if let Some(p) = camera_options.position {
                 viewer.orbit_controls.position = Point3::from_vec(p)

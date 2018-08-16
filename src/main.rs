@@ -85,6 +85,9 @@ pub fn main() {
         .arg(Arg::with_name("headless")
             .long("headless")
             .help("Use real headless rendering for screenshots (default is a hidden window) [EXPERIMENTAL - see README for details]"))
+        .arg(Arg::with_name("straight")
+            .long("straight")
+            .help("Position camera in front of model if using default camera (i.e. glTF doesn't contain a camera or `--cam-index -1` is passed."))
         .arg(Arg::with_name("scene")
             .long("scene")
             .default_value("0")
@@ -130,6 +133,7 @@ pub fn main() {
         position: args.value_of("CAM-POS").map(|v| parse_vec3(v).unwrap()),
         target: args.value_of("CAM-TARGET").map(|v| parse_vec3(v).unwrap()),
         fovy: args.value_of("CAM-FOVY").map(|n| Deg(n.parse().unwrap())).unwrap(),
+        straight: args.is_present("straight"),
     };
 
     let log_level = match args.occurrences_of("verbose") {
