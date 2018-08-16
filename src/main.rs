@@ -87,7 +87,7 @@ pub fn main() {
             .help("Use real headless rendering for screenshots (default is a hidden window) [EXPERIMENTAL - see README for details]"))
         .arg(Arg::with_name("straight")
             .long("straight")
-            .help("Position camera in front of model if not using default camera"))
+            .help("Position camera in front of model if using default camera (i.e. glTF doesn't contain a camera or `--cam-index -1` is passed."))
         .arg(Arg::with_name("scene")
             .long("scene")
             .default_value("0")
