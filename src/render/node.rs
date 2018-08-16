@@ -106,21 +106,11 @@ impl Node {
             self.bounds = mesh.bounds
                 .transform(&self.final_transform);
         }
-        else if self.camera.is_some() {
-            // Skip updating bounds for Cameras, since they don't have bounds.
-        }
-        else if self.children.is_empty() {
-            // Cameras (others?) have neither mesh nor children. Their position is the origin
-            // TODO!: are there other cases? Do bounds matter for cameras?
-            self.bounds = Aabb3::zero();
-            self.bounds = self.bounds.transform(&self.final_transform);
-        }
-        else {
-            for node_id in &self.children {
-                let node = root.unsafe_get_node_mut(*node_id);
-                node.update_bounds(root);
-                self.bounds = self.bounds.union(&node.bounds);
-            }
+
+        for node_id in &self.children {
+            let node = root.unsafe_get_node_mut(*node_id);
+            node.update_bounds(root);
+            self.bounds = self.bounds.union(&node.bounds);
         }
     }
 
