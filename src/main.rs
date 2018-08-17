@@ -14,8 +14,6 @@ extern crate gl;
 extern crate glutin;
 
 extern crate gltf;
-extern crate gltf_importer;
-extern crate gltf_utils;
 
 extern crate image;
 extern crate num_traits;
@@ -37,6 +35,7 @@ mod shader;
 mod controls;
 mod framebuffer;
 mod macros;
+mod importdata;
 // TODO!: adapt Source...
 // mod http_source;
 // use http_source::HttpSource;

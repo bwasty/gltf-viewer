@@ -1,5 +1,4 @@
 use std::f32::consts::PI;
-use std::fs::File;
 use std::os::raw::c_void;
 use std::path::Path;
 use std::process;
@@ -8,6 +7,7 @@ use std::time::Instant;
 use cgmath::{ Deg, Point3 };
 use collision::Aabb;
 use gl;
+use gltf;
 use glutin;
 use glutin::{
     Api,
@@ -19,16 +19,16 @@ use glutin::{
     VirtualKeyCode,
     WindowEvent,
 };
+use glutin::dpi::PhysicalSize;
 use glutin::ElementState::*;
 
-use gltf_importer;
-use gltf_importer::config::ValidationStrategy;
-use image::{DynamicImage, ImageFormat};
+use image::{DynamicImage};
 
 
 use controls::{OrbitControls, NavState};
 use controls::CameraMovement::*;
 use framebuffer::Framebuffer;
+use importdata::ImportData;
 use render::*;
 use render::math::*;
 use utils::{print_elapsed, FrameTimer, gl_check_error, print_context_info};
@@ -49,8 +49,8 @@ pub struct CameraOptions {
 }
 
 pub struct GltfViewer {
-    width: u32,
-    height: u32,
+    size: PhysicalSize,
+    dpi_factor: f64,
 
     orbit_controls: OrbitControls,
     first_mouse: bool,
@@ -83,7 +83,7 @@ impl GltfViewer {
     ) -> GltfViewer {
         let gl_request = GlRequest::Specific(Api::OpenGl, (3, 3));
         let gl_profile = GlProfile::Core;
-        let (events_loop, gl_window, width, height) =
+        let (events_loop, gl_window, dpi_factor, inner_size) =
             if headless {
                 let headless_context = glutin::HeadlessRendererBuilder::new(width, height)
                     // .with_gl(gl_request)
@@ -96,16 +96,17 @@ impl GltfViewer {
                 framebuffer.bind();
                 unsafe { gl::Viewport(0, 0, width as i32, height as i32); }
 
-                (None, None, width, height) // TODO: real height (retina?)
+                (None, None, 1.0, PhysicalSize::new(width as f64, height as f64)) // TODO: real height (retina? (should be the same as PhysicalSize when headless?))
             }
             else {
                 // glutin: initialize and configure
                 let events_loop = glutin::EventsLoop::new();
+                let window_size = glutin::dpi::LogicalSize::new(width as f64, height as f64);
 
                 // TODO?: hints for 4.1, core profile, forward compat
                 let window = glutin::WindowBuilder::new()
                         .with_title("gltf-viewer")
-                        .with_dimensions(width, height)
+                        .with_dimensions(window_size)
                         .with_visibility(visible);
 
                 let context = glutin::ContextBuilder::new()
@@ -115,34 +116,27 @@ impl GltfViewer {
                 let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
 
                 // Real dimensions might be much higher on High-DPI displays
-                let (mut real_width, mut real_height) = gl_window.get_inner_size().unwrap();
-
-                // TODO!!: workaround for https://github.com/tomaka/winit/issues/399
-                #[cfg(target_os = "macos")]
-                {
-                    let factor = gl_window.hidpi_factor();
-                    real_width = (real_width as f32 * factor) as u32;
-                    real_height = (real_height as f32 * factor) as u32;
-                }
+                let dpi_factor = gl_window.get_hidpi_factor();
+                let inner_size = gl_window.get_inner_size().unwrap().to_physical(dpi_factor);
 
                 unsafe { gl_window.make_current().unwrap(); }
 
                 // gl: load all OpenGL function pointers
                 gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
 
-                (Some(events_loop), Some(gl_window), real_width, real_height)
+                (Some(events_loop), Some(gl_window), dpi_factor, inner_size)
             };
 
         let mut orbit_controls = OrbitControls::new(
-            Point3::new(0.0, 0.0, 2.0), width as f32, height as f32
-        );
+            Point3::new(0.0, 0.0, 2.0),
+            inner_size);
         orbit_controls.camera = Camera::default();
         orbit_controls.camera.fovy = camera_options.fovy;
-        orbit_controls.camera.update_aspect_ratio(width as f32 / height as f32); // updates projection matrix
+        orbit_controls.camera.update_aspect_ratio(inner_size.width as f32 / inner_size.height as f32); // updates projection matrix
 
         let first_mouse = true;
-        let last_x: f32 = width as f32 / 2.0;
-        let last_y: f32 = height as f32 / 2.0;
+        let last_x: f32 = inner_size.width as f32 / 2.0;
+        let last_y: f32 = inner_size.height as f32 / 2.0;
 
         unsafe {
             print_context_info();
@@ -167,8 +161,8 @@ impl GltfViewer {
 
         let (root, scene) = Self::load(source, scene_index);
         let mut viewer = GltfViewer {
-            width,
-            height,
+            size: inner_size,
+            dpi_factor,
 
             orbit_controls,
             first_mouse, last_x, last_y,
@@ -229,31 +223,31 @@ impl GltfViewer {
             // gltf
         }
         //     else {
-        let config = gltf_importer::Config { validation_strategy: ValidationStrategy::Complete };
-        let (gltf, buffers) = match gltf_importer::import_with_config(source, &config) {
-            Ok((gltf, buffers)) => (gltf, buffers),
+        let (doc, buffers, images) = match gltf::import(source) {
+            Ok(tuple) => tuple,
             Err(err) => {
                 error!("glTF import failed: {:?}", err);
-                if let gltf_importer::Error::Io(_) = err {
+                if let gltf::Error::Io(_) = err {
                     error!("Hint: Are the .bin file(s) referenced by the .gltf file available?")
                 }
                 process::exit(1)
             },
         };
+        let imp = ImportData { doc, buffers, images };
 
         print_elapsed("Imported glTF in ", &start_time);
         start_time = Instant::now();
 
         // load first scene
-        if scene_index >= gltf.scenes().len() {
-            error!("Scene index too high - file has only {} scene(s)", gltf.scenes().len());
+        if scene_index >= imp.doc.scenes().len() {
+            error!("Scene index too high - file has only {} scene(s)", imp.doc.scenes().len());
             process::exit(3)
         }
         let base_path = Path::new(source);
-        let mut root = Root::from_gltf(&gltf, &buffers, base_path);
-        let scene = Scene::from_gltf(&gltf.scenes().nth(scene_index).unwrap(), &mut root);
+        let mut root = Root::from_gltf(&imp, base_path);
+        let scene = Scene::from_gltf(&imp.doc.scenes().nth(scene_index).unwrap(), &mut root);
         print_elapsed(&format!("Loaded scene with {} nodes, {} meshes in ",
-                gltf.nodes().count(), root.meshes.len()), &start_time);
+                imp.doc.nodes().count(), imp.doc.meshes().len()), &start_time);
 
         (root, scene)
     }
@@ -297,7 +291,8 @@ impl GltfViewer {
             let keep_running = process_events(
                 &mut self.events_loop.as_mut().unwrap(), self.gl_window.as_mut().unwrap(),
                 &mut self.orbit_controls,
-                &mut self.width, &mut self.height);
+                &mut self.dpi_factor,
+                &mut self.size);
             if !keep_running {
                 unsafe { gl_check_error!(); } // final error check so errors don't go unnoticed
                 break
@@ -329,23 +324,21 @@ impl GltfViewer {
     pub fn screenshot(&mut self, filename: &str) {
         self.draw();
 
-        let mut img = DynamicImage::new_rgba8(self.width, self.height);
+        let mut img = DynamicImage::new_rgba8(self.size.width as u32, self.size.height as u32);
         unsafe {
             let pixels = img.as_mut_rgba8().unwrap();
             gl::PixelStorei(gl::PACK_ALIGNMENT, 1);
-            gl::ReadPixels(0, 0, self.width as i32, self.height as i32, gl::RGBA,
+            gl::ReadPixels(0, 0, self.size.width as i32, self.size.height as i32, gl::RGBA,
                 gl::UNSIGNED_BYTE, pixels.as_mut_ptr() as *mut c_void);
             gl_check_error!();
         }
 
         let img = img.flipv();
-
-        let mut file = File::create(filename).unwrap();
-        if let Err(err) = img.save(&mut file, ImageFormat::PNG) {
+        if let Err(err) = img.save(filename) {
             error!("{}", err);
         }
         else {
-            println!("Saved {}x{} screenshot to {}", self.width, self.height, filename);
+            println!("Saved {}x{} screenshot to {}", self.size.width, self.size.height, filename);
         }
     }
     pub fn multiscreenshot(&mut self, filename: &str, count: u32) {
@@ -367,26 +360,34 @@ fn process_events(
     events_loop: &mut glutin::EventsLoop,
     gl_window: &glutin::GlWindow,
     mut orbit_controls: &mut OrbitControls,
-    width: &mut u32,
-    height: &mut u32) -> bool
+    dpi_factor: &mut f64,
+    size: &mut PhysicalSize) -> bool
 {
     let mut keep_running = true;
     #[allow(single_match)]
     events_loop.poll_events(|event| {
         match event {
             glutin::Event::WindowEvent{ event, .. } => match event {
-                WindowEvent::Closed => keep_running = false,
-                WindowEvent::Resized(w, h) => {
-                    gl_window.resize(w, h);
-                    *width = w;
-                    *height = h;
-                    let w = w as f32;
-                    let h = h as f32;
-                    orbit_controls.camera.update_aspect_ratio(w / h);
-                    orbit_controls.screen_width = w;
-                    orbit_controls.screen_height = h;
+                WindowEvent::CloseRequested => {
+                    keep_running = false;
                 },
-                WindowEvent::DroppedFile(_path_buf) => (), // TODO: drag file in
+                WindowEvent::Destroyed => {
+                    // Log and exit?
+                    panic!("WindowEvent::Destroyed, unimplemented.");
+                },
+                WindowEvent::Resized(logical) => {
+                    let ph = logical.to_physical(*dpi_factor);
+                    gl_window.resize(ph);
+                    *size = ph;
+                    orbit_controls.camera.update_aspect_ratio((ph.width / ph.height) as f32);
+                    orbit_controls.screen_size = ph;
+                },
+                WindowEvent::HiDpiFactorChanged(f) => {
+                    *dpi_factor = f;
+                },
+                WindowEvent::DroppedFile(_path_buf) => {
+                    () // TODO: drag file in
+                }
                 WindowEvent::MouseInput { button, state: Pressed, ..} => {
                     match button {
                         MouseButton::Left => {
@@ -407,12 +408,13 @@ fn process_events(
                         _ => ()
                     }
                 }
-                WindowEvent::CursorMoved { position: (xpos, ypos), .. } => {
-                    let (xpos, ypos) = (xpos as f32, ypos as f32);
-                    orbit_controls.handle_mouse_move(xpos, ypos);
+                WindowEvent::CursorMoved { position, .. } => {
+                    let ph = position.to_physical(*dpi_factor);
+                    orbit_controls.handle_mouse_move(ph)
                 },
-                WindowEvent::MouseWheel { delta: MouseScrollDelta::PixelDelta(_xoffset, yoffset), .. } => {
-                    orbit_controls.process_mouse_scroll(yoffset);
+                WindowEvent::MouseWheel { delta: MouseScrollDelta::PixelDelta(logical), .. } => {
+                    let ph = logical.to_physical(*dpi_factor);
+                    orbit_controls.process_mouse_scroll(ph.y as f32);
                 }
                 WindowEvent::MouseWheel { delta: MouseScrollDelta::LineDelta(_rows, lines), .. } => {
                     orbit_controls.process_mouse_scroll(lines * 3.0);

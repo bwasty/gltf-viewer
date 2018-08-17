@@ -4,10 +4,10 @@ use std::path::Path;
 use collision::{Aabb, Aabb3, Union};
 
 use gltf;
-use gltf_importer;
 
 use render::math::*;
 use render::{Primitive, Root};
+use importdata::ImportData;
 
 pub struct Mesh {
     pub index: usize, // glTF index
@@ -23,13 +23,13 @@ impl Mesh {
     pub fn from_gltf(
         g_mesh: &gltf::Mesh,
         root: &mut Root,
-        buffers: &gltf_importer::Buffers,
+        imp: &ImportData,
         base_path: &Path,
     ) -> Mesh {
         let primitives: Vec<Primitive> = g_mesh.primitives()
             .enumerate()
             .map(|(i, g_prim)| {
-                Primitive::from_gltf(&g_prim, i, g_mesh.index(), root, buffers, base_path)
+                Primitive::from_gltf(&g_prim, i, g_mesh.index(), root, imp, base_path)
             })
             .collect();
 

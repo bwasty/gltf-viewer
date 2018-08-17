@@ -4,11 +4,9 @@ use std::rc::Rc;
 use std::collections::HashMap;
 use std::path::Path;
 
-use gltf;
-use gltf_importer;
-
 use shader::*;
 use render::{Mesh, Node, Texture, Material};
+use importdata::ImportData;
 
 #[derive(Default)]
 pub struct Root {
@@ -23,10 +21,10 @@ pub struct Root {
 }
 
 impl Root {
-    pub fn from_gltf(gltf: &gltf::Gltf, buffers: &gltf_importer::Buffers, base_path: &Path) -> Self {
+    pub fn from_gltf(imp: &ImportData, base_path: &Path) -> Self {
         let mut root = Root::default();
-        let nodes = gltf.nodes()
-            .map(|g_node| Node::from_gltf(&g_node, &mut root, buffers, base_path))
+        let nodes = imp.doc.nodes()
+            .map(|g_node| Node::from_gltf(&g_node, &mut root, imp, base_path))
             .collect();
         root.nodes = nodes;
         root.camera_nodes = root.nodes.iter()
