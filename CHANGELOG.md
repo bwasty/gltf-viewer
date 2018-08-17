@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased]
+### Added
+* `--straight` CLI parameter: Position camera in front of model if using default camera (i.e. glTF doesn't contain a camera or `--cam-index -1` is passed) ([#49](https://github.com/bwasty/gltf-viewer/pull/49))
+* Support more glTF options ([#51](https://github.com/bwasty/gltf-viewer/pull/51)/[#3](https://github.com/bwasty/gltf-viewer/issues/3), now complete apart from animations):
+  - `TEXCOORD_1`
+  - alpha blending (Alpha Mode, Alpha Cutoff)
+    - no depth/transparency sorting yet though, so result isn't always correct
+  - all draw modes (Points, Lines, Triangle Strips etc.)
+
+### Fixed
+* Rendering of large objects -> dynamic near/far plane ([#31](https://github.com/bwasty/gltf-viewer/pull/31))
+* Adding camera bounds cause incorrect bounding box estimation ([#47](https://github.com/bwasty/gltf-viewer/pull/47))
+* Minor PBR shader fixes (copied from the reference shader)
+
 ## [0.3.1] - 2018-03-16
 ### Changed
 * update `gltf` crate (0.9.3 -> 0.10.1)
