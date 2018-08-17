@@ -15,7 +15,6 @@ use importdata::ImportData;
 pub struct Node {
     pub index: usize, // glTF index
     pub children: Vec<usize>,
-    pub matrix: Matrix4,
     pub mesh: Option<Rc<Mesh>>,
     pub rotation: Quaternion,
     pub scale: Vector3,
@@ -31,18 +30,12 @@ pub struct Node {
 
 
 impl Node {
-    // TODO!: refactor transformations using mint and non-deprecated functions
     pub fn from_gltf(
         g_node: &gltf::Node,
         root: &mut Root,
         imp: &ImportData,
         base_path: &Path
     ) -> Node {
-        // convert matrix in 3 steps due to type system weirdness
-        let matrix = &g_node.transform().matrix();
-        let matrix: &Matrix4 = matrix.into();
-        let matrix = *matrix;
-
         let (trans, rot, scale) = g_node.transform().decomposed();
         let r = rot;
         let rotation = Quaternion::new(r[3], r[0], r[1], r[2]); // NOTE: different element order!
@@ -65,7 +58,6 @@ impl Node {
         Node {
             index: g_node.index(),
             children,
-            matrix,
             mesh,
             rotation,
             scale: scale.into(),
@@ -82,16 +74,10 @@ impl Node {
     pub fn update_transform(&mut self, root: &mut Root, parent_transform: &Matrix4) {
         self.final_transform = *parent_transform;
 
-        if !self.matrix.is_identity() {
-            self.final_transform = self.final_transform * self.matrix;
-        }
-        else {
-            // TODO?: detect if all default and set None? does NOT happen for any sample model
-            self.final_transform = self.final_transform *
-                Matrix4::from_translation(self.translation) *
-                Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, self.scale.z) *
-                Matrix4::from(self.rotation);
-        }
+        self.final_transform = self.final_transform *
+            Matrix4::from_translation(self.translation) *
+            Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, self.scale.z) *
+            Matrix4::from(self.rotation);
 
         for node_id in &self.children {
             let node = root.unsafe_get_node_mut(*node_id);
