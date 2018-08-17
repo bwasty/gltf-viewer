@@ -286,22 +286,25 @@ impl Primitive {
         if let Some(ref base_color_texture) = mat.base_color_texture {
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, base_color_texture.id);
+            shader.set_int(uniforms.u_BaseColorTexCoord, base_color_texture.tex_coord as i32);
         }
         if let Some(ref normal_texture) = mat.normal_texture {
             gl::ActiveTexture(gl::TEXTURE1);
             gl::BindTexture(gl::TEXTURE_2D, normal_texture.id);
+            shader.set_int(uniforms.u_NormalTexCoord, normal_texture.tex_coord as i32);
             shader.set_float(uniforms.u_NormalScale, mat.normal_scale.unwrap_or(1.0));
         }
         if let Some(ref emissive_texture) = mat.emissive_texture {
             gl::ActiveTexture(gl::TEXTURE2);
             gl::BindTexture(gl::TEXTURE_2D, emissive_texture.id);
-
+            shader.set_int(uniforms.u_EmissiveTexCoord, emissive_texture.tex_coord as i32);
             shader.set_vector3(uniforms.u_EmissiveFactor, &mat.emissive_factor);
         }
 
         if let Some(ref mr_texture) = mat.metallic_roughness_texture {
             gl::ActiveTexture(gl::TEXTURE3);
             gl::BindTexture(gl::TEXTURE_2D, mr_texture.id);
+            shader.set_int(uniforms.u_MetallicRoughnessTexCoord, mr_texture.tex_coord as i32);
         }
         shader.set_vec2(uniforms.u_MetallicRoughnessValues,
             mat.metallic_factor, mat.roughness_factor);
@@ -309,7 +312,7 @@ impl Primitive {
         if let Some(ref occlusion_texture) = mat.occlusion_texture {
             gl::ActiveTexture(gl::TEXTURE4);
             gl::BindTexture(gl::TEXTURE_2D, occlusion_texture.id);
-
+            shader.set_int(uniforms.u_OcclusionTexCoord, occlusion_texture.tex_coord as i32);
             shader.set_float(uniforms.u_OcclusionStrength, mat.occlusion_strength);
         }
     }

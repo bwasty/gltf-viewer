@@ -34,20 +34,25 @@ uniform sampler2D u_brdfLUT;
 
 #ifdef HAS_BASECOLORMAP
 uniform sampler2D u_BaseColorSampler;
+uniform int u_BaseColorTexCoord;
 #endif
 #ifdef HAS_NORMALMAP
 uniform sampler2D u_NormalSampler;
+uniform int u_NormalTexCoord;
 uniform float u_NormalScale;
 #endif
 #ifdef HAS_EMISSIVEMAP
 uniform sampler2D u_EmissiveSampler;
+uniform int u_EmissiveTexCoord;
 uniform vec3 u_EmissiveFactor;
 #endif
 #ifdef HAS_METALROUGHNESSMAP
 uniform sampler2D u_MetallicRoughnessSampler;
+uniform int u_MetallicRoughnessTexCoord;
 #endif
 #ifdef HAS_OCCLUSIONMAP
 uniform sampler2D u_OcclusionSampler;
+uniform int u_OcclusionTexCoord;
 uniform float u_OcclusionStrength;
 #endif
 
@@ -64,7 +69,7 @@ uniform vec4 u_ScaleIBLAmbient;
 
 in vec3 v_Position;
 
-in vec2 v_UV;
+in vec2 v_UV[2];
 
 in vec4 v_Color;
 
@@ -108,8 +113,8 @@ vec3 getNormal()
 #ifndef HAS_TANGENTS
     vec3 pos_dx = dFdx(v_Position);
     vec3 pos_dy = dFdy(v_Position);
-    vec3 tex_dx = dFdx(vec3(v_UV, 0.0));
-    vec3 tex_dy = dFdy(vec3(v_UV, 0.0));
+    vec3 tex_dx = dFdx(vec3(v_UV[0], 0.0));
+    vec3 tex_dy = dFdy(vec3(v_UV[0], 0.0));
     vec3 t = (tex_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_dy.t - tex_dy.s * tex_dx.t);
 
 #ifdef HAS_NORMALS
@@ -126,7 +131,7 @@ vec3 getNormal()
 #endif
 
 #ifdef HAS_NORMALMAP
-    vec3 n = texture(u_NormalSampler, v_UV).rgb;
+    vec3 n = texture(u_NormalSampler, v_UV[u_NormalTexCoord]).rgb;
     n = normalize(tbn * ((2.0 * n - 1.0) * vec3(u_NormalScale, u_NormalScale, 1.0)));
 #else
     // The tbn matrix is linearly interpolated, so we need to re-normalize
@@ -219,7 +224,7 @@ void main()
 #ifdef HAS_METALROUGHNESSMAP
     // Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel.
     // This layout intentionally reserves the 'r' channel for (optional) occlusion map data
-    vec4 mrSample = texture(u_MetallicRoughnessSampler, v_UV);
+    vec4 mrSample = texture(u_MetallicRoughnessSampler, v_UV[u_MetallicRoughnessTexCoord]);
     perceptualRoughness = mrSample.g * perceptualRoughness;
     metallic = mrSample.b * metallic;
 #endif
@@ -231,7 +236,7 @@ void main()
 
     // The albedo may be defined from a base texture or a flat color
 #ifdef HAS_BASECOLORMAP
-    vec4 baseColor = texture(u_BaseColorSampler, v_UV) * u_BaseColorFactor;
+    vec4 baseColor = texture(u_BaseColorSampler, v_UV[u_BaseColorTexCoord]) * u_BaseColorFactor;
 #else
     vec4 baseColor = u_BaseColorFactor;
 #endif
@@ -299,12 +304,12 @@ void main()
 
     // Apply optional PBR terms for additional (optional) shading
 #ifdef HAS_OCCLUSIONMAP
-    float ao = texture(u_OcclusionSampler, v_UV).r;
+    float ao = texture(u_OcclusionSampler, v_UV[u_OcclusionTexCoord]).r;
     color = mix(color, color * ao, u_OcclusionStrength);
 #endif
 
 #ifdef HAS_EMISSIVEMAP
-    vec3 emissive = texture(u_EmissiveSampler, v_UV).rgb * u_EmissiveFactor;
+    vec3 emissive = texture(u_EmissiveSampler, v_UV[u_EmissiveTexCoord]).rgb * u_EmissiveFactor;
     color += emissive;
 #endif
 
