@@ -12,6 +12,7 @@ use num_traits::clamp;
 use render::Camera;
 use render::math::*;
 
+use glutin::dpi::PhysicalPosition;
 use glutin::dpi::PhysicalSize;
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
@@ -130,17 +131,17 @@ impl OrbitControls {
         Matrix4::look_at(self.position, self.target, vec3(0.0, 1.0, 0.0))
     }
 
-    pub fn handle_mouse_move(&mut self, x: f32, y: f32) {
+    pub fn handle_mouse_move(&mut self, pos: PhysicalPosition) {
         match self.state {
-            NavState::Rotating => self.handle_mouse_move_rotate(x, y),
-            NavState::Panning => self.handle_mouse_move_pan(x, y),
+            NavState::Rotating => self.handle_mouse_move_rotate(pos),
+            NavState::Panning => self.handle_mouse_move_pan(pos),
             NavState::None => ()
         }
     }
 
-    fn handle_mouse_move_rotate(&mut self, x: f32, y: f32) {
-        self.rotate_end.x = x;
-        self.rotate_end.y = y;
+    fn handle_mouse_move_rotate(&mut self, pos: PhysicalPosition) {
+        self.rotate_end.x = pos.x as f32;
+        self.rotate_end.y = pos.y as f32;
         let rotate_delta = if let Some(rotate_start) = self.rotate_start {
             self.rotate_end - rotate_start
         } else {
@@ -178,9 +179,9 @@ impl OrbitControls {
         self.spherical_delta.phi -= angle;
     }
 
-    fn handle_mouse_move_pan(&mut self, x: f32, y: f32) {
-        self.pan_end.x = x;
-        self.pan_end.y = y;
+    fn handle_mouse_move_pan(&mut self, pos: PhysicalPosition) {
+        self.pan_end.x = pos.x as f32;
+        self.pan_end.y = pos.y as f32;
 
         let pan_delta = if let Some(pan_start) = self.pan_start {
             self.pan_end - pan_start

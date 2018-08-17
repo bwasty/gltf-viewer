@@ -32,7 +32,6 @@ pub struct Node {
 
 impl Node {
     // TODO!: refactor transformations using mint and non-deprecated functions
-    #[allow(deprecated)]
     pub fn from_gltf(
         g_node: &gltf::Node,
         root: &mut Root,
@@ -44,8 +43,8 @@ impl Node {
         let matrix: &Matrix4 = matrix.into();
         let matrix = *matrix;
 
-        let decomposed = &g_node.transform().decomposed();
-        let r = decomposed.1;
+        let (trans, rot, scale) = g_node.transform().decomposed();
+        let r = rot;
         let rotation = Quaternion::new(r[3], r[0], r[1], r[2]); // NOTE: different element order!
 
         let mut mesh = None;
@@ -69,8 +68,8 @@ impl Node {
             matrix,
             mesh,
             rotation,
-            scale: decomposed.2.into(),
-            translation: decomposed.0.into(),
+            scale: scale.into(),
+            translation: trans.into(),
             camera: g_node.camera().as_ref().map(Camera::from_gltf),
             name: g_node.name().map(|s| s.into()),
 

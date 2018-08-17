@@ -408,9 +408,8 @@ fn process_events(
                     }
                 }
                 WindowEvent::CursorMoved { position, .. } => {
-                    orbit_controls.handle_mouse_move(
-                        position.x as f32,
-                        position.y as f32);
+                    let ph = position.to_physical(*dpi_factor);
+                    orbit_controls.handle_mouse_move(ph)
                 },
                 WindowEvent::MouseWheel { delta: MouseScrollDelta::PixelDelta(logical), .. } => {
                     let ph = logical.to_physical(*dpi_factor);

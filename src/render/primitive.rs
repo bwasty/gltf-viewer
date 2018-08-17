@@ -96,11 +96,6 @@ impl Primitive {
         imp: &ImportData,
         base_path: &Path) -> Primitive
     {
-        // positions
-        //let positions = g_primitive.positions(buffers)
-        //    .expect(&format!("primitives must have the POSITION attribute (mesh: {}, primitive: {})",
-        //        mesh_index, primitive_index));
-
         let buffers = &imp.buffers;
         let reader = g_primitive.reader(|buffer| Some(&buffers[buffer.index()]));
         let positions = {
