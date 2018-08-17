@@ -101,9 +101,10 @@ impl Primitive {
         let positions = {
             let iter = reader
                 .read_positions()
-                .expect(&format!(
-                    "primitives must have the POSITION attribute (mesh: {}, primitive: {})",
-                    mesh_index, primitive_index));
+                .unwrap_or_else(||
+                    panic!("primitives must have the POSITION attribute (mesh: {}, primitive: {})",
+                        mesh_index, primitive_index)
+                );
             iter.collect::<Vec<_>>()
         };
 

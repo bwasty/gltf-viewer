@@ -17,10 +17,11 @@ pub struct Shader {
 }
 
 impl Shader {
+    #[allow(dead_code)]
     pub fn new(vertex_path: &str, fragment_path: &str, defines: &[String]) -> Shader {
         // 1. retrieve the vertex/fragment source code from filesystem
-        let mut v_shader_file = File::open(vertex_path).expect(&format!("Failed to open {}", vertex_path));
-        let mut f_shader_file = File::open(fragment_path).expect(&format!("Failed to open {}", fragment_path));
+        let mut v_shader_file = File::open(vertex_path).unwrap_or_else(|_| panic!("Failed to open {}", vertex_path));
+        let mut f_shader_file = File::open(fragment_path).unwrap_or_else(|_| panic!("Failed to open {}", fragment_path));
         let mut vertex_code = String::new();
         let mut fragment_code = String::new();
         v_shader_file
@@ -96,6 +97,7 @@ impl Shader {
 
     /// utility uniform functions
     /// ------------------------------------------------------------------------
+    #[allow(dead_code)]
     pub unsafe fn set_bool(&self, location: i32, value: bool) {
         gl::Uniform1i(location, value as i32);
     }
@@ -196,7 +198,7 @@ bitflags! {
 }
 
 impl ShaderFlags {
-    pub fn as_strings(&self) -> Vec<String> {
+    pub fn as_strings(self) -> Vec<String> {
         (0..15)
             .map(|i| 1u16 << i)
             .filter(|i| self.bits & i != 0)

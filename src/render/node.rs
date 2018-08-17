@@ -74,6 +74,7 @@ impl Node {
     pub fn update_transform(&mut self, root: &mut Root, parent_transform: &Matrix4) {
         self.final_transform = *parent_transform;
 
+        // TODO: cache local tranform when adding animations?
         self.final_transform = self.final_transform *
             Matrix4::from_translation(self.translation) *
             Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, self.scale.z) *
