@@ -290,6 +290,7 @@ impl Primitive {
         if let Some(ref normal_texture) = mat.normal_texture {
             gl::ActiveTexture(gl::TEXTURE1);
             gl::BindTexture(gl::TEXTURE_2D, normal_texture.id);
+            shader.set_float(uniforms.u_NormalScale, mat.normal_scale.unwrap_or(1.0));
         }
         if let Some(ref emissive_texture) = mat.emissive_texture {
             gl::ActiveTexture(gl::TEXTURE2);
