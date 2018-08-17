@@ -124,7 +124,7 @@ impl GltfViewer {
 
                 (Some(events_loop), Some(gl_window), dpi_factor, inner_size)
             };
-
+        
         let mut orbit_controls = OrbitControls::new(
             Point3::new(0.0, 0.0, 2.0),
             inner_size);
@@ -282,7 +282,8 @@ impl GltfViewer {
 
             // events
             let keep_running = process_events(
-                &mut self.events_loop.as_mut().unwrap(), self.gl_window.as_mut().unwrap(),
+                &mut self.events_loop.as_mut().unwrap(),
+                self.gl_window.as_mut().unwrap(),
                 &mut self.orbit_controls,
                 &mut self.dpi_factor,
                 &mut self.size);
@@ -371,6 +372,11 @@ fn process_events(
                 WindowEvent::Resized(logical) => {
                     let ph = logical.to_physical(*dpi_factor);
                     gl_window.resize(ph);
+
+                    // This doesn't seem to be needed on macOS but linux X11, Wayland and Windows
+                    // do need it.
+                    unsafe { gl::Viewport(0, 0, ph.width as i32, ph.height as i32); }
+
                     *size = ph;
                     orbit_controls.camera.update_aspect_ratio((ph.width / ph.height) as f32);
                     orbit_controls.screen_size = ph;
