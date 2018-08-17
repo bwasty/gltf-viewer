@@ -246,6 +246,9 @@ pub struct PbrUniformLocations {
     pub u_OcclusionTexCoord: i32,
     pub u_OcclusionStrength: i32,
 
+    pub u_AlphaBlend: i32,
+    pub u_AlphaCutoff: i32,
+
     // TODO!: use/remove debugging uniforms
     // debugging flags used for shader output of intermediate PBR variables
     pub u_ScaleDiffBaseMR: i32,
@@ -307,6 +310,9 @@ impl PbrShader {
                 u_OcclusionSampler: shader.uniform_location("u_OcclusionSampler"),
                 u_OcclusionTexCoord: shader.uniform_location("u_OcclusionTexCoord"),
                 u_OcclusionStrength: shader.uniform_location("u_OcclusionStrength"),
+
+                u_AlphaBlend: shader.uniform_location("u_AlphaBlend"),
+                u_AlphaCutoff: shader.uniform_location("u_AlphaCutoff"),
 
                 u_ScaleDiffBaseMR: shader.uniform_location("u_ScaleDiffBaseMR"),
                 u_ScaleFGDSpec: shader.uniform_location("u_ScaleFGDSpec"),

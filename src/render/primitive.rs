@@ -265,6 +265,16 @@ impl Primitive {
 
         gl::BindVertexArray(0);
         gl::ActiveTexture(gl::TEXTURE0);
+
+        if self.material.alpha_mode != gltf::material::AlphaMode::Opaque {
+            let shader = &self.pbr_shader.shader;
+
+            gl::Disable(gl::BLEND);
+            shader.set_float(self.pbr_shader.uniforms.u_AlphaBlend, 0.0);
+            if self.material.alpha_mode == gltf::material::AlphaMode::Mask {
+                shader.set_float(self.pbr_shader.uniforms.u_AlphaCutoff, 0.0);
+            }
+        }
     }
 
     unsafe fn configure_shader(&self, model_matrix: &Matrix4,
@@ -280,6 +290,18 @@ impl Primitive {
         shader.set_mat4(uniforms.u_ModelMatrix, model_matrix);
         shader.set_mat4(uniforms.u_MVPMatrix, mvp_matrix);
         shader.set_vector3(uniforms.u_Camera, camera_position);
+
+        // alpha blending
+        if mat.alpha_mode != gltf::material::AlphaMode::Opaque {
+            // BLEND + MASK
+            gl::Enable(gl::BLEND);
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+            shader.set_float(uniforms.u_AlphaBlend, 1.0);
+
+            if mat.alpha_mode == gltf::material::AlphaMode::Mask {
+                shader.set_float(uniforms.u_AlphaCutoff, mat.alpha_cutoff);
+            }
+        }
 
         // NOTE: for sampler numbers, see also PbrShader constructor
         shader.set_vector4(uniforms.u_BaseColorFactor, &mat.base_color_factor);

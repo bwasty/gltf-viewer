@@ -61,6 +61,9 @@ uniform vec4 u_BaseColorFactor;
 
 uniform vec3 u_Camera;
 
+uniform float u_AlphaBlend;
+uniform float u_AlphaCutoff;
+
 // TODO!: remove or ifdef?
 // debugging flags used for shader output of intermediate PBR variables
 uniform vec4 u_ScaleDiffBaseMR;
@@ -313,17 +316,29 @@ void main()
     color += emissive;
 #endif
 
-    // This section uses mix to override final color for reference app visualization
-    // of various parameters in the lighting equation.
-    color = mix(color, F, u_ScaleFGDSpec.x);
-    color = mix(color, vec3(G), u_ScaleFGDSpec.y);
-    color = mix(color, vec3(D), u_ScaleFGDSpec.z);
-    color = mix(color, specContrib, u_ScaleFGDSpec.w);
+    // // This section uses mix to override final color for reference app visualization
+    // // of various parameters in the lighting equation.
+    // color = mix(color, F, u_ScaleFGDSpec.x);
+    // color = mix(color, vec3(G), u_ScaleFGDSpec.y);
+    // color = mix(color, vec3(D), u_ScaleFGDSpec.z);
+    // color = mix(color, specContrib, u_ScaleFGDSpec.w);
 
-    color = mix(color, diffuseContrib, u_ScaleDiffBaseMR.x);
-    color = mix(color, baseColor.rgb, u_ScaleDiffBaseMR.y);
-    color = mix(color, vec3(metallic), u_ScaleDiffBaseMR.z);
-    color = mix(color, vec3(perceptualRoughness), u_ScaleDiffBaseMR.w);
+    // color = mix(color, diffuseContrib, u_ScaleDiffBaseMR.x);
+    // color = mix(color, baseColor.rgb, u_ScaleDiffBaseMR.y);
+    // color = mix(color, vec3(metallic), u_ScaleDiffBaseMR.z);
+    // color = mix(color, vec3(perceptualRoughness), u_ScaleDiffBaseMR.w);
 
-    FragColor = vec4(color, baseColor.a);
+    // NOTE: the spec mandates to ignore any alpha value in 'OPAQUE' mode
+    float alpha = mix(1.0, baseColor.a, u_AlphaBlend);
+    if (u_AlphaCutoff > 0.0) {
+        alpha = step(u_AlphaCutoff, baseColor.a);
+    }
+
+    if (alpha == 0.0) {
+        discard;
+    }
+
+    // TODO!: apply fix from reference shader:
+    // https://github.com/KhronosGroup/glTF-WebGL-PBR/pull/55/files#diff-f7232333b020880432a925d5a59e075d
+    FragColor = vec4(color, alpha);
 }
