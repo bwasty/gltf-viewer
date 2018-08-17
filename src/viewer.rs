@@ -40,6 +40,7 @@ use utils::{print_elapsed, FrameTimer, gl_check_error, print_context_info};
 //     back_face_culling_enabled: bool
 // }
 
+#[derive(Copy, Clone)]
 pub struct CameraOptions {
     pub index: i32,
     pub position: Option<Vector3>,
@@ -53,9 +54,6 @@ pub struct GltfViewer {
     dpi_factor: f64,
 
     orbit_controls: OrbitControls,
-    first_mouse: bool,
-    last_x: f32,
-    last_y: f32,
     events_loop: Option<glutin::EventsLoop>,
     gl_window: Option<glutin::GlWindow>,
 
@@ -134,10 +132,6 @@ impl GltfViewer {
         orbit_controls.camera.fovy = camera_options.fovy;
         orbit_controls.camera.update_aspect_ratio(inner_size.width as f32 / inner_size.height as f32); // updates projection matrix
 
-        let first_mouse = true;
-        let last_x: f32 = inner_size.width as f32 / 2.0;
-        let last_y: f32 = inner_size.height as f32 / 2.0;
-
         unsafe {
             print_context_info();
 
@@ -165,7 +159,6 @@ impl GltfViewer {
             dpi_factor,
 
             orbit_controls,
-            first_mouse, last_x, last_y,
 
             events_loop,
             gl_window,
@@ -235,7 +228,7 @@ impl GltfViewer {
         };
         let imp = ImportData { doc, buffers, images };
 
-        print_elapsed("Imported glTF in ", &start_time);
+        print_elapsed("Imported glTF in ", start_time);
         start_time = Instant::now();
 
         // load first scene
@@ -247,7 +240,7 @@ impl GltfViewer {
         let mut root = Root::from_gltf(&imp, base_path);
         let scene = Scene::from_gltf(&imp.doc.scenes().nth(scene_index).unwrap(), &mut root);
         print_elapsed(&format!("Loaded scene with {} nodes, {} meshes in ",
-                imp.doc.nodes().count(), imp.doc.meshes().len()), &start_time);
+                imp.doc.nodes().count(), imp.doc.meshes().len()), start_time);
 
         (root, scene)
     }

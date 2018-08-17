@@ -1,7 +1,9 @@
-#![allow(dead_code)]
+// #![allow(dead_code)]
 #![allow(unknown_lints)]
 // #![allow(unused_features)]
 // #![feature(test)]
+#![cfg_attr(feature = "cargo-clippy", allow(cast_lossless, cyclomatic_complexity))]
+
 #[macro_use] extern crate clap;
 extern crate cgmath;
 use cgmath::Deg;

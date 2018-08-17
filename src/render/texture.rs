@@ -73,29 +73,27 @@ impl Texture {
                             g_img.index(), mime_type)),
                     }
                 }
+                else if let Some(mime_type) = mime_type {
+                    let path = base_path.parent().unwrap_or_else(|| Path::new("./")).join(uri);
+                    let file = fs::File::open(path).unwrap();
+                    let reader = io::BufReader::new(file);
+                    match mime_type {
+                        "image/jpeg" => image::load(reader, JPEG),
+                        "image/png" => image::load(reader, PNG),
+                        _ => panic!(format!("unsupported image type (image: {}, mime_type: {})",
+                            g_img.index(), mime_type)),
+                    }
+                }
                 else {
-                    if let Some(mime_type) = mime_type {
-                        let path = base_path.parent().unwrap_or_else(|| Path::new("./")).join(uri);
-                        let file = fs::File::open(path).unwrap();
-                        let reader = io::BufReader::new(file);
-                        match mime_type {
-                            "image/jpeg" => image::load(reader, JPEG),
-                            "image/png" => image::load(reader, PNG),
-                            _ => panic!(format!("unsupported image type (image: {}, mime_type: {})",
-                                g_img.index(), mime_type)),
-                        }
-                    }
-                    else {
-                        let path = base_path.parent().unwrap_or_else(||Path::new("./")).join(uri);
-                        image::open(path)
-                    }
+                    let path = base_path.parent().unwrap_or_else(||Path::new("./")).join(uri);
+                    image::open(path)
                 }
             }
         };
 
         // TODO: handle I/O problems
         let dyn_img = img.expect("Image loading failed.");
-        
+
         let format = match dyn_img {
             ImageLuma8(_) => gl::RED,
             ImageLumaA8(_) => gl::RG,
@@ -134,7 +132,7 @@ impl Texture {
             index: g_texture.index(),
             name: g_texture.name().map(|s| s.into()),
             id: texture_id,
-            tex_coord: tex_coord,
+            tex_coord,
         }
     }
 

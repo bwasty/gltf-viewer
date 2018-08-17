@@ -17,10 +17,11 @@ pub struct Shader {
 }
 
 impl Shader {
+    #[allow(dead_code)]
     pub fn new(vertex_path: &str, fragment_path: &str, defines: &[String]) -> Shader {
         // 1. retrieve the vertex/fragment source code from filesystem
-        let mut v_shader_file = File::open(vertex_path).expect(&format!("Failed to open {}", vertex_path));
-        let mut f_shader_file = File::open(fragment_path).expect(&format!("Failed to open {}", fragment_path));
+        let mut v_shader_file = File::open(vertex_path).unwrap_or_else(|_| panic!("Failed to open {}", vertex_path));
+        let mut f_shader_file = File::open(fragment_path).unwrap_or_else(|_| panic!("Failed to open {}", fragment_path));
         let mut vertex_code = String::new();
         let mut fragment_code = String::new();
         v_shader_file
@@ -96,6 +97,7 @@ impl Shader {
 
     /// utility uniform functions
     /// ------------------------------------------------------------------------
+    #[allow(dead_code)]
     pub unsafe fn set_bool(&self, location: i32, value: bool) {
         gl::Uniform1i(location, value as i32);
     }
@@ -196,7 +198,7 @@ bitflags! {
 }
 
 impl ShaderFlags {
-    pub fn as_strings(&self) -> Vec<String> {
+    pub fn as_strings(self) -> Vec<String> {
         (0..15)
             .map(|i| 1u16 << i)
             .filter(|i| self.bits & i != 0)
@@ -227,19 +229,27 @@ pub struct PbrUniformLocations {
     ///
 
     pub u_BaseColorSampler: i32,
+    pub u_BaseColorTexCoord: i32,
     pub u_BaseColorFactor: i32,
 
     pub u_NormalSampler: i32,
+    pub u_NormalTexCoord: i32,
     pub u_NormalScale: i32,
 
     pub u_EmissiveSampler: i32,
+    pub u_EmissiveTexCoord: i32,
     pub u_EmissiveFactor: i32,
 
     pub u_MetallicRoughnessSampler: i32,
+    pub u_MetallicRoughnessTexCoord: i32,
     pub u_MetallicRoughnessValues: i32,
 
     pub u_OcclusionSampler: i32,
+    pub u_OcclusionTexCoord: i32,
     pub u_OcclusionStrength: i32,
+
+    pub u_AlphaBlend: i32,
+    pub u_AlphaCutoff: i32,
 
     // TODO!: use/remove debugging uniforms
     // debugging flags used for shader output of intermediate PBR variables
@@ -284,19 +294,27 @@ impl PbrShader {
                 u_brdfLUT: shader.uniform_location("u_brdfLUT"),
 
                 u_BaseColorSampler: shader.uniform_location("u_BaseColorSampler"),
+                u_BaseColorTexCoord: shader.uniform_location("u_BaseColorTexCoord"),
                 u_BaseColorFactor: shader.uniform_location("u_BaseColorFactor"),
 
                 u_NormalSampler: shader.uniform_location("u_NormalSampler"),
+                u_NormalTexCoord: shader.uniform_location("u_NormalTexCoord"),
                 u_NormalScale: shader.uniform_location("u_NormalScale"),
 
                 u_EmissiveSampler: shader.uniform_location("u_EmissiveSampler"),
+                u_EmissiveTexCoord: shader.uniform_location("u_EmissiveTexCoord"),
                 u_EmissiveFactor: shader.uniform_location("u_EmissiveFactor"),
 
                 u_MetallicRoughnessSampler: shader.uniform_location("u_MetallicRoughnessSampler"),
+                u_MetallicRoughnessTexCoord: shader.uniform_location("u_MetallicRoughnessTexCoord"),
                 u_MetallicRoughnessValues: shader.uniform_location("u_MetallicRoughnessValues"),
 
                 u_OcclusionSampler: shader.uniform_location("u_OcclusionSampler"),
+                u_OcclusionTexCoord: shader.uniform_location("u_OcclusionTexCoord"),
                 u_OcclusionStrength: shader.uniform_location("u_OcclusionStrength"),
+
+                u_AlphaBlend: shader.uniform_location("u_AlphaBlend"),
+                u_AlphaCutoff: shader.uniform_location("u_AlphaCutoff"),
 
                 u_ScaleDiffBaseMR: shader.uniform_location("u_ScaleDiffBaseMR"),
                 u_ScaleFGDSpec: shader.uniform_location("u_ScaleFGDSpec"),

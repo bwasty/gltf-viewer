@@ -44,6 +44,7 @@ impl Framebuffer {
         unsafe { gl::BindFramebuffer(gl::FRAMEBUFFER, self.id) }
     }
 
+    #[allow(dead_code)]
     pub fn unbind(&self) {
         unsafe { gl::BindFramebuffer(gl::FRAMEBUFFER, 0) }
     }

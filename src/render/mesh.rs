@@ -38,7 +38,7 @@ impl Mesh {
 
         Mesh {
             index: g_mesh.index(),
-            primitives: primitives,
+            primitives,
             name: g_mesh.name().map(|s| s.into()),
             bounds,
         }

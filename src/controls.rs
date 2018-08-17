@@ -33,10 +33,7 @@ pub struct CameraParams {
 }
 
 // Default camera values
-const YAW: f32 = -90.0;
-const PITCH: f32 = 0.0;
 const SPEED: f32 = 2.5;
-const SENSITIVTY: f32 = 0.1;
 const ZOOM_SENSITIVITY: f32 = 0.1;
 pub const ZOOM: f32 = 45.0;
 const MIN_ZOOM: f32 = 1.0;
@@ -189,14 +186,14 @@ impl OrbitControls {
             Vector2::zero()
         };
 
-        self.pan(&pan_delta);
+        self.pan(pan_delta);
 
         self.pan_start = Some(self.pan_end);
 
         self.update();
     }
 
-    fn pan(&mut self, delta: &Vector2) {
+    fn pan(&mut self, delta: Vector2) {
         if self.camera.is_perspective() {
             let offset = self.position - self.target;
             let mut target_distance = offset.magnitude();

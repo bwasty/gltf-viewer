@@ -7,7 +7,7 @@ use std::time::{Duration, Instant};
 use gl;
 use gl::types::GLubyte;
 
-pub fn elapsed(start_time: &Instant) -> String {
+pub fn elapsed(start_time: Instant) -> String {
     let elapsed = start_time.elapsed();
     format_duration(elapsed)
 }
@@ -33,7 +33,7 @@ fn format_duration(duration: Duration) -> String {
     }
 }
 
-pub fn print_elapsed(message: &str, start_time: &Instant) {
+pub fn print_elapsed(message: &str, start_time: Instant) {
     info!("{:<25}{}", message, elapsed(start_time));
 }
 
@@ -50,7 +50,7 @@ impl FrameTimer {
     pub fn new(message: &str, averaging_window: usize) -> FrameTimer {
         FrameTimer {
             message: message.to_owned(),
-            averaging_window: averaging_window,
+            averaging_window,
             current_frame_start: Instant::now(),
             frame_times: Vec::with_capacity(averaging_window),
         }

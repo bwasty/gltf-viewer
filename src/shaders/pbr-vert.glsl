@@ -10,7 +10,8 @@ layout (location = 1) in vec4 a_Normal;
 layout (location = 2) in vec4 a_Tangent;
 #endif
 #ifdef HAS_UV
-layout (location = 3) in vec2 a_UV; // TEXCOORD_0
+layout (location = 3) in vec2 a_UV_0; // TEXCOORD_0
+layout (location = 4) in vec2 a_UV_1; // TEXCOORD_1
 #endif
 // TODO!: tex_coord_1, joints_0, weights_0
 #ifdef HAS_COLORS
@@ -21,7 +22,7 @@ uniform mat4 u_MVPMatrix;
 uniform mat4 u_ModelMatrix;
 
 out vec3 v_Position;
-out vec2 v_UV;
+out vec2 v_UV[2];
 out vec4 v_Color;
 
 #ifdef HAS_NORMALS
@@ -40,6 +41,7 @@ void main()
 
   #ifdef HAS_NORMALS
   #ifdef HAS_TANGENTS
+  // TODO!: the reference shader was updated to use the normal matrix here
   vec3 normalW = normalize(vec3(u_ModelMatrix * vec4(a_Normal.xyz, 0.0)));
   vec3 tangentW = normalize(vec3(u_ModelMatrix * vec4(a_Tangent.xyz, 0.0)));
   vec3 bitangentW = cross(normalW, tangentW) * a_Tangent.w;
@@ -50,9 +52,11 @@ void main()
   #endif
 
   #ifdef HAS_UV
-  v_UV = a_UV;
+  v_UV[0] = a_UV_0;
+  v_UV[1] = a_UV_1;
   #else
-  v_UV = vec2(0.,0.);
+  v_UV[0] = vec2(0.,0.);
+  v_UV[1] = vec2(0.,0.);
   #endif
 
   #ifdef HAS_COLORS

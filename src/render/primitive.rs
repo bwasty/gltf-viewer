@@ -5,10 +5,9 @@ use std::ptr;
 use std::rc::Rc;
 
 use gl;
+use gl::types::GLenum;
 use gltf;
-use gltf::json::mesh::Mode;
 
-// use camera::Camera;
 use render::math::*;
 use render::{Material, Root};
 use shader::*;
@@ -58,6 +57,8 @@ pub struct Primitive {
     ebo: Option<u32>,
     num_indices: u32,
 
+    mode: GLenum,
+
     material: Rc<Material>,
 
     pbr_shader: Rc<PbrShader>,
@@ -70,6 +71,7 @@ impl Primitive {
         bounds: Aabb3,
         vertices: &[Vertex],
         indices: Option<Vec<u32>>,
+        mode: GLenum,
         material: Rc<Material>,
         shader: Rc<PbrShader>,
     ) -> Primitive {
@@ -79,6 +81,7 @@ impl Primitive {
             num_vertices: vertices.len() as u32,
             num_indices: num_indices as u32,
             vao: 0, vbo: 0, ebo: None,
+            mode,
             material,
             pbr_shader: shader,
         };
@@ -101,9 +104,10 @@ impl Primitive {
         let positions = {
             let iter = reader
                 .read_positions()
-                .expect(&format!(
-                    "primitives must have the POSITION attribute (mesh: {}, primitive: {})",
-                    mesh_index, primitive_index));
+                .unwrap_or_else(||
+                    panic!("primitives must have the POSITION attribute (mesh: {}, primitive: {})",
+                        mesh_index, primitive_index)
+                );
             iter.collect::<Vec<_>>()
         };
 
@@ -208,7 +212,14 @@ impl Primitive {
                 read_indices.into_u32().collect::<Vec<_>>()
             });
 
-        assert_eq!(g_primitive.mode(), Mode::Triangles, "not yet implemented: primitive mode must be Triangles.");
+        // TODO: spec:
+        // Implementation note: When the 'mode' property is set to a non-triangular type
+        //(such as POINTS or LINES) some additional considerations must be taken while
+        //considering the proper rendering technique:
+        //   For LINES with NORMAL and TANGENT properties can render with standard lighting including normal maps.
+        //   For all POINTS or LINES with no TANGENT property, render with standard lighting but ignore any normal maps on the material.
+        //   For POINTS or LINES with no NORMAL property, don't calculate lighting and instead output the COLOR value for each pixel drawn.
+        let mode = g_primitive.mode().as_gl_enum();
 
         let g_material = g_primitive.material();
 
@@ -239,7 +250,7 @@ impl Primitive {
             root.shaders.insert(shader_flags, Rc::clone(&shader));
         }
 
-        Primitive::new(bounds, &vertices, indices, material, shader)
+        Primitive::new(bounds, &vertices, indices, mode, material, shader)
     }
 
     /// render the mesh
@@ -252,19 +263,33 @@ impl Primitive {
             gl::Enable(gl::CULL_FACE);
         }
 
+        if self.mode == gl::POINTS {
+            gl::PointSize(10.0);
+        }
+
         self.configure_shader(model_matrix, mvp_matrix, camera_position);
 
         // draw mesh
         gl::BindVertexArray(self.vao);
         if self.ebo.is_some() {
-            gl::DrawElements(gl::TRIANGLES, self.num_indices as i32, gl::UNSIGNED_INT, ptr::null());
+            gl::DrawElements(self.mode, self.num_indices as i32, gl::UNSIGNED_INT, ptr::null());
         }
         else {
-            gl::DrawArrays(gl::TRIANGLES, 0, self.num_vertices as i32)
+            gl::DrawArrays(self.mode, 0, self.num_vertices as i32)
         }
 
         gl::BindVertexArray(0);
         gl::ActiveTexture(gl::TEXTURE0);
+
+        if self.material.alpha_mode != gltf::material::AlphaMode::Opaque {
+            let shader = &self.pbr_shader.shader;
+
+            gl::Disable(gl::BLEND);
+            shader.set_float(self.pbr_shader.uniforms.u_AlphaBlend, 0.0);
+            if self.material.alpha_mode == gltf::material::AlphaMode::Mask {
+                shader.set_float(self.pbr_shader.uniforms.u_AlphaCutoff, 0.0);
+            }
+        }
     }
 
     unsafe fn configure_shader(&self, model_matrix: &Matrix4,
@@ -281,26 +306,42 @@ impl Primitive {
         shader.set_mat4(uniforms.u_MVPMatrix, mvp_matrix);
         shader.set_vector3(uniforms.u_Camera, camera_position);
 
+        // alpha blending
+        if mat.alpha_mode != gltf::material::AlphaMode::Opaque {
+            // BLEND + MASK
+            gl::Enable(gl::BLEND);
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+            shader.set_float(uniforms.u_AlphaBlend, 1.0);
+
+            if mat.alpha_mode == gltf::material::AlphaMode::Mask {
+                shader.set_float(uniforms.u_AlphaCutoff, mat.alpha_cutoff);
+            }
+        }
+
         // NOTE: for sampler numbers, see also PbrShader constructor
         shader.set_vector4(uniforms.u_BaseColorFactor, &mat.base_color_factor);
         if let Some(ref base_color_texture) = mat.base_color_texture {
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, base_color_texture.id);
+            shader.set_int(uniforms.u_BaseColorTexCoord, base_color_texture.tex_coord as i32);
         }
         if let Some(ref normal_texture) = mat.normal_texture {
             gl::ActiveTexture(gl::TEXTURE1);
             gl::BindTexture(gl::TEXTURE_2D, normal_texture.id);
+            shader.set_int(uniforms.u_NormalTexCoord, normal_texture.tex_coord as i32);
+            shader.set_float(uniforms.u_NormalScale, mat.normal_scale.unwrap_or(1.0));
         }
         if let Some(ref emissive_texture) = mat.emissive_texture {
             gl::ActiveTexture(gl::TEXTURE2);
             gl::BindTexture(gl::TEXTURE_2D, emissive_texture.id);
-
+            shader.set_int(uniforms.u_EmissiveTexCoord, emissive_texture.tex_coord as i32);
             shader.set_vector3(uniforms.u_EmissiveFactor, &mat.emissive_factor);
         }
 
         if let Some(ref mr_texture) = mat.metallic_roughness_texture {
             gl::ActiveTexture(gl::TEXTURE3);
             gl::BindTexture(gl::TEXTURE_2D, mr_texture.id);
+            shader.set_int(uniforms.u_MetallicRoughnessTexCoord, mr_texture.tex_coord as i32);
         }
         shader.set_vec2(uniforms.u_MetallicRoughnessValues,
             mat.metallic_factor, mat.roughness_factor);
@@ -308,7 +349,7 @@ impl Primitive {
         if let Some(ref occlusion_texture) = mat.occlusion_texture {
             gl::ActiveTexture(gl::TEXTURE4);
             gl::BindTexture(gl::TEXTURE_2D, occlusion_texture.id);
-
+            shader.set_int(uniforms.u_OcclusionTexCoord, occlusion_texture.tex_coord as i32);
             shader.set_float(uniforms.u_OcclusionStrength, mat.occlusion_strength);
         }
     }
