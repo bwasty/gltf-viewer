@@ -1,4 +1,4 @@
-FROM rust:1.23
+FROM rust:1.28
 
 WORKDIR /usr/src/gltf-viewer
 COPY src src
