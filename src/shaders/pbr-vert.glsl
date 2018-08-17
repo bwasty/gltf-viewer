@@ -40,6 +40,7 @@ void main()
 
   #ifdef HAS_NORMALS
   #ifdef HAS_TANGENTS
+  // TODO!: the reference shader was updated to use the normal matrix here
   vec3 normalW = normalize(vec3(u_ModelMatrix * vec4(a_Normal.xyz, 0.0)));
   vec3 tangentW = normalize(vec3(u_ModelMatrix * vec4(a_Tangent.xyz, 0.0)));
   vec3 bitangentW = cross(normalW, tangentW) * a_Tangent.w;
