@@ -5,10 +5,9 @@ use std::ptr;
 use std::rc::Rc;
 
 use gl;
+use gl::types::GLenum;
 use gltf;
-use gltf::json::mesh::Mode;
 
-// use camera::Camera;
 use render::math::*;
 use render::{Material, Root};
 use shader::*;
@@ -58,6 +57,8 @@ pub struct Primitive {
     ebo: Option<u32>,
     num_indices: u32,
 
+    mode: GLenum,
+
     material: Rc<Material>,
 
     pbr_shader: Rc<PbrShader>,
@@ -70,6 +71,7 @@ impl Primitive {
         bounds: Aabb3,
         vertices: &[Vertex],
         indices: Option<Vec<u32>>,
+        mode: GLenum,
         material: Rc<Material>,
         shader: Rc<PbrShader>,
     ) -> Primitive {
@@ -79,6 +81,7 @@ impl Primitive {
             num_vertices: vertices.len() as u32,
             num_indices: num_indices as u32,
             vao: 0, vbo: 0, ebo: None,
+            mode,
             material,
             pbr_shader: shader,
         };
@@ -209,7 +212,14 @@ impl Primitive {
                 read_indices.into_u32().collect::<Vec<_>>()
             });
 
-        assert_eq!(g_primitive.mode(), Mode::Triangles, "not yet implemented: primitive mode must be Triangles.");
+        // TODO: spec:
+        // Implementation note: When the 'mode' property is set to a non-triangular type
+        //(such as POINTS or LINES) some additional considerations must be taken while
+        //considering the proper rendering technique:
+        //   For LINES with NORMAL and TANGENT properties can render with standard lighting including normal maps.
+        //   For all POINTS or LINES with no TANGENT property, render with standard lighting but ignore any normal maps on the material.
+        //   For POINTS or LINES with no NORMAL property, don't calculate lighting and instead output the COLOR value for each pixel drawn.
+        let mode = g_primitive.mode().as_gl_enum();
 
         let g_material = g_primitive.material();
 
@@ -240,7 +250,7 @@ impl Primitive {
             root.shaders.insert(shader_flags, Rc::clone(&shader));
         }
 
-        Primitive::new(bounds, &vertices, indices, material, shader)
+        Primitive::new(bounds, &vertices, indices, mode, material, shader)
     }
 
     /// render the mesh
@@ -253,15 +263,19 @@ impl Primitive {
             gl::Enable(gl::CULL_FACE);
         }
 
+        if self.mode == gl::POINTS {
+            gl::PointSize(10.0);
+        }
+
         self.configure_shader(model_matrix, mvp_matrix, camera_position);
 
         // draw mesh
         gl::BindVertexArray(self.vao);
         if self.ebo.is_some() {
-            gl::DrawElements(gl::TRIANGLES, self.num_indices as i32, gl::UNSIGNED_INT, ptr::null());
+            gl::DrawElements(self.mode, self.num_indices as i32, gl::UNSIGNED_INT, ptr::null());
         }
         else {
-            gl::DrawArrays(gl::TRIANGLES, 0, self.num_vertices as i32)
+            gl::DrawArrays(self.mode, 0, self.num_vertices as i32)
         }
 
         gl::BindVertexArray(0);
