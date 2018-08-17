@@ -43,6 +43,8 @@ OPTIONS:
                                      1]
         --headless                   Use real headless rendering for screenshots (default is a hidden window)
                                      [EXPERIMENTAL - see README for details]
+        --straight                   Position camera in front of model if using default camera (i.e. glTF doesn't
+                                     contain a camera or `--cam-index -1` is passed.
         --scene <scene>              Index of the scene to load [default: 0]
         --cam-index <CAM-INDEX>      Use the glTF camera with the given index (starting at 0).
                                      Fallback if there is none: determine 'nice' camera position based on the scene's
