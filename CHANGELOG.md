@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.4.0] - 2018-08-22
 ### Added
 * `--straight` CLI parameter: Position camera in front of model if using default camera (i.e. glTF doesn't contain a camera or `--cam-index -1` is passed) ([#49](https://github.com/bwasty/gltf-viewer/pull/49))
 * Support more glTF options ([#51](https://github.com/bwasty/gltf-viewer/pull/51)/[#3](https://github.com/bwasty/gltf-viewer/issues/3), now complete apart from animations):
