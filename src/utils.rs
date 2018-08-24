@@ -19,16 +19,16 @@ fn format_duration(duration: Duration) -> String {
     if secs > 0 {
         let secs = secs as f64 + ms / 1000.0;
         format!("{:<4.*} s", 1, secs)
-    }
-    else {
-        let places =
-            if ms >= 20.0      { 0 }
-            else if ms >= 1.0  { 1 }
-            else {
-                let micros = f64::from(nanos) / 1000.0;
-                let places = if micros >= 10.0 { 0 } else { 2 };
-                return format!("{:>3.*} µs", places, micros)
-            };
+    } else {
+        let places = if ms >= 20.0 {
+            0
+        } else if ms >= 1.0 {
+            1
+        } else {
+            let micros = f64::from(nanos) / 1000.0;
+            let places = if micros >= 10.0 { 0 } else { 2 };
+            return format!("{:>3.*} µs", places, micros);
+        };
         format!("{:>3.*} ms", places, ms)
     }
 }
@@ -72,8 +72,13 @@ impl FrameTimer {
             let avg = self.frame_times.iter().sum::<Duration>() / self.frame_times.len() as u32;
             let min = self.frame_times.iter().min().unwrap();
             let max = self.frame_times.iter().max().unwrap();
-            info!("{:<15}{} (min: {}, max: {})", self.message,
-                format_duration(avg), format_duration(*min), format_duration(*max));
+            info!(
+                "{:<15}{} (min: {}, max: {})",
+                self.message,
+                format_duration(avg),
+                format_duration(*min),
+                format_duration(*max)
+            );
         }
         self.frame_times.clear();
     }
@@ -90,7 +95,7 @@ pub unsafe fn gl_check_error(file: &str, line: u32) -> u32 {
             gl::STACK_UNDERFLOW => "STACK_UNDERFLOW",
             gl::OUT_OF_MEMORY => "OUT_OF_MEMORY",
             gl::INVALID_FRAMEBUFFER_OPERATION => "INVALID_FRAMEBUFFER_OPERATION",
-            _ => "unknown GL error code"
+            _ => "unknown GL error code",
         };
 
         error!("{} | {} ({})", error, file, line);
@@ -102,9 +107,9 @@ pub unsafe fn gl_check_error(file: &str, line: u32) -> u32 {
 
 #[allow(unused_macros)]
 macro_rules! gl_check_error {
-    () => (
+    () => {
         gl_check_error(file!(), line!())
-    )
+    };
 }
 
 /// Prints information about the current OpenGL context
@@ -113,7 +118,10 @@ pub unsafe fn print_context_info() {
     debug!("Renderer     : {}", gl_string(gl::GetString(gl::RENDERER)));
     debug!("Vendor       : {}", gl_string(gl::GetString(gl::VENDOR)));
     debug!("Version      : {}", gl_string(gl::GetString(gl::VERSION)));
-    debug!("GLSL         : {}", gl_string(gl::GetString(gl::SHADING_LANGUAGE_VERSION)));
+    debug!(
+        "GLSL         : {}",
+        gl_string(gl::GetString(gl::SHADING_LANGUAGE_VERSION))
+    );
 
     let mut val = mem::uninitialized();
     gl::GetIntegerv(gl::CONTEXT_PROFILE_MASK, &mut val);
@@ -131,21 +139,28 @@ pub unsafe fn print_context_info() {
         let mut val = mem::uninitialized();
         gl::GetIntegerv(gl::CONTEXT_FLAGS, &mut val);
         let val = val as gl::types::GLenum;
-        ((val & gl::CONTEXT_FLAG_DEBUG_BIT) != 0,
-         (val & gl::CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT) != 0)
+        (
+            (val & gl::CONTEXT_FLAG_DEBUG_BIT) != 0,
+            (val & gl::CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT) != 0,
+        )
     };
-    debug!("Context Flags: Debug: {}, Forward Compatible: {}", debug, forward_compatible);
+    debug!(
+        "Context Flags: Debug: {}, Forward Compatible: {}",
+        debug, forward_compatible
+    );
 
     let mut num_extensions = 0;
     gl::GetIntegerv(gl::NUM_EXTENSIONS, &mut num_extensions);
-    let extensions: Vec<_> = (0 .. num_extensions).map(|num| {
-        gl_string(gl::GetStringi(gl::EXTENSIONS, num as gl::types::GLuint))
-    }).collect();
+    let extensions: Vec<_> = (0..num_extensions)
+        .map(|num| gl_string(gl::GetStringi(gl::EXTENSIONS, num as gl::types::GLuint)))
+        .collect();
     debug!("Extensions   : {}", extensions.join(", "))
 }
 
 pub unsafe fn gl_string(raw_string: *const GLubyte) -> String {
-    if raw_string.is_null() { return "(NULL)".into() }
+    if raw_string.is_null() {
+        return "(NULL)".into();
+    }
     String::from_utf8(CStr::from_ptr(raw_string as *const _).to_bytes().to_vec())
-                                .expect("gl_string: non-UTF8 string")
+        .expect("gl_string: non-UTF8 string")
 }

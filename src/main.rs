@@ -4,7 +4,8 @@
 // #![feature(test)]
 #![cfg_attr(feature = "cargo-clippy", allow(cast_lossless, cyclomatic_complexity))]
 
-#[macro_use] extern crate clap;
+#[macro_use]
+extern crate clap;
 extern crate cgmath;
 use cgmath::Deg;
 
@@ -23,21 +24,22 @@ extern crate num_traits;
 #[macro_use]
 extern crate bitflags;
 
-use clap::{Arg, App, AppSettings};
+use clap::{App, AppSettings, Arg};
 
-#[macro_use]extern crate log;
+#[macro_use]
+extern crate log;
 extern crate simplelog;
-use simplelog::{TermLogger, LevelFilter, Config as LogConfig};
+use simplelog::{Config as LogConfig, LevelFilter, TermLogger};
 
 mod utils;
 mod viewer;
-use viewer::{GltfViewer, CameraOptions};
+use viewer::{CameraOptions, GltfViewer};
 
-mod shader;
 mod controls;
 mod framebuffer;
-mod macros;
 mod importdata;
+mod macros;
+mod shader;
 // TODO!: adapt Source...
 // mod http_source;
 // use http_source::HttpSource;
@@ -130,10 +132,16 @@ pub fn main() {
     let scene: usize = args.value_of("scene").unwrap().parse().unwrap();
 
     let camera_options = CameraOptions {
-        index: args.value_of("CAM-INDEX").map(|n| n.parse().unwrap()).unwrap(),
+        index: args
+            .value_of("CAM-INDEX")
+            .map(|n| n.parse().unwrap())
+            .unwrap(),
         position: args.value_of("CAM-POS").map(|v| parse_vec3(v).unwrap()),
         target: args.value_of("CAM-TARGET").map(|v| parse_vec3(v).unwrap()),
-        fovy: args.value_of("CAM-FOVY").map(|n| Deg(n.parse().unwrap())).unwrap(),
+        fovy: args
+            .value_of("CAM-FOVY")
+            .map(|n| Deg(n.parse().unwrap()))
+            .unwrap(),
         straight: args.is_present("straight"),
     };
 
@@ -141,16 +149,27 @@ pub fn main() {
         0 => LevelFilter::Warn,
         1 => LevelFilter::Info,
         2 => LevelFilter::Debug,
-        _ => LevelFilter::Trace
+        _ => LevelFilter::Trace,
     };
 
-    let _ = TermLogger::init(log_level, LogConfig { time: None, target: None, ..LogConfig::default() });
+    let _ = TermLogger::init(
+        log_level,
+        LogConfig {
+            time: None,
+            target: None,
+            ..LogConfig::default()
+        },
+    );
 
-    let mut viewer = GltfViewer::new(source, width, height,
+    let mut viewer = GltfViewer::new(
+        source,
+        width,
+        height,
         args.is_present("headless"),
         !args.is_present("screenshot"),
         camera_options,
-        scene);
+        scene,
+    );
 
     if args.is_present("screenshot") {
         let filename = args.value_of("screenshot").unwrap();
@@ -183,22 +202,28 @@ mod tests {
         println!("Primitive: {:>3}", std::mem::size_of::<render::Primitive>());
         println!("Vertex:    {:>3}", std::mem::size_of::<render::Vertex>());
         println!();
-        println!("Option<String>: {:>3}", std::mem::size_of::<Option<String>>());
+        println!(
+            "Option<String>: {:>3}",
+            std::mem::size_of::<Option<String>>()
+        );
         println!("String:         {:>3}", std::mem::size_of::<String>());
         println!("Vec<f32>:       {:>3}", std::mem::size_of::<Vec<f32>>());
-        println!("Vec<Node>:      {:>3}", std::mem::size_of::<Vec<render::Node>>());
+        println!(
+            "Vec<Node>:      {:>3}",
+            std::mem::size_of::<Vec<render::Node>>()
+        );
     }
 
-//     extern crate test;
-//     use self::test::Bencher;
-//     #[bench]
-//     fn bench_frame_timer(b: &mut Bencher) {
-//         let mut timer = FrameTimer::new("Foobar", 60);
-//         b.iter(|| {
-//             for _ in 0..60 {
-//                 timer.start();
-//                 timer.end();
-//             }
-//         })
-//     }
+    //     extern crate test;
+    //     use self::test::Bencher;
+    //     #[bench]
+    //     fn bench_frame_timer(b: &mut Bencher) {
+    //         let mut timer = FrameTimer::new("Foobar", 60);
+    //         b.iter(|| {
+    //             for _ in 0..60 {
+    //                 timer.start();
+    //                 timer.end();
+    //             }
+    //         })
+    //     }
 }

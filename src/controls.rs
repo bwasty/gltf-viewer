@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
-use cgmath::{vec3, Deg};
 use cgmath::prelude::*;
+use cgmath::{vec3, Deg};
 
 use num_traits::clamp;
 
@@ -9,8 +9,8 @@ use num_traits::clamp;
 // type Vector3 = cgmath::Vector3<f32>;
 // type Matrix4 = cgmath::Matrix4<f32>;
 
-use render::Camera;
 use render::math::*;
+use render::Camera;
 
 use glutin::dpi::PhysicalPosition;
 use glutin::dpi::PhysicalSize;
@@ -132,7 +132,7 @@ impl OrbitControls {
         match self.state {
             NavState::Rotating => self.handle_mouse_move_rotate(pos),
             NavState::Panning => self.handle_mouse_move_pan(pos),
-            NavState::None => ()
+            NavState::None => (),
         }
     }
 
@@ -281,13 +281,18 @@ impl OrbitControls {
 
         // NOTE: skip zoomChanged stuff
 
-        trace!("Position: {:?}\tTarget: {:?}\tfovy: {:?}", self.position, self.target, Deg(self.camera.fovy));
+        trace!(
+            "Position: {:?}\tTarget: {:?}\tfovy: {:?}",
+            self.position,
+            self.target,
+            Deg(self.camera.fovy)
+        );
     }
 
     pub fn process_keyboard(&mut self, direction: CameraMovement, pressed: bool) {
         match direction {
             FORWARD => self.moving_forward = pressed,
-            BACKWARD => self.moving_backward= pressed,
+            BACKWARD => self.moving_backward = pressed,
             LEFT => self.moving_left = pressed,
             RIGHT => self.moving_right = pressed,
         }
