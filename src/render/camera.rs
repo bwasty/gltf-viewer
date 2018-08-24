@@ -1,10 +1,10 @@
-use cgmath::{Deg, Rad, perspective};
+use cgmath::{perspective, Deg, Rad};
 
 use gltf;
 use gltf::camera::Projection;
 
+use controls::ZOOM;
 use render::math::*;
-use ::controls::{ZOOM};
 
 #[derive(Clone)]
 pub struct Camera {
@@ -66,7 +66,7 @@ impl Camera {
                 camera.fovy = Deg::from(Rad(persp.yfov()));
                 camera.znear = persp.znear();
                 camera.zfar = persp.zfar();
-            },
+            }
             Projection::Orthographic(ortho) => {
                 camera.xmag = Some(ortho.xmag());
                 camera.ymag = Some(ortho.ymag());
@@ -87,6 +87,7 @@ impl Camera {
         self.aspect_ratio
     }
 
+    #[cfg_attr(rustfmt, rustfmt_skip)]
     pub fn update_projection_matrix(&mut self) {
         if let Some(xmag) = self.xmag {
             // from https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#orthographic-projection

@@ -5,9 +5,9 @@ use collision::{Aabb, Aabb3, Union};
 
 use gltf;
 
+use importdata::ImportData;
 use render::math::*;
 use render::{Primitive, Root};
-use importdata::ImportData;
 
 pub struct Mesh {
     pub index: usize, // glTF index
@@ -26,14 +26,16 @@ impl Mesh {
         imp: &ImportData,
         base_path: &Path,
     ) -> Mesh {
-        let primitives: Vec<Primitive> = g_mesh.primitives()
+        let primitives: Vec<Primitive> = g_mesh
+            .primitives()
             .enumerate()
             .map(|(i, g_prim)| {
                 Primitive::from_gltf(&g_prim, i, g_mesh.index(), root, imp, base_path)
             })
             .collect();
 
-        let bounds = primitives.iter()
+        let bounds = primitives
+            .iter()
             .fold(Aabb3::zero(), |bounds, prim| prim.bounds.union(&bounds));
 
         Mesh {

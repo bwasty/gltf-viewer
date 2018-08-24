@@ -3,8 +3,8 @@ use gltf;
 use collision::{Aabb, Union};
 
 use controls::CameraParams;
-use render::{Root};
 use render::math::*;
+use render::Root;
 
 pub struct Scene {
     pub name: Option<String>,
@@ -17,7 +17,7 @@ impl Default for Scene {
         Self {
             name: None,
             nodes: vec![],
-            bounds: Aabb3::zero()
+            bounds: Aabb3::zero(),
         }
     }
 }
@@ -28,9 +28,7 @@ impl Scene {
             name: g_scene.name().map(|s| s.to_owned()),
             ..Default::default()
         };
-        scene.nodes = g_scene.nodes()
-            .map(|g_node| g_node.index())
-            .collect();
+        scene.nodes = g_scene.nodes().map(|g_node| g_node.index()).collect();
 
         // propagate transforms
         let root_transform = Matrix4::identity();

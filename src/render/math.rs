@@ -28,7 +28,11 @@ pub struct Spherical {
 
 impl Default for Spherical {
     fn default() -> Self {
-        Spherical { radius: 1.0, phi: 0.0, theta: 0.0 }
+        Spherical {
+            radius: 1.0,
+            phi: 0.0,
+            theta: 0.0,
+        }
     }
 }
 
@@ -39,15 +43,11 @@ impl Spherical {
             (0.0, 0.0)
         } else {
             (
-                vec3.x.atan2(vec3.z), // equator angle around y-up axis
-                clamp(vec3.y / radius, -1.0, 1.0).acos() // polar angle
+                vec3.x.atan2(vec3.z),                     // equator angle around y-up axis
+                clamp(vec3.y / radius, -1.0, 1.0).acos(), // polar angle
             )
         };
-        Self {
-            radius,
-            theta,
-            phi
-        }
+        Self { radius, theta, phi }
     }
 
     pub fn to_vec3(&self) -> Vector3 {

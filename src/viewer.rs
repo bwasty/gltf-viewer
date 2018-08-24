@@ -4,34 +4,27 @@ use std::path::Path;
 use std::process;
 use std::time::Instant;
 
-use cgmath::{ Deg, Point3 };
+use cgmath::{Deg, Point3};
 use collision::Aabb;
 use gl;
 use gltf;
 use glutin;
-use glutin::{
-    Api,
-    MouseScrollDelta,
-    MouseButton,
-    GlContext,
-    GlRequest,
-    GlProfile,
-    VirtualKeyCode,
-    WindowEvent,
-};
 use glutin::dpi::PhysicalSize;
 use glutin::ElementState::*;
+use glutin::{
+    Api, GlContext, GlProfile, GlRequest, MouseButton, MouseScrollDelta, VirtualKeyCode,
+    WindowEvent,
+};
 
-use image::{DynamicImage};
+use image::DynamicImage;
 
-
-use controls::{OrbitControls, NavState};
 use controls::CameraMovement::*;
+use controls::{NavState, OrbitControls};
 use framebuffer::Framebuffer;
 use importdata::ImportData;
-use render::*;
 use render::math::*;
-use utils::{print_elapsed, FrameTimer, gl_check_error, print_context_info};
+use render::*;
+use utils::{gl_check_error, print_context_info, print_elapsed, FrameTimer};
 
 // TODO!: complete and pass through draw calls? or get rid of multiple shaders?
 // How about state ordering anyway?
@@ -81,56 +74,63 @@ impl GltfViewer {
     ) -> GltfViewer {
         let gl_request = GlRequest::Specific(Api::OpenGl, (3, 3));
         let gl_profile = GlProfile::Core;
-        let (events_loop, gl_window, dpi_factor, inner_size) =
-            if headless {
-                let headless_context = glutin::HeadlessRendererBuilder::new(width, height)
+        let (events_loop, gl_window, dpi_factor, inner_size) = if headless {
+            let headless_context = glutin::HeadlessRendererBuilder::new(width, height)
                     // .with_gl(gl_request)
                     // .with_gl_profile(gl_profile)
                     .build()
                     .unwrap();
-                unsafe { headless_context.make_current().unwrap() }
-                gl::load_with(|symbol| headless_context.get_proc_address(symbol) as *const _);
-                let framebuffer = Framebuffer::new(width, height);
-                framebuffer.bind();
-                unsafe { gl::Viewport(0, 0, width as i32, height as i32); }
-
-                (None, None, 1.0, PhysicalSize::new(width as f64, height as f64)) // TODO: real height (retina? (should be the same as PhysicalSize when headless?))
+            unsafe { headless_context.make_current().unwrap() }
+            gl::load_with(|symbol| headless_context.get_proc_address(symbol) as *const _);
+            let framebuffer = Framebuffer::new(width, height);
+            framebuffer.bind();
+            unsafe {
+                gl::Viewport(0, 0, width as i32, height as i32);
             }
-            else {
-                // glutin: initialize and configure
-                let events_loop = glutin::EventsLoop::new();
-                let window_size = glutin::dpi::LogicalSize::new(width as f64, height as f64);
 
-                // TODO?: hints for 4.1, core profile, forward compat
-                let window = glutin::WindowBuilder::new()
-                        .with_title("gltf-viewer")
-                        .with_dimensions(window_size)
-                        .with_visibility(visible);
+            (
+                None,
+                None,
+                1.0,
+                PhysicalSize::new(width as f64, height as f64),
+            ) // TODO: real height (retina? (should be the same as PhysicalSize when headless?))
+        } else {
+            // glutin: initialize and configure
+            let events_loop = glutin::EventsLoop::new();
+            let window_size = glutin::dpi::LogicalSize::new(width as f64, height as f64);
 
-                let context = glutin::ContextBuilder::new()
-                    .with_gl(gl_request)
-                    .with_gl_profile(gl_profile)
-                    .with_vsync(true);
-                let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
+            // TODO?: hints for 4.1, core profile, forward compat
+            let window = glutin::WindowBuilder::new()
+                .with_title("gltf-viewer")
+                .with_dimensions(window_size)
+                .with_visibility(visible);
 
-                // Real dimensions might be much higher on High-DPI displays
-                let dpi_factor = gl_window.get_hidpi_factor();
-                let inner_size = gl_window.get_inner_size().unwrap().to_physical(dpi_factor);
+            let context = glutin::ContextBuilder::new()
+                .with_gl(gl_request)
+                .with_gl_profile(gl_profile)
+                .with_vsync(true);
+            let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
 
-                unsafe { gl_window.make_current().unwrap(); }
+            // Real dimensions might be much higher on High-DPI displays
+            let dpi_factor = gl_window.get_hidpi_factor();
+            let inner_size = gl_window.get_inner_size().unwrap().to_physical(dpi_factor);
 
-                // gl: load all OpenGL function pointers
-                gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
+            unsafe {
+                gl_window.make_current().unwrap();
+            }
 
-                (Some(events_loop), Some(gl_window), dpi_factor, inner_size)
-            };
-        
-        let mut orbit_controls = OrbitControls::new(
-            Point3::new(0.0, 0.0, 2.0),
-            inner_size);
+            // gl: load all OpenGL function pointers
+            gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
+
+            (Some(events_loop), Some(gl_window), dpi_factor, inner_size)
+        };
+
+        let mut orbit_controls = OrbitControls::new(Point3::new(0.0, 0.0, 2.0), inner_size);
         orbit_controls.camera = Camera::default();
         orbit_controls.camera.fovy = camera_options.fovy;
-        orbit_controls.camera.update_aspect_ratio(inner_size.width as f32 / inner_size.height as f32); // updates projection matrix
+        orbit_controls
+            .camera
+            .update_aspect_ratio(inner_size.width as f32 / inner_size.height as f32); // updates projection matrix
 
         unsafe {
             print_context_info();
@@ -141,8 +141,7 @@ impl GltfViewer {
             if headless || !visible {
                 // transparent background for screenshots
                 gl::ClearColor(0.0, 0.0, 0.0, 0.0);
-            }
-            else {
+            } else {
                 gl::ClearColor(0.1, 0.2, 0.3, 1.0);
             }
 
@@ -171,19 +170,32 @@ impl GltfViewer {
 
             render_timer: FrameTimer::new("rendering", 300),
         };
-        unsafe { gl_check_error!(); };
+        unsafe {
+            gl_check_error!();
+        };
 
-        if camera_options.index != 0 && camera_options.index >= viewer.root.camera_nodes.len() as i32 {
-            error!("No camera with index {} found in glTF file (max: {})",
-                camera_options.index, viewer.root.camera_nodes.len() as i32 - 1);
+        if camera_options.index != 0
+            && camera_options.index >= viewer.root.camera_nodes.len() as i32
+        {
+            error!(
+                "No camera with index {} found in glTF file (max: {})",
+                camera_options.index,
+                viewer.root.camera_nodes.len() as i32 - 1
+            );
             process::exit(2)
         }
         if !viewer.root.camera_nodes.is_empty() && camera_options.index != -1 {
             let cam_node = &viewer.root.get_camera_node(camera_options.index as usize);
             let cam_node_info = format!("{} ({:?})", cam_node.index, cam_node.name);
             let cam = cam_node.camera.as_ref().unwrap();
-            info!("Using camera {} on node {}", cam.description(), cam_node_info);
-            viewer.orbit_controls.set_camera(cam, &cam_node.final_transform);
+            info!(
+                "Using camera {} on node {}",
+                cam.description(),
+                cam_node_info
+            );
+            viewer
+                .orbit_controls
+                .set_camera(cam, &cam_node.final_transform);
 
             if camera_options.position.is_some() || camera_options.target.is_some() {
                 warn!("Ignoring --cam-pos / --cam-target since --cam-index is given.")
@@ -224,23 +236,36 @@ impl GltfViewer {
                     error!("Hint: Are the .bin file(s) referenced by the .gltf file available?")
                 }
                 process::exit(1)
-            },
+            }
         };
-        let imp = ImportData { doc, buffers, images };
+        let imp = ImportData {
+            doc,
+            buffers,
+            images,
+        };
 
         print_elapsed("Imported glTF in ", start_time);
         start_time = Instant::now();
 
         // load first scene
         if scene_index >= imp.doc.scenes().len() {
-            error!("Scene index too high - file has only {} scene(s)", imp.doc.scenes().len());
+            error!(
+                "Scene index too high - file has only {} scene(s)",
+                imp.doc.scenes().len()
+            );
             process::exit(3)
         }
         let base_path = Path::new(source);
         let mut root = Root::from_gltf(&imp, base_path);
         let scene = Scene::from_gltf(&imp.doc.scenes().nth(scene_index).unwrap(), &mut root);
-        print_elapsed(&format!("Loaded scene with {} nodes, {} meshes in ",
-                imp.doc.nodes().count(), imp.doc.meshes().len()), start_time);
+        print_elapsed(
+            &format!(
+                "Loaded scene with {} nodes, {} meshes in ",
+                imp.doc.nodes().count(),
+                imp.doc.meshes().len()
+            ),
+            start_time,
+        );
 
         (root, scene)
     }
@@ -253,11 +278,7 @@ impl GltfViewer {
 
         // TODO: x,y addition optional
         let cam_pos = if straight {
-            Point3::new(
-                center.x,
-                center.y,
-                center.z + size * 0.75,
-            )
+            Point3::new(center.x, center.y, center.z + size * 0.75)
         } else {
             Point3::new(
                 center.x + size / 2.0,
@@ -286,10 +307,13 @@ impl GltfViewer {
                 self.gl_window.as_mut().unwrap(),
                 &mut self.orbit_controls,
                 &mut self.dpi_factor,
-                &mut self.size);
+                &mut self.size,
+            );
             if !keep_running {
-                unsafe { gl_check_error!(); } // final error check so errors don't go unnoticed
-                break
+                unsafe {
+                    gl_check_error!();
+                } // final error check so errors don't go unnoticed
+                break;
             }
 
             self.orbit_controls.frame_update(self.delta_time); // keyboard navigation
@@ -322,24 +346,33 @@ impl GltfViewer {
         unsafe {
             let pixels = img.as_mut_rgba8().unwrap();
             gl::PixelStorei(gl::PACK_ALIGNMENT, 1);
-            gl::ReadPixels(0, 0, self.size.width as i32, self.size.height as i32, gl::RGBA,
-                gl::UNSIGNED_BYTE, pixels.as_mut_ptr() as *mut c_void);
+            gl::ReadPixels(
+                0,
+                0,
+                self.size.width as i32,
+                self.size.height as i32,
+                gl::RGBA,
+                gl::UNSIGNED_BYTE,
+                pixels.as_mut_ptr() as *mut c_void,
+            );
             gl_check_error!();
         }
 
         let img = img.flipv();
         if let Err(err) = img.save(filename) {
             error!("{}", err);
-        }
-        else {
-            println!("Saved {}x{} screenshot to {}", self.size.width, self.size.height, filename);
+        } else {
+            println!(
+                "Saved {}x{} screenshot to {}",
+                self.size.width, self.size.height, filename
+            );
         }
     }
     pub fn multiscreenshot(&mut self, filename: &str, count: u32) {
-        let min_angle : f32 = 0.0 ;
-        let max_angle : f32 =  2.0 * PI ;
-        let increment_angle : f32 = ((max_angle - min_angle)/(count as f32)) as f32;
-        for i in 1..(count+1) {
+        let min_angle: f32 = 0.0;
+        let max_angle: f32 = 2.0 * PI;
+        let increment_angle: f32 = ((max_angle - min_angle) / (count as f32)) as f32;
+        for i in 1..(count + 1) {
             self.orbit_controls.rotate_object(increment_angle);
             let dot = filename.rfind('.').unwrap_or_else(|| filename.len());
             let mut actual_name = filename.to_string();
@@ -355,75 +388,90 @@ fn process_events(
     gl_window: &glutin::GlWindow,
     mut orbit_controls: &mut OrbitControls,
     dpi_factor: &mut f64,
-    size: &mut PhysicalSize) -> bool
-{
+    size: &mut PhysicalSize,
+) -> bool {
     let mut keep_running = true;
     #[allow(single_match)]
     events_loop.poll_events(|event| {
         match event {
-            glutin::Event::WindowEvent{ event, .. } => match event {
+            glutin::Event::WindowEvent { event, .. } => match event {
                 WindowEvent::CloseRequested => {
                     keep_running = false;
-                },
+                }
                 WindowEvent::Destroyed => {
                     // Log and exit?
                     panic!("WindowEvent::Destroyed, unimplemented.");
-                },
+                }
                 WindowEvent::Resized(logical) => {
                     let ph = logical.to_physical(*dpi_factor);
                     gl_window.resize(ph);
 
                     // This doesn't seem to be needed on macOS but linux X11, Wayland and Windows
                     // do need it.
-                    unsafe { gl::Viewport(0, 0, ph.width as i32, ph.height as i32); }
+                    unsafe {
+                        gl::Viewport(0, 0, ph.width as i32, ph.height as i32);
+                    }
 
                     *size = ph;
-                    orbit_controls.camera.update_aspect_ratio((ph.width / ph.height) as f32);
+                    orbit_controls
+                        .camera
+                        .update_aspect_ratio((ph.width / ph.height) as f32);
                     orbit_controls.screen_size = ph;
-                },
+                }
                 WindowEvent::HiDpiFactorChanged(f) => {
                     *dpi_factor = f;
-                },
+                }
                 WindowEvent::DroppedFile(_path_buf) => {
                     () // TODO: drag file in
                 }
-                WindowEvent::MouseInput { button, state: Pressed, ..} => {
-                    match button {
-                        MouseButton::Left => {
-                            orbit_controls.state = NavState::Rotating;
-                        },
-                        MouseButton::Right => {
-                            orbit_controls.state = NavState::Panning;
-                        },
-                        _ => ()
+                WindowEvent::MouseInput {
+                    button,
+                    state: Pressed,
+                    ..
+                } => match button {
+                    MouseButton::Left => {
+                        orbit_controls.state = NavState::Rotating;
                     }
+                    MouseButton::Right => {
+                        orbit_controls.state = NavState::Panning;
+                    }
+                    _ => (),
                 },
-                WindowEvent::MouseInput { button, state: Released, ..} => {
-                    match (button, orbit_controls.state.clone()) {
-                        (MouseButton::Left, NavState::Rotating) | (MouseButton::Right, NavState::Panning) => {
-                            orbit_controls.state = NavState::None;
-                            orbit_controls.handle_mouse_up();
-                        },
-                        _ => ()
+                WindowEvent::MouseInput {
+                    button,
+                    state: Released,
+                    ..
+                } => match (button, orbit_controls.state.clone()) {
+                    (MouseButton::Left, NavState::Rotating)
+                    | (MouseButton::Right, NavState::Panning) => {
+                        orbit_controls.state = NavState::None;
+                        orbit_controls.handle_mouse_up();
                     }
-                }
+                    _ => (),
+                },
                 WindowEvent::CursorMoved { position, .. } => {
                     let ph = position.to_physical(*dpi_factor);
                     orbit_controls.handle_mouse_move(ph)
-                },
-                WindowEvent::MouseWheel { delta: MouseScrollDelta::PixelDelta(logical), .. } => {
+                }
+                WindowEvent::MouseWheel {
+                    delta: MouseScrollDelta::PixelDelta(logical),
+                    ..
+                } => {
                     let ph = logical.to_physical(*dpi_factor);
                     orbit_controls.process_mouse_scroll(ph.y as f32);
                 }
-                WindowEvent::MouseWheel { delta: MouseScrollDelta::LineDelta(_rows, lines), .. } => {
+                WindowEvent::MouseWheel {
+                    delta: MouseScrollDelta::LineDelta(_rows, lines),
+                    ..
+                } => {
                     orbit_controls.process_mouse_scroll(lines * 3.0);
                 }
                 WindowEvent::KeyboardInput { input, .. } => {
                     keep_running = process_input(input, &mut orbit_controls);
                 }
-                _ => ()
+                _ => (),
             },
-            _ => ()
+            _ => (),
         }
     });
 
@@ -433,16 +481,18 @@ fn process_events(
 fn process_input(input: glutin::KeyboardInput, controls: &mut OrbitControls) -> bool {
     let pressed = match input.state {
         Pressed => true,
-        Released => false
+        Released => false,
     };
     if let Some(code) = input.virtual_keycode {
         match code {
             VirtualKeyCode::Escape if pressed => return false,
-            VirtualKeyCode::W | VirtualKeyCode::Up    => controls.process_keyboard(FORWARD, pressed),
-            VirtualKeyCode::S | VirtualKeyCode::Down  => controls.process_keyboard(BACKWARD, pressed),
-            VirtualKeyCode::A | VirtualKeyCode::Left  => controls.process_keyboard(LEFT, pressed),
+            VirtualKeyCode::W | VirtualKeyCode::Up => controls.process_keyboard(FORWARD, pressed),
+            VirtualKeyCode::S | VirtualKeyCode::Down => {
+                controls.process_keyboard(BACKWARD, pressed)
+            }
+            VirtualKeyCode::A | VirtualKeyCode::Left => controls.process_keyboard(LEFT, pressed),
             VirtualKeyCode::D | VirtualKeyCode::Right => controls.process_keyboard(RIGHT, pressed),
-            _ => ()
+            _ => (),
         }
     }
     true
