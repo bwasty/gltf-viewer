@@ -5,7 +5,8 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use shader::*;
-use render::{Mesh, Node, Texture, Material};
+use render::{Mesh, Node, Material};
+use render::texture::Texture;
 use importdata::ImportData;
 
 #[derive(Default)]

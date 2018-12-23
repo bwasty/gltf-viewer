@@ -4,7 +4,8 @@ use std::path::Path;
 use gltf;
 
 use render::math::*;
-use render::{ Root, Texture };
+use render::{ Root };
+use render::texture::Texture;
 use shader::*;
 use importdata::ImportData;
 
