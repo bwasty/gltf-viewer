@@ -31,7 +31,7 @@ use simplelog::{TermLogger, LevelFilter, Config as LogConfig};
 
 mod utils;
 mod viewer;
-use viewer::{GltfViewer, CameraOptions};
+use crate::viewer::{GltfViewer, CameraOptions};
 
 mod shader;
 mod controls;
@@ -42,7 +42,7 @@ mod importdata;
 // mod http_source;
 // use http_source::HttpSource;
 mod render;
-use render::math::*;
+use crate::render::math::*;
 
 pub fn main() {
     let args = App::new("gltf-viewer")

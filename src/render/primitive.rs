@@ -8,10 +8,10 @@ use gl;
 use gl::types::GLenum;
 use gltf;
 
-use render::math::*;
-use render::{Material, Root};
-use shader::*;
-use importdata::ImportData;
+use crate::render::math::*;
+use crate::render::{Material, Root};
+use crate::shader::*;
+use crate::importdata::ImportData;
 
 #[derive(Debug)]
 pub struct Vertex {

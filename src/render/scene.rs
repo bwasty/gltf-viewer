@@ -2,9 +2,9 @@ use gltf;
 
 use collision::{Aabb, Union};
 
-use controls::CameraParams;
-use render::{Root};
-use render::math::*;
+use crate::controls::CameraParams;
+use crate::render::{Root};
+use crate::render::math::*;
 
 pub struct Scene {
     pub name: Option<String>,

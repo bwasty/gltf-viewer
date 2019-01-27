@@ -3,8 +3,8 @@ use cgmath::{Deg, Rad, perspective};
 use gltf;
 use gltf::camera::Projection;
 
-use render::math::*;
-use ::controls::{ZOOM};
+use crate::render::math::*;
+use crate::controls::{ZOOM};
 
 #[derive(Clone)]
 pub struct Camera {

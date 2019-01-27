@@ -14,7 +14,7 @@ use image::DynamicImage::*;
 use image::GenericImageView;
 use image::FilterType;
 
-use importdata::ImportData;
+use crate::importdata::ImportData;
 
 pub struct Texture {
     pub index: usize, // glTF index

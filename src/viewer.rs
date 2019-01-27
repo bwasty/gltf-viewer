@@ -25,13 +25,13 @@ use glutin::ElementState::*;
 use image::{DynamicImage};
 
 
-use controls::{OrbitControls, NavState};
-use controls::CameraMovement::*;
-use framebuffer::Framebuffer;
-use importdata::ImportData;
-use render::*;
-use render::math::*;
-use utils::{print_elapsed, FrameTimer, gl_check_error, print_context_info};
+use crate::controls::{OrbitControls, NavState};
+use crate::controls::CameraMovement::*;
+use crate::framebuffer::Framebuffer;
+use crate::importdata::ImportData;
+use crate::render::*;
+use crate::render::math::*;
+use crate::utils::{print_elapsed, FrameTimer, gl_check_error, print_context_info};
 
 // TODO!: complete and pass through draw calls? or get rid of multiple shaders?
 // How about state ordering anyway?

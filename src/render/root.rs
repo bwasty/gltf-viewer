@@ -4,10 +4,10 @@ use std::rc::Rc;
 use std::collections::HashMap;
 use std::path::Path;
 
-use shader::*;
-use render::{Mesh, Node, Material};
-use render::texture::Texture;
-use importdata::ImportData;
+use crate::shader::*;
+use crate::render::{Mesh, Node, Material};
+use crate::render::texture::Texture;
+use crate::importdata::ImportData;
 
 #[derive(Default)]
 pub struct Root {

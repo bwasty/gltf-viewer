@@ -5,12 +5,12 @@ use gltf;
 
 use collision::{Aabb, Union};
 
-use controls::CameraParams;
-use render::math::*;
-use render::mesh::Mesh;
-use render::Root;
-use render::camera::Camera;
-use importdata::ImportData;
+use crate::controls::CameraParams;
+use crate::render::math::*;
+use crate::render::mesh::Mesh;
+use crate::render::Root;
+use crate::render::camera::Camera;
+use crate::importdata::ImportData;
 
 pub struct Node {
     pub index: usize, // glTF index
