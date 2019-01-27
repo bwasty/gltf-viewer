@@ -1,10 +1,10 @@
-FROM rust:1.28
+FROM rust:1.32
 
 WORKDIR /usr/src/gltf-viewer
 COPY src src
 COPY Cargo.toml Cargo.toml
 COPY Cargo.lock Cargo.lock
-RUN cargo install
+RUN cargo install --path .
 
 RUN apt-get update
 
