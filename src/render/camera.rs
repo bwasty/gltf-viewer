@@ -64,7 +64,8 @@ impl Camera {
                 // TODO!!: ignoring aspect ratio for now as it would require window resizing...
                 let _aspect = persp.aspect_ratio();
                 camera.fovy = Deg::from(Rad(persp.yfov()));
-                camera.znear = persp.znear();
+                // cgmath asserts znear > 0, but the gltf spec allows it
+                camera.znear = persp.znear().max(0.0001); 
                 camera.zfar = persp.zfar();
             },
             Projection::Orthographic(ortho) => {
