@@ -22,11 +22,9 @@ See [Latest Release](https://github.com/bwasty/gltf-viewer/releases/latest)
 ```shell
 cargo install gltf-viewer
 ```
-or
+Latest version (unstable):
 ```shell
-git clone https://github.com/bwasty/gltf-viewer.git
-cd gltf-viewer
-cargo install gltf-viewer
+cargo install --git https://github.com/bwasty/gltf-viewer.git
 ```
 ## Usage
 ```
