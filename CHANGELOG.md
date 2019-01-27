@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.1] - 2019-01-27
+### Fixed
+* Ambiguous import compilation error with Rust 1.31 ([#55](https://github.com/bwasty/gltf-viewer/pull/55))
+* Crash due to near plane 0 ([#54](https://github.com/bwasty/gltf-viewer/issues/54), [rust-lang/rust#56316](https://github.com/rust-lang/rust/issues/56316))
+
+### Changed
+* (internal) upgrade to Rust Edition 2018
+
 ## [0.4.0] - 2018-08-22
 ### Added
 * `--straight` CLI parameter: Position camera in front of model if using default camera (i.e. glTF doesn't contain a camera or `--cam-index -1` is passed) ([#49](https://github.com/bwasty/gltf-viewer/pull/49))
