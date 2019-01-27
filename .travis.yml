@@ -57,7 +57,7 @@ deploy:
     condition: $TRAVIS_RUST_VERSION = stable
     tags: true
   provider: releases
-  prerelease: true
+  prerelease: false
   skip_cleanup: true
 
 cache: cargo
