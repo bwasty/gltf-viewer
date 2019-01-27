@@ -11,6 +11,9 @@ use gl::types::*;
 use cgmath::{Matrix, Matrix4, Vector3, Vector4};
 use cgmath::prelude::*;
 
+use bitflags::bitflags;
+use log::{warn, trace};
+
 pub struct Shader {
     pub id: u32,
     uniform_location_cache: HashMap<&'static str, i32>

@@ -1,19 +1,15 @@
 // #![allow(dead_code)]
-#![allow(unknown_lints)]
 // #![allow(unused_features)]
 // #![feature(test)]
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::cast_lossless, clippy::cyclomatic_complexity))]
+#![allow(clippy::cast_lossless, clippy::cyclomatic_complexity)]
 
-#[macro_use] extern crate clap;
+use clap::crate_version;
 use cgmath;
 use cgmath::Deg;
 
-#[macro_use]
-extern crate bitflags;
-
 use clap::{Arg, App, AppSettings};
 
-#[macro_use]extern crate log;
+use log::warn;
 
 use simplelog::{TermLogger, LevelFilter, Config as LogConfig};
 

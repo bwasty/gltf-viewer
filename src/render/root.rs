@@ -1,5 +1,3 @@
-#![macro_use]
-
 use std::rc::Rc;
 use std::collections::HashMap;
 use std::path::Path;

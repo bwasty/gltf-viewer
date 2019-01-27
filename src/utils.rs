@@ -7,6 +7,8 @@ use std::time::{Duration, Instant};
 use gl;
 use gl::types::GLubyte;
 
+use log::{debug, info, error};
+
 pub fn elapsed(start_time: Instant) -> String {
     let elapsed = start_time.elapsed();
     format_duration(elapsed)

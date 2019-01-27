@@ -3,6 +3,7 @@ use std::f32::consts::PI;
 use cgmath::{vec3, Deg};
 use cgmath::prelude::*;
 
+use log::{warn, trace};
 use num_traits::clamp;
 
 // type Point3 = cgmath::Point3<f32>;

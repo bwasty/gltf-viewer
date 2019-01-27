@@ -7,6 +7,7 @@ use std::rc::Rc;
 use gl;
 use gl::types::GLenum;
 use gltf;
+use log::{warn, debug};
 
 use crate::render::math::*;
 use crate::render::{Material, Root};

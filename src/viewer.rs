@@ -23,7 +23,7 @@ use glutin::dpi::PhysicalSize;
 use glutin::ElementState::*;
 
 use image::{DynamicImage};
-
+use log::{error, warn, info};
 
 use crate::controls::{OrbitControls, NavState};
 use crate::controls::CameraMovement::*;
