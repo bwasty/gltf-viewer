@@ -11,7 +11,7 @@ use gltf::image::Source;
 use image;
 use image::ImageFormat::{JPEG, PNG};
 use image::DynamicImage::*;
-use image::GenericImage;
+use image::GenericImageView;
 use image::FilterType;
 
 use importdata::ImportData;
@@ -99,6 +99,8 @@ impl Texture {
             ImageLumaA8(_) => gl::RG,
             ImageRgb8(_) => gl::RGB,
             ImageRgba8(_) => gl::RGBA,
+            ImageBgr8(_) => gl::BGR,
+            ImageBgra8(_) => gl::BGRA,
         };
 
         // **Non-Power-Of-Two Texture Implementation Note**: glTF does not guarantee that a texture's
