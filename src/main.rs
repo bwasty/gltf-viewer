@@ -2,23 +2,11 @@
 #![allow(unknown_lints)]
 // #![allow(unused_features)]
 // #![feature(test)]
-#![cfg_attr(feature = "cargo-clippy", allow(cast_lossless, cyclomatic_complexity))]
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::cast_lossless, clippy::cyclomatic_complexity))]
 
 #[macro_use] extern crate clap;
-extern crate cgmath;
+use cgmath;
 use cgmath::Deg;
-
-extern crate base64;
-extern crate collision;
-
-extern crate gl;
-
-extern crate glutin;
-
-extern crate gltf;
-
-extern crate image;
-extern crate num_traits;
 
 #[macro_use]
 extern crate bitflags;
@@ -26,12 +14,12 @@ extern crate bitflags;
 use clap::{Arg, App, AppSettings};
 
 #[macro_use]extern crate log;
-extern crate simplelog;
+
 use simplelog::{TermLogger, LevelFilter, Config as LogConfig};
 
 mod utils;
 mod viewer;
-use viewer::{GltfViewer, CameraOptions};
+use crate::viewer::{GltfViewer, CameraOptions};
 
 mod shader;
 mod controls;
@@ -42,7 +30,7 @@ mod importdata;
 // mod http_source;
 // use http_source::HttpSource;
 mod render;
-use render::math::*;
+use crate::render::math::*;
 
 pub fn main() {
     let args = App::new("gltf-viewer")

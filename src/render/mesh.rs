@@ -5,9 +5,9 @@ use collision::{Aabb, Aabb3, Union};
 
 use gltf;
 
-use render::math::*;
-use render::{Primitive, Root};
-use importdata::ImportData;
+use crate::render::math::*;
+use crate::render::{Primitive, Root};
+use crate::importdata::ImportData;
 
 pub struct Mesh {
     pub index: usize, // glTF index
@@ -21,7 +21,7 @@ pub struct Mesh {
 
 impl Mesh {
     pub fn from_gltf(
-        g_mesh: &gltf::Mesh,
+        g_mesh: &gltf::Mesh<'_>,
         root: &mut Root,
         imp: &ImportData,
         base_path: &Path,

@@ -3,8 +3,8 @@ use cgmath::{Deg, Rad, perspective};
 use gltf;
 use gltf::camera::Projection;
 
-use render::math::*;
-use ::controls::{ZOOM};
+use crate::render::math::*;
+use crate::controls::{ZOOM};
 
 #[derive(Clone)]
 pub struct Camera {
@@ -47,7 +47,7 @@ impl Default for Camera {
 }
 
 impl Camera {
-    pub fn from_gltf(g_camera: &gltf::Camera) -> Self {
+    pub fn from_gltf(g_camera: &gltf::Camera<'_>) -> Self {
         let mut camera = Camera {
             index: g_camera.index(),
             name: g_camera.name().map(|n| n.to_owned()),
@@ -64,7 +64,8 @@ impl Camera {
                 // TODO!!: ignoring aspect ratio for now as it would require window resizing...
                 let _aspect = persp.aspect_ratio();
                 camera.fovy = Deg::from(Rad(persp.yfov()));
-                camera.znear = persp.znear();
+                // cgmath asserts znear > 0, but the gltf spec allows it
+                camera.znear = persp.znear().max(0.0001); 
                 camera.zfar = persp.zfar();
             },
             Projection::Orthographic(ortho) => {

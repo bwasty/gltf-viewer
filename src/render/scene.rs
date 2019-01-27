@@ -2,9 +2,9 @@ use gltf;
 
 use collision::{Aabb, Union};
 
-use controls::CameraParams;
-use render::{Root};
-use render::math::*;
+use crate::controls::CameraParams;
+use crate::render::{Root};
+use crate::render::math::*;
 
 pub struct Scene {
     pub name: Option<String>,
@@ -23,7 +23,7 @@ impl Default for Scene {
 }
 
 impl Scene {
-    pub fn from_gltf(g_scene: &gltf::Scene, root: &mut Root) -> Scene {
+    pub fn from_gltf(g_scene: &gltf::Scene<'_>, root: &mut Root) -> Scene {
         let mut scene = Scene {
             name: g_scene.name().map(|s| s.to_owned()),
             ..Default::default()

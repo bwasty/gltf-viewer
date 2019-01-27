@@ -9,8 +9,8 @@ use num_traits::clamp;
 // type Vector3 = cgmath::Vector3<f32>;
 // type Matrix4 = cgmath::Matrix4<f32>;
 
-use render::Camera;
-use render::math::*;
+use crate::render::Camera;
+use crate::render::math::*;
 
 use glutin::dpi::PhysicalPosition;
 use glutin::dpi::PhysicalSize;

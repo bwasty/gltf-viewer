@@ -3,11 +3,11 @@ use std::path::Path;
 
 use gltf;
 
-use render::math::*;
-use render::{ Root };
-use render::texture::Texture;
-use shader::*;
-use importdata::ImportData;
+use crate::render::math::*;
+use crate::render::{ Root };
+use crate::render::texture::Texture;
+use crate::shader::*;
+use crate::importdata::ImportData;
 
 pub struct Material {
     pub index: Option<usize>, /// glTF index
@@ -37,7 +37,7 @@ pub struct Material {
 
 impl Material {
     pub fn from_gltf(
-        g_material: &gltf::material::Material,
+        g_material: &gltf::material::Material<'_>,
         root: &mut Root,
         imp: &ImportData,
         base_path: &Path
@@ -118,7 +118,7 @@ impl Material {
 }
 
 fn load_texture(
-    g_texture: &gltf::texture::Texture,
+    g_texture: &gltf::texture::Texture<'_>,
     tex_coord: u32,
     root: &mut Root,
     imp: &ImportData,

@@ -25,13 +25,13 @@ use glutin::ElementState::*;
 use image::{DynamicImage};
 
 
-use controls::{OrbitControls, NavState};
-use controls::CameraMovement::*;
-use framebuffer::Framebuffer;
-use importdata::ImportData;
-use render::*;
-use render::math::*;
-use utils::{print_elapsed, FrameTimer, gl_check_error, print_context_info};
+use crate::controls::{OrbitControls, NavState};
+use crate::controls::CameraMovement::*;
+use crate::framebuffer::Framebuffer;
+use crate::importdata::ImportData;
+use crate::render::*;
+use crate::render::math::*;
+use crate::utils::{print_elapsed, FrameTimer, gl_check_error, print_context_info};
 
 // TODO!: complete and pass through draw calls? or get rid of multiple shaders?
 // How about state ordering anyway?
@@ -339,7 +339,7 @@ impl GltfViewer {
         let min_angle : f32 = 0.0 ;
         let max_angle : f32 =  2.0 * PI ;
         let increment_angle : f32 = ((max_angle - min_angle)/(count as f32)) as f32;
-        for i in 1..(count+1) {
+        for i in 1..=count {
             self.orbit_controls.rotate_object(increment_angle);
             let dot = filename.rfind('.').unwrap_or_else(|| filename.len());
             let mut actual_name = filename.to_string();
@@ -349,7 +349,7 @@ impl GltfViewer {
     }
 }
 
-#[allow(too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
 fn process_events(
     events_loop: &mut glutin::EventsLoop,
     gl_window: &glutin::GlWindow,
@@ -358,7 +358,7 @@ fn process_events(
     size: &mut PhysicalSize) -> bool
 {
     let mut keep_running = true;
-    #[allow(single_match)]
+    #[allow(clippy::single_match)]
     events_loop.poll_events(|event| {
         match event {
             glutin::Event::WindowEvent{ event, .. } => match event {
@@ -385,7 +385,7 @@ fn process_events(
                     *dpi_factor = f;
                 },
                 WindowEvent::DroppedFile(_path_buf) => {
-                    () // TODO: drag file in
+                    // TODO: drag file in
                 }
                 WindowEvent::MouseInput { button, state: Pressed, ..} => {
                     match button {
