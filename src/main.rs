@@ -2,7 +2,7 @@
 #![allow(unknown_lints)]
 // #![allow(unused_features)]
 // #![feature(test)]
-#![cfg_attr(feature = "cargo-clippy", allow(cast_lossless, cyclomatic_complexity))]
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::cast_lossless, clippy::cyclomatic_complexity))]
 
 #[macro_use] extern crate clap;
 extern crate cgmath;
