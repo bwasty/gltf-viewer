@@ -47,7 +47,7 @@ impl Default for Camera {
 }
 
 impl Camera {
-    pub fn from_gltf(g_camera: &gltf::Camera) -> Self {
+    pub fn from_gltf(g_camera: &gltf::Camera<'_>) -> Self {
         let mut camera = Camera {
             index: g_camera.index(),
             name: g_camera.name().map(|n| n.to_owned()),

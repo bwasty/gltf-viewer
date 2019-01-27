@@ -25,7 +25,7 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn from_gltf(g_texture: &gltf::Texture, tex_coord: u32, imp: &ImportData, base_path: &Path) -> Texture {
+    pub fn from_gltf(g_texture: &gltf::Texture<'_>, tex_coord: u32, imp: &ImportData, base_path: &Path) -> Texture {
         let buffers = &imp.buffers;
         let mut texture_id = 0;
         unsafe {
@@ -140,7 +140,7 @@ impl Texture {
 
     // Returns whether image needs to be Power-Of-Two-sized and whether mip maps should be generated
     // TODO: refactor return type into enum?
-    unsafe fn set_sampler_params(sampler: &gltf::texture::Sampler) -> (bool, bool) {
+    unsafe fn set_sampler_params(sampler: &gltf::texture::Sampler<'_>) -> (bool, bool) {
         // **Mipmapping Implementation Note**: When a sampler's minification filter (`minFilter`)
         // uses mipmapping (`NEAREST_MIPMAP_NEAREST`, `NEAREST_MIPMAP_LINEAR`, `LINEAR_MIPMAP_NEAREST`,
         // or `LINEAR_MIPMAP_LINEAR`), any texture referencing the sampler needs to have mipmaps,

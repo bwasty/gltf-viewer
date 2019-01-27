@@ -21,7 +21,7 @@ pub struct Mesh {
 
 impl Mesh {
     pub fn from_gltf(
-        g_mesh: &gltf::Mesh,
+        g_mesh: &gltf::Mesh<'_>,
         root: &mut Root,
         imp: &ImportData,
         base_path: &Path,

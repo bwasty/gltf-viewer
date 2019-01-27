@@ -92,7 +92,7 @@ impl Primitive {
     }
 
     pub fn from_gltf(
-        g_primitive: &gltf::Primitive,
+        g_primitive: &gltf::Primitive<'_>,
         primitive_index: usize,
         mesh_index: usize,
         root: &mut Root,

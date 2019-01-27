@@ -31,7 +31,7 @@ pub struct Node {
 
 impl Node {
     pub fn from_gltf(
-        g_node: &gltf::Node,
+        g_node: &gltf::Node<'_>,
         root: &mut Root,
         imp: &ImportData,
         base_path: &Path

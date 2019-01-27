@@ -23,7 +23,7 @@ impl Default for Scene {
 }
 
 impl Scene {
-    pub fn from_gltf(g_scene: &gltf::Scene, root: &mut Root) -> Scene {
+    pub fn from_gltf(g_scene: &gltf::Scene<'_>, root: &mut Root) -> Scene {
         let mut scene = Scene {
             name: g_scene.name().map(|s| s.to_owned()),
             ..Default::default()
