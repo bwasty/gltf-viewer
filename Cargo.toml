@@ -1,5 +1,8 @@
 [package]
+name = "gltf-viewer"
+version = "0.4.1-alpha.0"
 authors = ["Benjamin Wasty <benny.wasty@gmail.com>"]
+edition = "2018"
 categories = ["rendering"]
 description = "Simple glTF 2.0 viewer"
 include = [
@@ -10,10 +13,8 @@ include = [
 ]
 keywords = ["glTF", "3D", "model", "scene", "viewer"]
 license = "Unlicense"
-name = "gltf-viewer"
 readme = "README.md"
 repository = "https://github.com/bwasty/gltf-viewer"
-version = "0.4.1-alpha.0"
 build = false # TODO: git-version doesn't work on Travis
 
 [badges]
