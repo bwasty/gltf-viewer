@@ -8,10 +8,10 @@ use gl;
 use gl::types::GLenum;
 use gltf;
 
+use importdata::ImportData;
 use render::math::*;
 use render::{Material, Root};
 use shader::*;
-use importdata::ImportData;
 
 #[derive(Debug)]
 pub struct Vertex {
@@ -62,7 +62,6 @@ pub struct Primitive {
     material: Rc<Material>,
 
     pbr_shader: Rc<PbrShader>,
-
     // TODO!: mode, targets
 }
 
@@ -80,7 +79,9 @@ impl Primitive {
             bounds,
             num_vertices: vertices.len() as u32,
             num_indices: num_indices as u32,
-            vao: 0, vbo: 0, ebo: None,
+            vao: 0,
+            vbo: 0,
+            ebo: None,
             mode,
             material,
             pbr_shader: shader,
@@ -97,33 +98,31 @@ impl Primitive {
         mesh_index: usize,
         root: &mut Root,
         imp: &ImportData,
-        base_path: &Path) -> Primitive
-    {
+        base_path: &Path,
+    ) -> Primitive {
         let buffers = &imp.buffers;
         let reader = g_primitive.reader(|buffer| Some(&buffers[buffer.index()]));
         let positions = {
-            let iter = reader
-                .read_positions()
-                .unwrap_or_else(||
-                    panic!("primitives must have the POSITION attribute (mesh: {}, primitive: {})",
-                        mesh_index, primitive_index)
-                );
+            let iter = reader.read_positions().unwrap_or_else(|| {
+                panic!(
+                    "primitives must have the POSITION attribute (mesh: {}, primitive: {})",
+                    mesh_index, primitive_index
+                )
+            });
             iter.collect::<Vec<_>>()
         };
 
         let bounds = g_primitive.bounding_box();
         let bounds = Aabb3 {
             min: bounds.min.into(),
-            max: bounds.max.into()
+            max: bounds.max.into(),
         };
 
         let mut vertices: Vec<Vertex> = positions
             .into_iter()
-            .map(|position| {
-                Vertex {
-                    position: Vector3::from(position),
-                    ..Vertex::default()
-                }
+            .map(|position| Vertex {
+                position: Vector3::from(position),
+                ..Vertex::default()
             }).collect();
 
         let mut shader_flags = ShaderFlags::empty();
@@ -134,10 +133,12 @@ impl Primitive {
                 vertices[i].normal = Vector3::from(normal);
             }
             shader_flags |= ShaderFlags::HAS_NORMALS;
-        }
-        else {
-            debug!("Found no NORMALs for primitive {} of mesh {} \
-                   (flat normal calculation not implemented yet)", primitive_index, mesh_index);
+        } else {
+            debug!(
+                "Found no NORMALs for primitive {} of mesh {} \
+                 (flat normal calculation not implemented yet)",
+                primitive_index, mesh_index
+            );
         }
 
         // tangents
@@ -146,19 +147,23 @@ impl Primitive {
                 vertices[i].tangent = Vector4::from(tangent);
             }
             shader_flags |= ShaderFlags::HAS_TANGENTS;
-        }
-        else {
-            debug!("Found no TANGENTS for primitive {} of mesh {} \
-                   (tangent calculation not implemented yet)", primitive_index, mesh_index);
+        } else {
+            debug!(
+                "Found no TANGENTS for primitive {} of mesh {} \
+                 (tangent calculation not implemented yet)",
+                primitive_index, mesh_index
+            );
         }
 
         // texture coordinates
         let mut tex_coord_set = 0;
         while let Some(tex_coords) = reader.read_tex_coords(tex_coord_set) {
             if tex_coord_set > 1 {
-                warn!("Ignoring texture coordinate set {}, \
-                        only supporting 2 sets at the moment. (mesh: {}, primitive: {})",
-                        tex_coord_set, mesh_index, primitive_index);
+                warn!(
+                    "Ignoring texture coordinate set {}, \
+                     only supporting 2 sets at the moment. (mesh: {}, primitive: {})",
+                    tex_coord_set, mesh_index, primitive_index
+                );
                 tex_coord_set += 1;
                 continue;
             }
@@ -166,7 +171,7 @@ impl Primitive {
                 match tex_coord_set {
                     0 => vertices[i].tex_coord_0 = Vector2::from(tex_coord),
                     1 => vertices[i].tex_coord_1 = Vector2::from(tex_coord),
-                    _ => unreachable!()
+                    _ => unreachable!(),
                 }
             }
             shader_flags |= ShaderFlags::HAS_UV;
@@ -182,8 +187,10 @@ impl Primitive {
             shader_flags |= ShaderFlags::HAS_COLORS;
         }
         if reader.read_colors(1).is_some() {
-            warn!("Ignoring further color attributes, only supporting COLOR_0. (mesh: {}, primitive: {})",
-                mesh_index, primitive_index);
+            warn!(
+                "Ignoring further color attributes, only supporting COLOR_0. (mesh: {}, primitive: {})",
+                mesh_index, primitive_index
+            );
         }
 
         if let Some(joints) = reader.read_joints(0) {
@@ -192,8 +199,10 @@ impl Primitive {
             }
         }
         if reader.read_joints(1).is_some() {
-            warn!("Ignoring further joint attributes, only supporting JOINTS_0. (mesh: {}, primitive: {})",
-                mesh_index, primitive_index);
+            warn!(
+                "Ignoring further joint attributes, only supporting JOINTS_0. (mesh: {}, primitive: {})",
+                mesh_index, primitive_index
+            );
         }
 
         if let Some(weights) = reader.read_weights(0) {
@@ -202,15 +211,15 @@ impl Primitive {
             }
         }
         if reader.read_weights(1).is_some() {
-            warn!("Ignoring further weight attributes, only supporting WEIGHTS_0. (mesh: {}, primitive: {})",
-                mesh_index, primitive_index);
+            warn!(
+                "Ignoring further weight attributes, only supporting WEIGHTS_0. (mesh: {}, primitive: {})",
+                mesh_index, primitive_index
+            );
         }
 
         let indices = reader
             .read_indices()
-            .map(|read_indices| {
-                read_indices.into_u32().collect::<Vec<_>>()
-            });
+            .map(|read_indices| read_indices.into_u32().collect::<Vec<_>>());
 
         // TODO: spec:
         // Implementation note: When the 'mode' property is set to a non-triangular type
@@ -228,7 +237,8 @@ impl Primitive {
             material = Rc::clone(mat).into()
         }
 
-        if material.is_none() { // no else due to borrow checker madness
+        if material.is_none() {
+            // no else due to borrow checker madness
             let mat = Rc::new(Material::from_gltf(&g_material, root, imp, base_path));
             root.materials.push(Rc::clone(&mat));
             material = Some(mat);
@@ -237,15 +247,12 @@ impl Primitive {
         shader_flags |= material.shader_flags();
 
         let mut new_shader = false; // borrow checker workaround
-        let shader =
-            if let Some(shader) = root.shaders.get(&shader_flags) {
-                Rc::clone(shader)
-            }
-            else {
-                new_shader = true;
-                PbrShader::new(shader_flags).into()
-
-            };
+        let shader = if let Some(shader) = root.shaders.get(&shader_flags) {
+            Rc::clone(shader)
+        } else {
+            new_shader = true;
+            PbrShader::new(shader_flags).into()
+        };
         if new_shader {
             root.shaders.insert(shader_flags, Rc::clone(&shader));
         }
@@ -273,8 +280,7 @@ impl Primitive {
         gl::BindVertexArray(self.vao);
         if self.ebo.is_some() {
             gl::DrawElements(self.mode, self.num_indices as i32, gl::UNSIGNED_INT, ptr::null());
-        }
-        else {
+        } else {
             gl::DrawArrays(self.mode, 0, self.num_vertices as i32)
         }
 
@@ -292,9 +298,7 @@ impl Primitive {
         }
     }
 
-    unsafe fn configure_shader(&self, model_matrix: &Matrix4,
-        mvp_matrix: &Matrix4, camera_position: &Vector3)
-    {
+    unsafe fn configure_shader(&self, model_matrix: &Matrix4, mvp_matrix: &Matrix4, camera_position: &Vector3) {
         // let pbr_shader = &Rc::get_mut(&mut self.pbr_shader).unwrap();
         let mat = &self.material;
         let shader = &self.pbr_shader.shader;
@@ -343,8 +347,11 @@ impl Primitive {
             gl::BindTexture(gl::TEXTURE_2D, mr_texture.id);
             shader.set_int(uniforms.u_MetallicRoughnessTexCoord, mr_texture.tex_coord as i32);
         }
-        shader.set_vec2(uniforms.u_MetallicRoughnessValues,
-            mat.metallic_factor, mat.roughness_factor);
+        shader.set_vec2(
+            uniforms.u_MetallicRoughnessValues,
+            mat.metallic_factor,
+            mat.roughness_factor,
+        );
 
         if let Some(ref occlusion_texture) = mat.occlusion_texture {
             gl::ActiveTexture(gl::TEXTURE4);
@@ -383,29 +390,85 @@ impl Primitive {
         let size = size_of::<Vertex>() as i32;
         // POSITION
         gl::EnableVertexAttribArray(0);
-        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, position) as *const c_void);
+        gl::VertexAttribPointer(
+            0,
+            3,
+            gl::FLOAT,
+            gl::FALSE,
+            size,
+            offset_of!(Vertex, position) as *const c_void,
+        );
         // NORMAL
         gl::EnableVertexAttribArray(1);
-        gl::VertexAttribPointer(1, 3, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, normal) as *const c_void);
+        gl::VertexAttribPointer(
+            1,
+            3,
+            gl::FLOAT,
+            gl::FALSE,
+            size,
+            offset_of!(Vertex, normal) as *const c_void,
+        );
         // TANGENT
         gl::EnableVertexAttribArray(2);
-        gl::VertexAttribPointer(2, 4, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, tangent) as *const c_void);
+        gl::VertexAttribPointer(
+            2,
+            4,
+            gl::FLOAT,
+            gl::FALSE,
+            size,
+            offset_of!(Vertex, tangent) as *const c_void,
+        );
         // TEXCOORD_0
         gl::EnableVertexAttribArray(3);
-        gl::VertexAttribPointer(3, 2, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, tex_coord_0) as *const c_void);
+        gl::VertexAttribPointer(
+            3,
+            2,
+            gl::FLOAT,
+            gl::FALSE,
+            size,
+            offset_of!(Vertex, tex_coord_0) as *const c_void,
+        );
         // TEXCOORD_1
         gl::EnableVertexAttribArray(4);
-        gl::VertexAttribPointer(4, 2, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, tex_coord_1) as *const c_void);
+        gl::VertexAttribPointer(
+            4,
+            2,
+            gl::FLOAT,
+            gl::FALSE,
+            size,
+            offset_of!(Vertex, tex_coord_1) as *const c_void,
+        );
         // COLOR_0
         gl::EnableVertexAttribArray(5);
-        gl::VertexAttribPointer(5, 4, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, color_0) as *const c_void);
+        gl::VertexAttribPointer(
+            5,
+            4,
+            gl::FLOAT,
+            gl::FALSE,
+            size,
+            offset_of!(Vertex, color_0) as *const c_void,
+        );
         // JOINTS_0
         gl::EnableVertexAttribArray(6);
         // TODO: normalization?
-        gl::VertexAttribPointer(6, 4, gl::UNSIGNED_SHORT, gl::FALSE, size, offset_of!(Vertex, joints_0) as *const c_void);
+        gl::VertexAttribPointer(
+            6,
+            4,
+            gl::UNSIGNED_SHORT,
+            gl::FALSE,
+            size,
+            offset_of!(Vertex, joints_0) as *const c_void,
+        );
         // WEIGHTS_0
         gl::EnableVertexAttribArray(7);
-        gl::VertexAttribPointer(7, 4, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, weights_0) as *const c_void);
+        gl::VertexAttribPointer(
+            7,
+            4,
+            gl::FLOAT,
+            gl::FALSE,
+            size,
+            offset_of!(Vertex, weights_0) as *const c_void,
+        );
 
         gl::BindVertexArray(0);
     }

@@ -4,7 +4,8 @@
 // #![feature(test)]
 #![cfg_attr(feature = "cargo-clippy", allow(cast_lossless, cyclomatic_complexity))]
 
-#[macro_use] extern crate clap;
+#[macro_use]
+extern crate clap;
 extern crate cgmath;
 use cgmath::Deg;
 
@@ -23,21 +24,22 @@ extern crate num_traits;
 #[macro_use]
 extern crate bitflags;
 
-use clap::{Arg, App, AppSettings};
+use clap::{App, AppSettings, Arg};
 
-#[macro_use]extern crate log;
+#[macro_use]
+extern crate log;
 extern crate simplelog;
-use simplelog::{TermLogger, LevelFilter, Config as LogConfig};
+use simplelog::{Config as LogConfig, LevelFilter, TermLogger};
 
 mod utils;
 mod viewer;
-use viewer::{GltfViewer, CameraOptions};
+use viewer::{CameraOptions, GltfViewer};
 
-mod shader;
 mod controls;
 mod framebuffer;
-mod macros;
 mod importdata;
+mod macros;
+mod shader;
 // TODO!: adapt Source...
 // mod http_source;
 // use http_source::HttpSource;
@@ -141,16 +143,27 @@ pub fn main() {
         0 => LevelFilter::Warn,
         1 => LevelFilter::Info,
         2 => LevelFilter::Debug,
-        _ => LevelFilter::Trace
+        _ => LevelFilter::Trace,
     };
 
-    let _ = TermLogger::init(log_level, LogConfig { time: None, target: None, ..LogConfig::default() });
+    let _ = TermLogger::init(
+        log_level,
+        LogConfig {
+            time: None,
+            target: None,
+            ..LogConfig::default()
+        },
+    );
 
-    let mut viewer = GltfViewer::new(source, width, height,
+    let mut viewer = GltfViewer::new(
+        source,
+        width,
+        height,
         args.is_present("headless"),
         !args.is_present("screenshot"),
         camera_options,
-        scene);
+        scene,
+    );
 
     if args.is_present("screenshot") {
         let filename = args.value_of("screenshot").unwrap();
@@ -189,16 +202,16 @@ mod tests {
         println!("Vec<Node>:      {:>3}", std::mem::size_of::<Vec<render::Node>>());
     }
 
-//     extern crate test;
-//     use self::test::Bencher;
-//     #[bench]
-//     fn bench_frame_timer(b: &mut Bencher) {
-//         let mut timer = FrameTimer::new("Foobar", 60);
-//         b.iter(|| {
-//             for _ in 0..60 {
-//                 timer.start();
-//                 timer.end();
-//             }
-//         })
-//     }
+    //     extern crate test;
+    //     use self::test::Bencher;
+    //     #[bench]
+    //     fn bench_frame_timer(b: &mut Bencher) {
+    //         let mut timer = FrameTimer::new("Foobar", 60);
+    //         b.iter(|| {
+    //             for _ in 0..60 {
+    //                 timer.start();
+    //                 timer.end();
+    //             }
+    //         })
+    //     }
 }

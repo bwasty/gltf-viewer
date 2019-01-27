@@ -1,16 +1,16 @@
-use std::rc::Rc;
 use std::path::Path;
+use std::rc::Rc;
 
 use gltf;
 
 use collision::{Aabb, Union};
 
 use controls::CameraParams;
+use importdata::ImportData;
+use render::camera::Camera;
 use render::math::*;
 use render::mesh::Mesh;
 use render::Root;
-use render::camera::Camera;
-use importdata::ImportData;
 
 pub struct Node {
     pub index: usize, // glTF index
@@ -30,12 +30,7 @@ pub struct Node {
 
 
 impl Node {
-    pub fn from_gltf(
-        g_node: &gltf::Node,
-        root: &mut Root,
-        imp: &ImportData,
-        base_path: &Path
-    ) -> Node {
+    pub fn from_gltf(g_node: &gltf::Node, root: &mut Root, imp: &ImportData, base_path: &Path) -> Node {
         let (trans, rot, scale) = g_node.transform().decomposed();
         let r = rot;
         let rotation = Quaternion::new(r[3], r[0], r[1], r[2]); // NOTE: different element order!
@@ -46,14 +41,13 @@ impl Node {
                 mesh = Some(Rc::clone(existing_mesh));
             }
 
-            if mesh.is_none() { // not using else due to borrow-checking madness
+            if mesh.is_none() {
+                // not using else due to borrow-checking madness
                 mesh = Some(Rc::new(Mesh::from_gltf(&g_mesh, root, imp, base_path)));
                 root.meshes.push(mesh.clone().unwrap());
             }
         }
-        let children: Vec<_> = g_node.children()
-                .map(|g_node| g_node.index())
-                .collect();
+        let children: Vec<_> = g_node.children().map(|g_node| g_node.index()).collect();
 
         Node {
             index: g_node.index(),
@@ -75,10 +69,10 @@ impl Node {
         self.final_transform = *parent_transform;
 
         // TODO: cache local tranform when adding animations?
-        self.final_transform = self.final_transform *
-            Matrix4::from_translation(self.translation) *
-            Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, self.scale.z) *
-            Matrix4::from(self.rotation);
+        self.final_transform = self.final_transform
+            * Matrix4::from_translation(self.translation)
+            * Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, self.scale.z)
+            * Matrix4::from(self.rotation);
 
         for node_id in &self.children {
             let node = root.unsafe_get_node_mut(*node_id);
@@ -90,8 +84,7 @@ impl Node {
     pub fn update_bounds(&mut self, root: &mut Root) {
         self.bounds = Aabb3::zero();
         if let Some(ref mesh) = self.mesh {
-            self.bounds = mesh.bounds
-                .transform(&self.final_transform);
+            self.bounds = mesh.bounds.transform(&self.final_transform);
         }
 
         for node_id in &self.children {

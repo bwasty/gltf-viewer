@@ -1,15 +1,16 @@
-use std::rc::Rc;
 use std::path::Path;
+use std::rc::Rc;
 
 use gltf;
 
-use render::math::*;
-use render::{ Root, Texture };
-use shader::*;
 use importdata::ImportData;
+use render::math::*;
+use render::{Root, Texture};
+use shader::*;
 
 pub struct Material {
-    pub index: Option<usize>, /// glTF index
+    /// glTF index
+    pub index: Option<usize>,
     pub name: Option<String>,
 
     // pbr_metallic_roughness properties
@@ -31,7 +32,6 @@ pub struct Material {
     pub alpha_mode: gltf::material::AlphaMode,
 
     pub double_sided: bool,
-
 }
 
 impl Material {
@@ -39,7 +39,7 @@ impl Material {
         g_material: &gltf::material::Material,
         root: &mut Root,
         imp: &ImportData,
-        base_path: &Path
+        base_path: &Path,
     ) -> Material {
         let pbr = g_material.pbr_metallic_roughness();
 
@@ -69,26 +69,51 @@ impl Material {
         };
 
         if let Some(color_info) = pbr.base_color_texture() {
-            material.base_color_texture = Some(
-                load_texture(&color_info.texture(), color_info.tex_coord(), root, imp, base_path));
+            material.base_color_texture = Some(load_texture(
+                &color_info.texture(),
+                color_info.tex_coord(),
+                root,
+                imp,
+                base_path,
+            ));
         }
         if let Some(mr_info) = pbr.metallic_roughness_texture() {
-            material.metallic_roughness_texture = Some(
-                load_texture(&mr_info.texture(), mr_info.tex_coord(), root, imp, base_path));
+            material.metallic_roughness_texture = Some(load_texture(
+                &mr_info.texture(),
+                mr_info.tex_coord(),
+                root,
+                imp,
+                base_path,
+            ));
         }
         if let Some(normal_texture) = g_material.normal_texture() {
-            material.normal_texture = Some(
-                load_texture(&normal_texture.texture(), normal_texture.tex_coord(), root, imp, base_path));
+            material.normal_texture = Some(load_texture(
+                &normal_texture.texture(),
+                normal_texture.tex_coord(),
+                root,
+                imp,
+                base_path,
+            ));
             material.normal_scale = Some(normal_texture.scale());
         }
         if let Some(occ_texture) = g_material.occlusion_texture() {
-            material.occlusion_texture = Some(
-                load_texture(&occ_texture.texture(), occ_texture.tex_coord(), root, imp, base_path));
+            material.occlusion_texture = Some(load_texture(
+                &occ_texture.texture(),
+                occ_texture.tex_coord(),
+                root,
+                imp,
+                base_path,
+            ));
             material.occlusion_strength = occ_texture.strength();
         }
         if let Some(em_info) = g_material.emissive_texture() {
-            material.emissive_texture = Some(
-                load_texture(&em_info.texture(), em_info.tex_coord(), root, imp, base_path));
+            material.emissive_texture = Some(load_texture(
+                &em_info.texture(),
+                em_info.tex_coord(),
+                root,
+                imp,
+                base_path,
+            ));
         }
 
         material
@@ -113,7 +138,6 @@ impl Material {
         }
         flags
     }
-
 }
 
 fn load_texture(
@@ -121,10 +145,10 @@ fn load_texture(
     tex_coord: u32,
     root: &mut Root,
     imp: &ImportData,
-    base_path: &Path) -> Rc<Texture>
-{
+    base_path: &Path,
+) -> Rc<Texture> {
     if let Some(tex) = root.textures.iter().find(|tex| (***tex).index == g_texture.index()) {
-        return Rc::clone(tex)
+        return Rc::clone(tex);
     }
 
     let texture = Rc::new(Texture::from_gltf(g_texture, tex_coord, imp, base_path));

@@ -1,0 +1,8 @@
+# use_small_heuristics = "Max"
+disable_all_formatting = false
+# fn_args_density = "Tall"
+imports_layout = "HorizontalVertical"
+max_width = 120
+# struct_field_align_threshold = 10
+use_field_init_shorthand = true
+blank_lines_upper_bound = 2
