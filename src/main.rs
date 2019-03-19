@@ -15,7 +15,7 @@ use simplelog::{TermLogger, LevelFilter, Config as LogConfig};
 
 mod utils;
 mod viewer;
-use crate::viewer::{GltfViewer, CameraOptions};
+use crate::viewer::{GltfViewer, CameraOptions, WindowType};
 
 mod shader;
 mod controls;
@@ -70,6 +70,9 @@ pub fn main() {
         .arg(Arg::with_name("headless")
             .long("headless")
             .help("Use real headless rendering for screenshots (default is a hidden window) [EXPERIMENTAL - see README for details]"))
+        .arg(Arg::with_name("osmesa")
+            .long("osmesa")
+            .help("Use real osmesa rendering for screenshots (default is a hidden window) [EXPERIMENTAL - see README for details]"))
         .arg(Arg::with_name("straight")
             .long("straight")
             .help("Position camera in front of model if using default camera (i.e. glTF doesn't contain a camera or `--cam-index -1` is passed)"))
@@ -130,8 +133,18 @@ pub fn main() {
 
     let _ = TermLogger::init(log_level, LogConfig { time: None, target: None, ..LogConfig::default() });
 
+    let wtype = match (args.is_present("headless"), args.is_present("osmesa")) {
+        (false, false) => WindowType::Windowed,
+        (true, false) => WindowType::Headless,
+        #[cfg(target_os = "linux")]
+        (false, true) => WindowType::OsMesa,
+        #[cfg(not(target_os = "linux"))]
+        (false, true) => panic!("Platform does not support OsMesa"),
+        _ => panic!("Can't have both OsMesa and Headless mode."),
+    };
+
     let mut viewer = GltfViewer::new(source, width, height,
-        args.is_present("headless"),
+        wtype,
         !args.is_present("screenshot"),
         camera_options,
         scene);

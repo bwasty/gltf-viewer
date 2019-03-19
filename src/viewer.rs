@@ -13,7 +13,7 @@ use glutin::{
     Api,
     MouseScrollDelta,
     MouseButton,
-    GlContext,
+    ContextTrait,
     GlRequest,
     GlProfile,
     VirtualKeyCode,
@@ -21,6 +21,8 @@ use glutin::{
 };
 use glutin::dpi::PhysicalSize;
 use glutin::ElementState::*;
+#[cfg(target_os = "linux")]
+use glutin::os::unix::OsMesaContextExt;
 
 use image::{DynamicImage};
 use log::{error, warn, info};
@@ -55,7 +57,8 @@ pub struct GltfViewer {
 
     orbit_controls: OrbitControls,
     events_loop: Option<glutin::EventsLoop>,
-    gl_window: Option<glutin::GlWindow>,
+    gl_window: Option<glutin::WindowedContext>,
+    pub _gl_context: Option<glutin::Context>,
 
     // TODO!: get rid of scene?
     root: Root,
@@ -67,6 +70,14 @@ pub struct GltfViewer {
     render_timer: FrameTimer,
 }
 
+#[derive(PartialEq, Copy, Clone)]
+pub enum WindowType {
+    Windowed,
+    Headless,
+    #[cfg(target_os = "linux")]
+    OsMesa,
+}
+
 /// Note about `headless` and `visible`: True headless rendering doesn't work on
 /// all operating systems, but an invisible window usually works
 impl GltfViewer {
@@ -74,29 +85,32 @@ impl GltfViewer {
         source: &str,
         width: u32,
         height: u32,
-        headless: bool,
+        wtype: WindowType,
         visible: bool,
         camera_options: CameraOptions,
         scene_index: usize,
     ) -> GltfViewer {
         let gl_request = GlRequest::Specific(Api::OpenGl, (3, 3));
         let gl_profile = GlProfile::Core;
-        let (events_loop, gl_window, dpi_factor, inner_size) =
-            if headless {
-                let headless_context = glutin::HeadlessRendererBuilder::new(width, height)
-                    // .with_gl(gl_request)
-                    // .with_gl_profile(gl_profile)
-                    .build()
+        let (events_loop, gl_window, gl_context, dpi_factor, inner_size) = match wtype {
+            WindowType::Headless => {
+                let events_loop = glutin::EventsLoop::new();
+                let dims = PhysicalSize::new(width as f64, height as f64);
+                let gl_context = glutin::ContextBuilder::new()
+                    .with_gl(gl_request)
+                    .with_gl_profile(gl_profile)
+                    .build_headless(&events_loop, dims.clone())
                     .unwrap();
-                unsafe { headless_context.make_current().unwrap() }
-                gl::load_with(|symbol| headless_context.get_proc_address(symbol) as *const _);
+
+                unsafe { gl_context.make_current().unwrap() }
+                gl::load_with(|symbol| gl_context.get_proc_address(symbol) as *const _);
                 let framebuffer = Framebuffer::new(width, height);
                 framebuffer.bind();
                 unsafe { gl::Viewport(0, 0, width as i32, height as i32); }
 
-                (None, None, 1.0, PhysicalSize::new(width as f64, height as f64)) // TODO: real height (retina? (should be the same as PhysicalSize when headless?))
+                (Some(events_loop), None, Some(gl_context), 1.0, dims) // TODO: real height (retina? (should be the same as PhysicalSize when headless?))
             }
-            else {
+            WindowType::Windowed => {
                 // glutin: initialize and configure
                 let events_loop = glutin::EventsLoop::new();
                 let window_size = glutin::dpi::LogicalSize::new(width as f64, height as f64);
@@ -107,11 +121,12 @@ impl GltfViewer {
                         .with_dimensions(window_size)
                         .with_visibility(visible);
 
-                let context = glutin::ContextBuilder::new()
+                let gl_window = glutin::ContextBuilder::new()
                     .with_gl(gl_request)
                     .with_gl_profile(gl_profile)
-                    .with_vsync(true);
-                let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
+                    .with_vsync(true)
+                    .build_windowed(window, &events_loop)
+                    .unwrap();
 
                 // Real dimensions might be much higher on High-DPI displays
                 let dpi_factor = gl_window.get_hidpi_factor();
@@ -122,9 +137,26 @@ impl GltfViewer {
                 // gl: load all OpenGL function pointers
                 gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
 
-                (Some(events_loop), Some(gl_window), dpi_factor, inner_size)
-            };
-        
+                (Some(events_loop), Some(gl_window), None, dpi_factor, inner_size)
+            }
+            #[cfg(target_os = "linux")]
+            WindowType::OsMesa => {
+                let dims = PhysicalSize::new(width as f64, height as f64);
+                let cb = glutin::ContextBuilder::new()
+                    .with_gl(gl_request)
+                    .with_gl_profile(gl_profile);
+                let gl_context = glutin::Context::new_osmesa(cb, dims.clone()).unwrap();
+
+                unsafe { gl_context.make_current().unwrap() }
+                gl::load_with(|symbol| gl_context.get_proc_address(symbol) as *const _);
+                let framebuffer = Framebuffer::new(width, height);
+                framebuffer.bind();
+                unsafe { gl::Viewport(0, 0, width as i32, height as i32); }
+
+                (None, None, Some(gl_context), 1.0, dims) // TODO: real height (retina? (should be the same as PhysicalSize when headless?))
+            }
+        };
+
         let mut orbit_controls = OrbitControls::new(
             Point3::new(0.0, 0.0, 2.0),
             inner_size);
@@ -138,7 +170,7 @@ impl GltfViewer {
             gl::ClearColor(0.0, 1.0, 0.0, 1.0); // green for debugging
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-            if headless || !visible {
+            if wtype != WindowType::Windowed || !visible {
                 // transparent background for screenshots
                 gl::ClearColor(0.0, 0.0, 0.0, 0.0);
             }
@@ -162,6 +194,7 @@ impl GltfViewer {
 
             events_loop,
             gl_window,
+            _gl_context: gl_context,
 
             root,
             scene,
@@ -280,23 +313,26 @@ impl GltfViewer {
             self.delta_time = f64::from(self.last_frame.elapsed().subsec_nanos()) / 1_000_000_000.0;
             self.last_frame = Instant::now();
 
-            // events
-            let keep_running = process_events(
-                &mut self.events_loop.as_mut().unwrap(),
-                self.gl_window.as_mut().unwrap(),
-                &mut self.orbit_controls,
-                &mut self.dpi_factor,
-                &mut self.size);
-            if !keep_running {
-                unsafe { gl_check_error!(); } // final error check so errors don't go unnoticed
-                break
+            if let Some(ref gl_window) = self.gl_window {
+                // window events
+                let keep_running = process_events(
+                    &mut self.events_loop.as_mut().unwrap(),
+                    gl_window,
+                    &mut self.orbit_controls,
+                    &mut self.dpi_factor,
+                    &mut self.size);
+                if !keep_running {
+                    unsafe { gl_check_error!(); } // final error check so errors don't go unnoticed
+                    break
+                }
             }
 
             self.orbit_controls.frame_update(self.delta_time); // keyboard navigation
-
             self.draw();
 
-            self.gl_window.as_ref().unwrap().swap_buffers().unwrap();
+            if let Some(ref gl_window) = self.gl_window {
+                gl_window.swap_buffers().unwrap();
+            }
         }
     }
 
@@ -352,7 +388,7 @@ impl GltfViewer {
 #[allow(clippy::too_many_arguments)]
 fn process_events(
     events_loop: &mut glutin::EventsLoop,
-    gl_window: &glutin::GlWindow,
+    gl_window: &glutin::WindowedContext,
     mut orbit_controls: &mut OrbitControls,
     dpi_factor: &mut f64,
     size: &mut PhysicalSize) -> bool
