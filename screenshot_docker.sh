@@ -19,13 +19,14 @@ if [[ ! -z "${DOCKER_IMAGE:-}" ]]; then
     docker pull "$DOCKER_IMAGE"
     image="$DOCKER_IMAGE"
 else
-    docker build -t gltf-viewer .
+    docker build --network=host -t gltf-viewer .
     image=gltf-viewer
 fi
 
 rm "$output_file" || true
-docker run -t --rm -v "$(pwd)/$gltf_dir:/input" \
+docker run --network=host -t --rm -v "$(pwd)/$gltf_dir:/input" \
     $image "/input/$gltf_file" -s "/input/$model_name.png" "${@:2}"
-# uncomment to run bash interactively
-# docker run -it -v "$(pwd)/$gltf_dir:/input" --entrypoint bash $image
-[ -f "$HOME/.iterm2/imgcat" ] && "$HOME/.iterm2/imgcat" "$output_file"
+echo "Running bash on container for debugging"
+docker run --network=host -it -v "$(pwd)/$gltf_dir:/input" --entrypoint bash $image
+# -> xvfb-run --auto-servernum --server-args="-screen 0 640x480x24" glxinfo | grep OpenGL
+# [ -f "$HOME/.iterm2/imgcat" ] && "$HOME/.iterm2/imgcat" "$output_file"
