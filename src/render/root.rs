@@ -2,15 +2,17 @@ use std::rc::Rc;
 use std::collections::HashMap;
 use std::path::Path;
 
+use yage::gl::GL;
+
 use crate::shader::*;
 use crate::render::{Mesh, Node, Material};
 use crate::render::texture::Texture;
 use crate::importdata::ImportData;
 
 #[derive(Default)]
-pub struct Root {
-    pub nodes: Vec<Node>,
-    pub meshes: Vec<Rc<Mesh>>, // TODO!: use gltf indices; drop Rc?
+pub struct Root<'a> {
+    pub nodes: Vec<Node<'a>>,
+    pub meshes: Vec<Rc<Mesh<'a>>>, // TODO!: use gltf indices; drop Rc?
     pub textures: Vec<Rc<Texture>>,
     pub materials: Vec<Rc<Material>>,
     pub shaders: HashMap<ShaderFlags, Rc<PbrShader>>,
@@ -19,11 +21,11 @@ pub struct Root {
     // TODO!: joint_nodes, mesh_nodes?
 }
 
-impl Root {
-    pub fn from_gltf(imp: &ImportData, base_path: &Path) -> Self {
-        let mut root = Root::default();
+impl<'a> Root<'a> {
+    pub fn from_gltf(gl: &'a GL, imp: &ImportData, base_path: &Path) -> Root<'a> {
+        let mut root: Root<'a> = Root::default();
         let nodes = imp.doc.nodes()
-            .map(|g_node| Node::from_gltf(&g_node, &mut root, imp, base_path))
+            .map(|g_node| Node::from_gltf(gl, &g_node, &mut root, imp, base_path))
             .collect();
         root.nodes = nodes;
         root.camera_nodes = root.nodes.iter()
@@ -36,7 +38,7 @@ impl Root {
     /// Get a mutable reference to a node without borrowing `Self` or `Self::nodes`.
     /// Safe for tree traversal (visiting each node ONCE and NOT keeping a reference)
     /// as long as the gltf is valid, i.e. the scene actually is a tree.
-    pub fn unsafe_get_node_mut(&mut self, index: usize) ->&'static mut Node {
+    pub fn unsafe_get_node_mut(&mut self, index: usize) ->&'a mut Node {
         unsafe {
             &mut *(&mut self.nodes[index] as *mut Node)
         }

@@ -2,6 +2,7 @@ use std::rc::Rc;
 use std::path::Path;
 
 use gltf;
+use yage::gl::GL;
 
 use collision::{Aabb, Union};
 
@@ -12,10 +13,10 @@ use crate::render::Root;
 use crate::render::camera::Camera;
 use crate::importdata::ImportData;
 
-pub struct Node {
+pub struct Node<'a> {
     pub index: usize, // glTF index
     pub children: Vec<usize>,
-    pub mesh: Option<Rc<Mesh>>,
+    pub mesh: Option<Rc<Mesh<'a>>>,
     pub rotation: Quaternion,
     pub scale: Vector3,
     pub translation: Vector3,
@@ -29,13 +30,14 @@ pub struct Node {
 }
 
 
-impl Node {
+impl<'a> Node<'a> {
     pub fn from_gltf(
+        gl: &'a GL,
         g_node: &gltf::Node<'_>,
-        root: &mut Root,
+        root: &'a mut Root<'a>,
         imp: &ImportData,
         base_path: &Path
-    ) -> Node {
+    ) -> Node<'a> {
         let (trans, rot, scale) = g_node.transform().decomposed();
         let r = rot;
         let rotation = Quaternion::new(r[3], r[0], r[1], r[2]); // NOTE: different element order!
@@ -47,7 +49,7 @@ impl Node {
             }
 
             if mesh.is_none() { // not using else due to borrow-checking madness
-                mesh = Some(Rc::new(Mesh::from_gltf(&g_mesh, root, imp, base_path)));
+                mesh = Some(Rc::new(Mesh::from_gltf(gl, &g_mesh, root, imp, base_path)));
                 root.meshes.push(mesh.clone().unwrap());
             }
         }
@@ -71,7 +73,7 @@ impl Node {
         }
     }
 
-    pub fn update_transform(&mut self, root: &mut Root, parent_transform: &Matrix4) {
+    pub fn update_transform(&mut self, root: &'a mut Root<'a>, parent_transform: &Matrix4) {
         self.final_transform = *parent_transform;
 
         // TODO: cache local tranform when adding animations?
@@ -87,7 +89,7 @@ impl Node {
     }
 
     /// Should be called after update_transforms
-    pub fn update_bounds(&mut self, root: &mut Root) {
+    pub fn update_bounds(&mut self, root: &'a mut Root<'a>) {
         self.bounds = Aabb3::zero();
         if let Some(ref mesh) = self.mesh {
             self.bounds = mesh.bounds
@@ -101,15 +103,15 @@ impl Node {
         }
     }
 
-    pub fn draw(&mut self, root: &mut Root, cam_params: &CameraParams) {
+    pub fn draw(&mut self, gl: &yage::gl::GL, root: &'a mut Root<'a>, cam_params: &CameraParams) {
         if let Some(ref mesh) = self.mesh {
             let mvp_matrix = cam_params.projection_matrix * cam_params.view_matrix * self.final_transform;
 
-            (*mesh).draw(&self.final_transform, &mvp_matrix, &cam_params.position);
+            (*mesh).draw(gl, &self.final_transform, &mvp_matrix, &cam_params.position);
         }
         for node_id in &self.children {
             let node = root.unsafe_get_node_mut(*node_id);
-            node.draw(root, cam_params);
+            node.draw(gl, root, cam_params);
         }
     }
 }

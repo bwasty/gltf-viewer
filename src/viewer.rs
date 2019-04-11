@@ -22,6 +22,8 @@ use glutin::{
 use glutin::dpi::PhysicalSize;
 use glutin::ElementState::*;
 
+use yage::gl::{GL, GlFunctions, glenum};
+
 use image::{DynamicImage};
 use log::{error, warn, info};
 
@@ -49,7 +51,7 @@ pub struct CameraOptions {
     pub straight: bool,
 }
 
-pub struct GltfViewer {
+pub struct GltfViewer<'a> {
     size: PhysicalSize,
     dpi_factor: f64,
 
@@ -57,8 +59,10 @@ pub struct GltfViewer {
     events_loop: Option<glutin::EventsLoop>,
     gl_window: Option<glutin::GlWindow>,
 
+    gl: GL,
+
     // TODO!: get rid of scene?
-    root: Root,
+    root: Root<'a>,
     scene: Scene,
 
     delta_time: f64, // seconds
@@ -69,7 +73,7 @@ pub struct GltfViewer {
 
 /// Note about `headless` and `visible`: True headless rendering doesn't work on
 /// all operating systems, but an invisible window usually works
-impl GltfViewer {
+impl<'a> GltfViewer<'a> {
     pub fn new(
         source: &str,
         width: u32,
@@ -124,7 +128,9 @@ impl GltfViewer {
 
                 (Some(events_loop), Some(gl_window), dpi_factor, inner_size)
             };
-        
+
+        let gl = GL::new();
+
         let mut orbit_controls = OrbitControls::new(
             Point3::new(0.0, 0.0, 2.0),
             inner_size);
@@ -153,7 +159,7 @@ impl GltfViewer {
             // gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
         };
 
-        let (root, scene) = Self::load(source, scene_index);
+        let (root, scene) = Self::load(&gl, source, scene_index);
         let mut viewer = GltfViewer {
             size: inner_size,
             dpi_factor,
@@ -162,6 +168,8 @@ impl GltfViewer {
 
             events_loop,
             gl_window,
+
+            gl,
 
             root,
             scene,
@@ -203,7 +211,7 @@ impl GltfViewer {
         viewer
     }
 
-    pub fn load(source: &str, scene_index: usize) -> (Root, Scene) {
+    pub fn load(gl: &'a GL,source: &str, scene_index: usize) -> (Root<'a>, Scene) {
         let mut start_time = Instant::now();
         // TODO!: http source
         // let gltf =
@@ -237,7 +245,7 @@ impl GltfViewer {
             process::exit(3)
         }
         let base_path = Path::new(source);
-        let mut root = Root::from_gltf(&imp, base_path);
+        let mut root: Root<'a> = Root::from_gltf(gl, &imp, base_path);
         let scene = Scene::from_gltf(&imp.doc.scenes().nth(scene_index).unwrap(), &mut root);
         print_elapsed(&format!("Loaded scene with {} nodes, {} meshes in ",
                 imp.doc.nodes().count(), imp.doc.meshes().len()), start_time);
@@ -284,6 +292,7 @@ impl GltfViewer {
             let keep_running = process_events(
                 &mut self.events_loop.as_mut().unwrap(),
                 self.gl_window.as_mut().unwrap(),
+                &self.gl,
                 &mut self.orbit_controls,
                 &mut self.dpi_factor,
                 &mut self.size);
@@ -303,16 +312,14 @@ impl GltfViewer {
     // Returns whether to keep running
     pub fn draw(&mut self) {
         // render
-        unsafe {
-            self.render_timer.start();
+        self.render_timer.start();
 
-            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+        self.gl.clear(glenum::BufferBit::Color as u32 | glenum::BufferBit::Depth as u32);
 
-            let cam_params = self.orbit_controls.camera_params();
-            self.scene.draw(&mut self.root, &cam_params);
+        let cam_params = self.orbit_controls.camera_params();
+        self.scene.draw(&self.gl, &mut self.root, &cam_params);
 
-            self.render_timer.end();
-        }
+        self.render_timer.end();
     }
 
     pub fn screenshot(&mut self, filename: &str) {
@@ -353,6 +360,7 @@ impl GltfViewer {
 fn process_events(
     events_loop: &mut glutin::EventsLoop,
     gl_window: &glutin::GlWindow,
+    gl: &GL,
     mut orbit_controls: &mut OrbitControls,
     dpi_factor: &mut f64,
     size: &mut PhysicalSize) -> bool
@@ -375,7 +383,7 @@ fn process_events(
 
                     // This doesn't seem to be needed on macOS but linux X11, Wayland and Windows
                     // do need it.
-                    unsafe { gl::Viewport(0, 0, ph.width as i32, ph.height as i32); }
+                    gl.viewport(0, 0, ph.width as i32, ph.height as i32);
 
                     *size = ph;
                     orbit_controls.camera.update_aspect_ratio((ph.width / ph.height) as f32);

@@ -558,7 +558,7 @@ dependencies = [
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "simplelog 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "yage 0.0.1 (git+https://github.com/bwasty/yage?branch=more-functions)",
+ "yage 0.0.1",
 ]
 
 [[package]]
@@ -1897,26 +1897,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "yage"
 version = "0.0.1"
-source = "git+https://github.com/bwasty/yage?branch=more-functions#b5680dacd4998d9778e249208ca0c5e024e309ad"
 dependencies = [
  "cfg-if 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasm-bindgen 0.2.41 (registry+https://github.com/rust-lang/crates.io-index)",
- "yage-core 0.0.1 (git+https://github.com/bwasty/yage?branch=more-functions)",
- "yage-gl 0.0.1 (git+https://github.com/bwasty/yage?branch=more-functions)",
- "yage-gltf 0.0.1 (git+https://github.com/bwasty/yage?branch=more-functions)",
- "yage-glutin 0.0.1 (git+https://github.com/bwasty/yage?branch=more-functions)",
- "yage-web 0.0.1 (git+https://github.com/bwasty/yage?branch=more-functions)",
+ "yage-core 0.0.1",
+ "yage-gl 0.0.1",
+ "yage-gltf 0.0.1",
+ "yage-glutin 0.0.1",
+ "yage-web 0.0.1",
 ]
 
 [[package]]
 name = "yage-core"
 version = "0.0.1"
-source = "git+https://github.com/bwasty/yage?branch=more-functions#b5680dacd4998d9778e249208ca0c5e024e309ad"
 
 [[package]]
 name = "yage-gl"
 version = "0.0.1"
-source = "git+https://github.com/bwasty/yage?branch=more-functions#b5680dacd4998d9778e249208ca0c5e024e309ad"
 dependencies = [
  "cgmath 0.17.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gl 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1931,7 +1928,6 @@ dependencies = [
 [[package]]
 name = "yage-gltf"
 version = "0.0.1"
-source = "git+https://github.com/bwasty/yage?branch=more-functions#b5680dacd4998d9778e249208ca0c5e024e309ad"
 dependencies = [
  "gltf 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1939,7 +1935,6 @@ dependencies = [
 [[package]]
 name = "yage-glutin"
 version = "0.0.1"
-source = "git+https://github.com/bwasty/yage?branch=more-functions#b5680dacd4998d9778e249208ca0c5e024e309ad"
 dependencies = [
  "glutin 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1947,7 +1942,6 @@ dependencies = [
 [[package]]
 name = "yage-web"
 version = "0.0.1"
-source = "git+https://github.com/bwasty/yage?branch=more-functions#b5680dacd4998d9778e249208ca0c5e024e309ad"
 
 [metadata]
 "checksum adler32 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "7e522997b529f05601e05166c07ed17789691f562762c7f3b987263d2dedee5c"
@@ -2165,9 +2159,3 @@ source = "git+https://github.com/bwasty/yage?branch=more-functions#b5680dacd4998
 "checksum xdg 2.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d089681aa106a86fade1b0128fb5daf07d5867a509ab036d99988dec80429a57"
 "checksum xml-rs 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "3c1cb601d29fe2c2ac60a2b2e5e293994d87a1f6fa9687a31a15270f909be9c2"
 "checksum xml-rs 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "541b12c998c5b56aa2b4e6f18f03664eef9a4fd0a246a55594efae6cc2d964b5"
-"checksum yage 0.0.1 (git+https://github.com/bwasty/yage?branch=more-functions)" = "<none>"
-"checksum yage-core 0.0.1 (git+https://github.com/bwasty/yage?branch=more-functions)" = "<none>"
-"checksum yage-gl 0.0.1 (git+https://github.com/bwasty/yage?branch=more-functions)" = "<none>"
-"checksum yage-gltf 0.0.1 (git+https://github.com/bwasty/yage?branch=more-functions)" = "<none>"
-"checksum yage-glutin 0.0.1 (git+https://github.com/bwasty/yage?branch=more-functions)" = "<none>"
-"checksum yage-web 0.0.1 (git+https://github.com/bwasty/yage?branch=more-functions)" = "<none>"

@@ -39,7 +39,8 @@ image = "0.21.0"
 log = "0.4.6"
 num-traits = "0.2.6"
 simplelog = "0.5.3"
-yage = { git = "https://github.com/bwasty/yage", branch="more-functions"  }
+# yage = { git = "https://github.com/bwasty/yage", branch="more-functions"  }
+yage = { path = "../../cginternals/yage"  }
 # itertools = "0.6.3"
 
 [dependencies.gltf]

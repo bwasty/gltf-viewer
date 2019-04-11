@@ -4,9 +4,10 @@ use std::path::Path;
 use std::ptr;
 use std::rc::Rc;
 
-use gl;
-use gl::types::GLenum;
 use gltf;
+
+use yage::gl::{GL, GlFunctions, glenum, objects::{VertexArray, Buffer}};
+
 use log::{warn, debug};
 
 use crate::render::math::*;
@@ -48,17 +49,19 @@ pub struct Texture {
     pub path: String,
 }
 
-pub struct Primitive {
+pub struct Primitive<'a> {
     pub bounds: Aabb3,
 
-    vao: u32,
-    vbo: u32,
+    gl: &'a GL,
+
+    vao: VertexArray<'a>,
+    vbo: Buffer<'a>,
     num_vertices: u32,
 
-    ebo: Option<u32>,
+    ebo: Option<Buffer<'a>>,
     num_indices: u32,
 
-    mode: GLenum,
+    mode: u32,
 
     material: Rc<Material>,
 
@@ -67,38 +70,38 @@ pub struct Primitive {
     // TODO!: mode, targets
 }
 
-impl Primitive {
+impl<'a> Primitive<'a> {
     pub fn new(
+        gl: &'a GL,
         bounds: Aabb3,
         vertices: &[Vertex],
         indices: Option<Vec<u32>>,
-        mode: GLenum,
+        mode: u32,
         material: Rc<Material>,
         shader: Rc<PbrShader>,
-    ) -> Primitive {
+    ) -> Primitive<'a> {
         let num_indices = indices.as_ref().map(|i| i.len()).unwrap_or(0);
-        let mut prim = Primitive {
+        let (vao, vbo, ebo) = unsafe { Self::setup_primitive(gl, vertices, indices) };
+        Primitive {
             bounds,
+            gl,
             num_vertices: vertices.len() as u32,
             num_indices: num_indices as u32,
-            vao: 0, vbo: 0, ebo: None,
+            vao, vbo, ebo,
             mode,
             material,
             pbr_shader: shader,
-        };
-
-        // now that we have all the required data, set the vertex buffers and its attribute pointers.
-        unsafe { prim.setup_primitive(vertices, indices) }
-        prim
+        }
     }
 
     pub fn from_gltf(
+        gl: &'a GL,
         g_primitive: &gltf::Primitive<'_>,
         primitive_index: usize,
         mesh_index: usize,
         root: &mut Root,
         imp: &ImportData,
-        base_path: &Path) -> Primitive
+        base_path: &Path) -> Primitive<'a>
     {
         let buffers = &imp.buffers;
         let reader = g_primitive.reader(|buffer| Some(&buffers[buffer.index()]));
@@ -251,29 +254,30 @@ impl Primitive {
             root.shaders.insert(shader_flags, Rc::clone(&shader));
         }
 
-        Primitive::new(bounds, &vertices, indices, mode, material, shader)
+        Primitive::new(gl, bounds, &vertices, indices, mode, material, shader)
     }
 
     /// render the mesh
-    pub unsafe fn draw(&self, model_matrix: &Matrix4, mvp_matrix: &Matrix4, camera_position: &Vector3) {
+    pub unsafe fn draw(&self, gl: &GL, model_matrix: &Matrix4, mvp_matrix: &Matrix4, camera_position: &Vector3) {
         // TODO!: determine if shader+material already active to reduce work...
 
         if self.material.double_sided {
-            gl::Disable(gl::CULL_FACE);
+            gl.disable(glenum::Culling::CullFace as _);
         } else {
-            gl::Enable(gl::CULL_FACE);
+            gl.enable(glenum::Culling::CullFace as _);
         }
 
         if self.mode == gl::POINTS {
-            gl::PointSize(10.0);
+            gl.point_size(10.0);
         }
 
         self.configure_shader(model_matrix, mvp_matrix, camera_position);
 
         // draw mesh
-        gl::BindVertexArray(self.vao);
+        self.vao.bind();
         if self.ebo.is_some() {
-            gl::DrawElements(self.mode, self.num_indices as i32, gl::UNSIGNED_INT, ptr::null());
+            gl.draw_elements(self.mode, self.num_indices as i32, glenum::DataType::U32 as _, 0);
+            // gl::DrawElements(self.mode, self.num_indices as i32, gl::UNSIGNED_INT, ptr::null());
         }
         else {
             gl::DrawArrays(self.mode, 0, self.num_vertices as i32)
@@ -355,31 +359,30 @@ impl Primitive {
         }
     }
 
-    unsafe fn setup_primitive(&mut self, vertices: &[Vertex], indices: Option<Vec<u32>>) {
+    unsafe fn setup_primitive(
+        gl: &'a GL,
+        vertices: &[Vertex],
+        indices: Option<Vec<u32>>
+    ) -> (VertexArray<'a>, Buffer<'a>, Option<Buffer<'a>>) {
         // create buffers/arrays
-        gl::GenVertexArrays(1, &mut self.vao);
-        gl::GenBuffers(1, &mut self.vbo);
-        if indices.is_some() {
-            let mut ebo = 0;
-            gl::GenBuffers(1, &mut ebo);
-            self.ebo = Some(ebo);
+        let vao = VertexArray::new(gl);
+        let vbo = Buffer::new(gl, glenum::BufferKind::Array as _);
+        let ebo = if indices.is_some() {
+            Some(Buffer::new(gl, glenum::BufferKind::ElementArray as _))
+        } else {
+            None
+        };
+
+        vao.bind();
+        vbo.bind();
+        vbo.set_data(vertices, glenum::DrawMode::Static as _);
+
+        if let Some(ebo) = ebo {
+            ebo.bind();
+            ebo.set_data(&indices.unwrap(), glenum::DrawMode::Static as _);
         }
 
-        gl::BindVertexArray(self.vao);
-        // load data into vertex buffers
-        gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
-        let size = (vertices.len() * size_of::<Vertex>()) as isize;
-        let data = &vertices[0] as *const Vertex as *const c_void;
-        gl::BufferData(gl::ARRAY_BUFFER, size, data, gl::STATIC_DRAW);
-
-        if let Some(ebo) = self.ebo {
-            let indices = indices.unwrap();
-            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
-            let size = (indices.len() * size_of::<u32>()) as isize;
-            let data = &indices[0] as *const u32 as *const c_void;
-            gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, size, data, gl::STATIC_DRAW);
-        }
-
+        // TODO!!!: attrib_enable...
         // set the vertex attribute pointers
         let size = size_of::<Vertex>() as i32;
         // POSITION
@@ -409,5 +412,7 @@ impl Primitive {
         gl::VertexAttribPointer(7, 4, gl::FLOAT, gl::FALSE, size, offset_of!(Vertex, weights_0) as *const c_void);
 
         gl::BindVertexArray(0);
+
+        (vao, vbo, ebo)
     }
 }
