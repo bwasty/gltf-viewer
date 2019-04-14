@@ -49,16 +49,16 @@ pub struct Texture {
     pub path: String,
 }
 
-pub struct Primitive<'a> {
+pub struct Primitive {
     pub bounds: Aabb3,
 
-    gl: &'a GL,
+    gl: Rc<GL>,
 
-    vao: VertexArray<'a>,
-    vbo: Buffer<'a>,
+    vao: VertexArray,
+    _vbo: Buffer,
     num_vertices: u32,
 
-    ebo: Option<Buffer<'a>>,
+    ebo: Option<Buffer>,
     num_indices: u32,
 
     mode: u32,
@@ -70,24 +70,24 @@ pub struct Primitive<'a> {
     // TODO!: mode, targets
 }
 
-impl<'a> Primitive<'a> {
+impl Primitive {
     pub fn new(
-        gl: &'a GL,
+        gl: &Rc<GL>,
         bounds: Aabb3,
         vertices: &[Vertex],
         indices: Option<Vec<u32>>,
         mode: u32,
         material: Rc<Material>,
         shader: Rc<PbrShader>,
-    ) -> Primitive<'a> {
+    ) -> Primitive {
         let num_indices = indices.as_ref().map(|i| i.len()).unwrap_or(0);
-        let (vao, vbo, ebo) = unsafe { Self::setup_primitive(gl, vertices, indices) };
+        let (vao, _vbo, ebo) = unsafe { Self::setup_primitive(gl, vertices, indices) };
         Primitive {
             bounds,
-            gl,
+            gl: gl.clone(),
             num_vertices: vertices.len() as u32,
             num_indices: num_indices as u32,
-            vao, vbo, ebo,
+            vao, _vbo, ebo,
             mode,
             material,
             pbr_shader: shader,
@@ -95,13 +95,13 @@ impl<'a> Primitive<'a> {
     }
 
     pub fn from_gltf(
-        gl: &'a GL,
+        gl: &Rc<GL>,
         g_primitive: &gltf::Primitive<'_>,
         primitive_index: usize,
         mesh_index: usize,
         root: &mut Root,
         imp: &ImportData,
-        base_path: &Path) -> Primitive<'a>
+        base_path: &Path) -> Primitive
     {
         let buffers = &imp.buffers;
         let reader = g_primitive.reader(|buffer| Some(&buffers[buffer.index()]));
@@ -258,17 +258,17 @@ impl<'a> Primitive<'a> {
     }
 
     /// render the mesh
-    pub unsafe fn draw(&self, gl: &GL, model_matrix: &Matrix4, mvp_matrix: &Matrix4, camera_position: &Vector3) {
+    pub unsafe fn draw(&self, model_matrix: &Matrix4, mvp_matrix: &Matrix4, camera_position: &Vector3) {
         // TODO!: determine if shader+material already active to reduce work...
 
         if self.material.double_sided {
-            gl.disable(glenum::Culling::CullFace as _);
+            self.gl.disable(glenum::Culling::CullFace as _);
         } else {
-            gl.enable(glenum::Culling::CullFace as _);
+            self.gl.enable(glenum::Culling::CullFace as _);
         }
 
-        if self.mode == gl::POINTS {
-            gl.point_size(10.0);
+        if self.mode == glenum::Primitives::Points as u32 {
+            self.gl.point_size(10.0);
         }
 
         self.configure_shader(model_matrix, mvp_matrix, camera_position);
@@ -276,20 +276,19 @@ impl<'a> Primitive<'a> {
         // draw mesh
         self.vao.bind();
         if self.ebo.is_some() {
-            gl.draw_elements(self.mode, self.num_indices as i32, glenum::DataType::U32 as _, 0);
-            // gl::DrawElements(self.mode, self.num_indices as i32, gl::UNSIGNED_INT, ptr::null());
+            self.gl.draw_elements(self.mode, self.num_indices as i32, glenum::DataType::U32 as _, 0);
         }
         else {
-            gl::DrawArrays(self.mode, 0, self.num_vertices as i32)
+            self.gl.draw_arrays(self.mode, 0, self.num_vertices as i32)
         }
 
-        gl::BindVertexArray(0);
-        gl::ActiveTexture(gl::TEXTURE0);
+        self.vao.unbind();
+        self.gl.active_texture(gl::TEXTURE0); // TODO!!!: not present in glenum...
 
         if self.material.alpha_mode != gltf::material::AlphaMode::Opaque {
             let shader = &self.pbr_shader.shader;
 
-            gl::Disable(gl::BLEND);
+            self.gl.disable(glenum::Flag::Blend as _);
             shader.set_float(self.pbr_shader.uniforms.u_AlphaBlend, 0.0);
             if self.material.alpha_mode == gltf::material::AlphaMode::Mask {
                 shader.set_float(self.pbr_shader.uniforms.u_AlphaCutoff, 0.0);
@@ -360,10 +359,10 @@ impl<'a> Primitive<'a> {
     }
 
     unsafe fn setup_primitive(
-        gl: &'a GL,
+        gl: &Rc<GL>,
         vertices: &[Vertex],
         indices: Option<Vec<u32>>
-    ) -> (VertexArray<'a>, Buffer<'a>, Option<Buffer<'a>>) {
+    ) -> (VertexArray, Buffer, Option<Buffer>) {
         // create buffers/arrays
         let vao = VertexArray::new(gl);
         let vbo = Buffer::new(gl, glenum::BufferKind::Array as _);
@@ -377,7 +376,7 @@ impl<'a> Primitive<'a> {
         vbo.bind();
         vbo.set_data(vertices, glenum::DrawMode::Static as _);
 
-        if let Some(ebo) = ebo {
+        if let Some(ebo) = &ebo {
             ebo.bind();
             ebo.set_data(&indices.unwrap(), glenum::DrawMode::Static as _);
         }

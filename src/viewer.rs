@@ -3,6 +3,7 @@ use std::os::raw::c_void;
 use std::path::Path;
 use std::process;
 use std::time::Instant;
+use std::rc::Rc;
 
 use cgmath::{ Deg, Point3 };
 use collision::Aabb;
@@ -51,7 +52,7 @@ pub struct CameraOptions {
     pub straight: bool,
 }
 
-pub struct GltfViewer<'a> {
+pub struct GltfViewer {
     size: PhysicalSize,
     dpi_factor: f64,
 
@@ -59,10 +60,10 @@ pub struct GltfViewer<'a> {
     events_loop: Option<glutin::EventsLoop>,
     gl_window: Option<glutin::GlWindow>,
 
-    gl: GL,
+    gl: Rc<GL>,
 
     // TODO!: get rid of scene?
-    root: Root<'a>,
+    root: Root,
     scene: Scene,
 
     delta_time: f64, // seconds
@@ -73,7 +74,7 @@ pub struct GltfViewer<'a> {
 
 /// Note about `headless` and `visible`: True headless rendering doesn't work on
 /// all operating systems, but an invisible window usually works
-impl<'a> GltfViewer<'a> {
+impl GltfViewer {
     pub fn new(
         source: &str,
         width: u32,
@@ -129,7 +130,7 @@ impl<'a> GltfViewer<'a> {
                 (Some(events_loop), Some(gl_window), dpi_factor, inner_size)
             };
 
-        let gl = GL::new();
+        let gl = Rc::new(GL::new());
 
         let mut orbit_controls = OrbitControls::new(
             Point3::new(0.0, 0.0, 2.0),
@@ -211,7 +212,7 @@ impl<'a> GltfViewer<'a> {
         viewer
     }
 
-    pub fn load(gl: &'a GL,source: &str, scene_index: usize) -> (Root<'a>, Scene) {
+    pub fn load(gl: &Rc<GL>,source: &str, scene_index: usize) -> (Root, Scene) {
         let mut start_time = Instant::now();
         // TODO!: http source
         // let gltf =
@@ -245,7 +246,7 @@ impl<'a> GltfViewer<'a> {
             process::exit(3)
         }
         let base_path = Path::new(source);
-        let mut root: Root<'a> = Root::from_gltf(gl, &imp, base_path);
+        let mut root: Root = Root::from_gltf(gl, &imp, base_path);
         let scene = Scene::from_gltf(&imp.doc.scenes().nth(scene_index).unwrap(), &mut root);
         print_elapsed(&format!("Loaded scene with {} nodes, {} meshes in ",
                 imp.doc.nodes().count(), imp.doc.meshes().len()), start_time);
@@ -317,7 +318,7 @@ impl<'a> GltfViewer<'a> {
         self.gl.clear(glenum::BufferBit::Color as u32 | glenum::BufferBit::Depth as u32);
 
         let cam_params = self.orbit_controls.camera_params();
-        self.scene.draw(&self.gl, &mut self.root, &cam_params);
+        self.scene.draw(&mut self.root, &cam_params);
 
         self.render_timer.end();
     }

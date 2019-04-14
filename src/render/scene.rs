@@ -23,7 +23,7 @@ impl Default for Scene {
 }
 
 impl Scene {
-    pub fn from_gltf<'a>(g_scene: &gltf::Scene<'_>, root: &'a mut Root<'a>) -> Scene {
+    pub fn from_gltf(g_scene: &gltf::Scene<'_>, root: &mut Root) -> Scene {
         let mut scene = Scene {
             name: g_scene.name().map(|s| s.to_owned()),
             ..Default::default()
@@ -45,12 +45,12 @@ impl Scene {
     }
 
     // TODO: flatten draw call hierarchy (global Vec<Primitive>?)
-    pub fn draw<'a>(&mut self, gl: &'a yage::gl::GL, root: &'a mut Root<'a>, cam_params: &CameraParams) {
+    pub fn draw(&mut self, root: &mut Root, cam_params: &CameraParams) {
         // TODO!: for correct alpha blending, sort by material alpha mode and
         // render opaque objects first.
         for node_id in &self.nodes {
             let node = root.unsafe_get_node_mut(*node_id);
-            node.draw(gl, root, cam_params);
+            node.draw(root, cam_params);
         }
     }
 }

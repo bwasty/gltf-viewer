@@ -1,4 +1,4 @@
-// use std::rc::Rc;
+use std::rc::Rc;
 use std::path::Path;
 
 use collision::{Aabb, Aabb3, Union};
@@ -10,9 +10,9 @@ use crate::render::math::*;
 use crate::render::{Primitive, Root};
 use crate::importdata::ImportData;
 
-pub struct Mesh<'a> {
+pub struct Mesh {
     pub index: usize, // glTF index
-    pub primitives: Vec<Primitive<'a>>,
+    pub primitives: Vec<Primitive>,
     // TODO: weights
     // pub weights: Vec<Rc<?>>
     pub name: Option<String>,
@@ -20,14 +20,14 @@ pub struct Mesh<'a> {
     pub bounds: Aabb3<f32>,
 }
 
-impl<'a> Mesh<'a> {
+impl Mesh {
     pub fn from_gltf(
-        gl: &'a GL,
+        gl: &Rc<GL>,
         g_mesh: &gltf::Mesh<'_>,
         root: &mut Root,
         imp: &ImportData,
         base_path: &Path,
-    ) -> Mesh<'a> {
+    ) -> Mesh {
         let primitives: Vec<Primitive> = g_mesh.primitives()
             .enumerate()
             .map(|(i, g_prim)| {
@@ -46,9 +46,9 @@ impl<'a> Mesh<'a> {
         }
     }
 
-    pub fn draw(&self, gl: &yage::gl::GL, model_matrix: &Matrix4, mvp_matrix: &Matrix4, camera_position: &Vector3) {
+    pub fn draw(&self, model_matrix: &Matrix4, mvp_matrix: &Matrix4, camera_position: &Vector3) {
         for primitive in &self.primitives {
-            unsafe { primitive.draw(gl, model_matrix, mvp_matrix, camera_position) }
+            unsafe { primitive.draw(model_matrix, mvp_matrix, camera_position) }
         }
     }
 }

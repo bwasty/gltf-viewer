@@ -13,10 +13,10 @@ use crate::render::Root;
 use crate::render::camera::Camera;
 use crate::importdata::ImportData;
 
-pub struct Node<'a> {
+pub struct Node {
     pub index: usize, // glTF index
     pub children: Vec<usize>,
-    pub mesh: Option<Rc<Mesh<'a>>>,
+    pub mesh: Option<Rc<Mesh>>,
     pub rotation: Quaternion,
     pub scale: Vector3,
     pub translation: Vector3,
@@ -30,14 +30,14 @@ pub struct Node<'a> {
 }
 
 
-impl<'a> Node<'a> {
+impl Node {
     pub fn from_gltf(
-        gl: &'a GL,
+        gl: &Rc<GL>,
         g_node: &gltf::Node<'_>,
-        root: &'a mut Root<'a>,
+        root: &mut Root,
         imp: &ImportData,
         base_path: &Path
-    ) -> Node<'a> {
+    ) -> Node {
         let (trans, rot, scale) = g_node.transform().decomposed();
         let r = rot;
         let rotation = Quaternion::new(r[3], r[0], r[1], r[2]); // NOTE: different element order!
@@ -73,7 +73,7 @@ impl<'a> Node<'a> {
         }
     }
 
-    pub fn update_transform(&mut self, root: &'a mut Root<'a>, parent_transform: &Matrix4) {
+    pub fn update_transform(&mut self, root: &mut Root, parent_transform: &Matrix4) {
         self.final_transform = *parent_transform;
 
         // TODO: cache local tranform when adding animations?
@@ -89,7 +89,7 @@ impl<'a> Node<'a> {
     }
 
     /// Should be called after update_transforms
-    pub fn update_bounds(&mut self, root: &'a mut Root<'a>) {
+    pub fn update_bounds(&mut self, root: &mut Root) {
         self.bounds = Aabb3::zero();
         if let Some(ref mesh) = self.mesh {
             self.bounds = mesh.bounds
@@ -103,15 +103,15 @@ impl<'a> Node<'a> {
         }
     }
 
-    pub fn draw(&mut self, gl: &yage::gl::GL, root: &'a mut Root<'a>, cam_params: &CameraParams) {
+    pub fn draw(&mut self, root: &mut Root, cam_params: &CameraParams) {
         if let Some(ref mesh) = self.mesh {
             let mvp_matrix = cam_params.projection_matrix * cam_params.view_matrix * self.final_transform;
 
-            (*mesh).draw(gl, &self.final_transform, &mvp_matrix, &cam_params.position);
+            (*mesh).draw(&self.final_transform, &mvp_matrix, &cam_params.position);
         }
         for node_id in &self.children {
             let node = root.unsafe_get_node_mut(*node_id);
-            node.draw(gl, root, cam_params);
+            node.draw(root, cam_params);
         }
     }
 }
