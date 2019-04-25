@@ -1,14 +1,20 @@
-FROM rust:1.32
+FROM rust:1.34 as build
 
 WORKDIR /usr/src/gltf-viewer
 COPY src src
 COPY Cargo.toml Cargo.toml
 COPY Cargo.lock Cargo.lock
-RUN cargo install --path .
+RUN cargo build --release
 
+FROM debian:stretch-20190326-slim
 RUN apt-get update
+RUN apt-get install -y \
+    xvfb \
+    libxcursor1 \
+    libxrandr2 \
+    libxi6
 
-RUN apt-get install -y xvfb
+COPY --from=build /usr/src/gltf-viewer/target/release/gltf-viewer /bin/gltf-viewer
 COPY run_xvfb.sh run_xvfb.sh
 ENTRYPOINT [ "./run_xvfb.sh" ]
 
