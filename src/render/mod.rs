@@ -14,7 +14,7 @@ pub use self::primitive::*;
 
 mod material;
 pub use self::material::*;
-mod texture;
+pub mod texture;
 pub use self::texture::*;
 
 mod camera;

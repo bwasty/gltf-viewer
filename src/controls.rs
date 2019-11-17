@@ -13,9 +13,6 @@ use num_traits::clamp;
 use crate::render::Camera;
 use crate::render::math::*;
 
-use glutin::dpi::PhysicalPosition;
-use glutin::dpi::PhysicalSize;
-
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
 #[derive(PartialEq, Clone, Copy)]
 pub enum CameraMovement {
@@ -46,6 +43,27 @@ pub enum NavState {
     Rotating,
     Panning,
 }
+
+pub struct ScreenSize {
+    pub width: f32,
+    pub height: f32,
+}
+impl ScreenSize {
+    pub fn new(width: f64, height: f64) -> Self {
+        Self { width: width as f32, height: height as f32 }
+    }
+}
+
+pub struct ScreenPosition {
+    pub x: f32,
+    pub y: f32,
+}
+impl ScreenPosition {
+    pub fn new(x: f64, y: f64) -> Self {
+        Self { x: x as f32, y: y as f32 }
+    }
+}
+
 
 /// Inspirted by `ThreeJS` `OrbitControls`
 pub struct OrbitControls {
@@ -79,11 +97,11 @@ pub struct OrbitControls {
     pub moving_forward: bool,
     pub moving_backward: bool,
 
-    pub screen_size: PhysicalSize,
+    pub screen_size: ScreenSize,
 }
 
 impl OrbitControls {
-    pub fn new(position: Point3, screen_size: PhysicalSize) -> Self {
+    pub fn new(position: Point3, screen_size: ScreenSize) -> Self {
         OrbitControls {
             camera: Camera::default(),
 
@@ -129,7 +147,7 @@ impl OrbitControls {
         Matrix4::look_at(self.position, self.target, vec3(0.0, 1.0, 0.0))
     }
 
-    pub fn handle_mouse_move(&mut self, pos: PhysicalPosition) {
+    pub fn handle_mouse_move(&mut self, pos: ScreenPosition) {
         match self.state {
             NavState::Rotating => self.handle_mouse_move_rotate(pos),
             NavState::Panning => self.handle_mouse_move_pan(pos),
@@ -137,7 +155,7 @@ impl OrbitControls {
         }
     }
 
-    fn handle_mouse_move_rotate(&mut self, pos: PhysicalPosition) {
+    fn handle_mouse_move_rotate(&mut self, pos: ScreenPosition) {
         self.rotate_end.x = pos.x as f32;
         self.rotate_end.y = pos.y as f32;
         let rotate_delta = if let Some(rotate_start) = self.rotate_start {
@@ -177,7 +195,7 @@ impl OrbitControls {
         self.spherical_delta.phi -= angle;
     }
 
-    fn handle_mouse_move_pan(&mut self, pos: PhysicalPosition) {
+    fn handle_mouse_move_pan(&mut self, pos: ScreenPosition) {
         self.pan_end.x = pos.x as f32;
         self.pan_end.y = pos.y as f32;
 

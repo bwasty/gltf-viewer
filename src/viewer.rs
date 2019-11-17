@@ -6,7 +6,7 @@ use std::time::Instant;
 
 use cgmath::{ Deg, Point3 };
 use collision::Aabb;
-use gl;
+use ::gl;
 use gltf;
 use glutin;
 use glutin::{
@@ -25,13 +25,16 @@ use glutin::ElementState::*;
 use image::{DynamicImage};
 use log::{error, warn, info};
 
-use crate::controls::{OrbitControls, NavState};
+use crate::controls::{OrbitControls, ScreenPosition, ScreenSize, NavState};
 use crate::controls::CameraMovement::*;
-use crate::framebuffer::Framebuffer;
 use crate::importdata::ImportData;
 use crate::render::*;
 use crate::render::math::*;
-use crate::utils::{print_elapsed, FrameTimer, gl_check_error, print_context_info};
+use crate::utils::{print_elapsed, FrameTimer};
+use crate::platform::*;
+
+#[cfg(not(feature = "use_wasm_bindgen"))]
+use crate::platform::gl::utils::{gl_check_error};
 
 // TODO!: complete and pass through draw calls? or get rid of multiple shaders?
 // How about state ordering anyway?
@@ -125,9 +128,10 @@ impl GltfViewer {
                 (Some(events_loop), Some(gl_window), dpi_factor, inner_size)
             };
         
+        let inner_screen_size =  ScreenSize::new(inner_size.width, inner_size.height);
         let mut orbit_controls = OrbitControls::new(
             Point3::new(0.0, 0.0, 2.0),
-            inner_size);
+            inner_screen_size);
         orbit_controls.camera = Camera::default();
         orbit_controls.camera.fovy = camera_options.fovy;
         orbit_controls.camera.update_aspect_ratio(inner_size.width as f32 / inner_size.height as f32); // updates projection matrix
@@ -171,7 +175,7 @@ impl GltfViewer {
 
             render_timer: FrameTimer::new("rendering", 300),
         };
-        unsafe { gl_check_error!(); };
+        unsafe { gl_check_error(); };
 
         if camera_options.index != 0 && camera_options.index >= viewer.root.camera_nodes.len() as i32 {
             error!("No camera with index {} found in glTF file (max: {})",
@@ -288,7 +292,7 @@ impl GltfViewer {
                 &mut self.dpi_factor,
                 &mut self.size);
             if !keep_running {
-                unsafe { gl_check_error!(); } // final error check so errors don't go unnoticed
+                unsafe { gl_check_error(); } // final error check so errors don't go unnoticed
                 break
             }
 
@@ -324,7 +328,7 @@ impl GltfViewer {
             gl::PixelStorei(gl::PACK_ALIGNMENT, 1);
             gl::ReadPixels(0, 0, self.size.width as i32, self.size.height as i32, gl::RGBA,
                 gl::UNSIGNED_BYTE, pixels.as_mut_ptr() as *mut c_void);
-            gl_check_error!();
+            gl_check_error();
         }
 
         let img = img.flipv();
@@ -380,7 +384,7 @@ fn process_events(
 
                     *size = ph;
                     orbit_controls.camera.update_aspect_ratio((ph.width / ph.height) as f32);
-                    orbit_controls.screen_size = ph;
+                    orbit_controls.screen_size = ScreenSize::new(ph.width, ph.height);
                 },
                 WindowEvent::HiDpiFactorChanged(f) => {
                     *dpi_factor = f;
@@ -410,7 +414,7 @@ fn process_events(
                 }
                 WindowEvent::CursorMoved { position, .. } => {
                     let ph = position.to_physical(*dpi_factor);
-                    orbit_controls.handle_mouse_move(ph)
+                    orbit_controls.handle_mouse_move(ScreenPosition::new(ph.x,ph.y))
                 },
                 WindowEvent::MouseWheel { delta: MouseScrollDelta::PixelDelta(logical), .. } => {
                     let ph = logical.to_physical(*dpi_factor);

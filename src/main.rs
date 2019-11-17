@@ -19,13 +19,12 @@ use crate::viewer::{GltfViewer, CameraOptions};
 
 mod shader;
 mod controls;
-mod framebuffer;
-mod macros;
+mod platform;
 mod importdata;
 // TODO!: adapt Source...
 // mod http_source;
 // use http_source::HttpSource;
-mod render;
+pub mod render;
 use crate::render::math::*;
 
 pub fn main() {

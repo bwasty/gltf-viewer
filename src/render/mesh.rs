@@ -9,6 +9,8 @@ use crate::render::math::*;
 use crate::render::{Primitive, Root};
 use crate::importdata::ImportData;
 
+use crate::platform::{PrimitiveHelpers};
+
 pub struct Mesh {
     pub index: usize, // glTF index
     pub primitives: Vec<Primitive>,
