@@ -1,11 +1,11 @@
 /// lib exports for use as library
 
-mod utils;
-// mod viewer;
+pub mod utils;
+pub mod viewer;
 // use crate::viewer::{GltfViewer, CameraOptions};
 
 mod shader;
-mod controls;
+pub mod controls;
 mod importdata;
 // TODO!: adapt Source...
 // mod http_source;

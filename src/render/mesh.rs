@@ -9,6 +9,7 @@ use crate::render::math::*;
 use crate::render::{Primitive, Root};
 use crate::importdata::ImportData;
 
+use crate::platform::{GltfViewerRenderer};
 use crate::platform::{PrimitiveHelpers};
 
 pub struct Mesh {
@@ -27,11 +28,12 @@ impl Mesh {
         root: &mut Root,
         imp: &ImportData,
         base_path: &Path,
+        renderer: &mut GltfViewerRenderer,
     ) -> Mesh {
         let primitives: Vec<Primitive> = g_mesh.primitives()
             .enumerate()
             .map(|(i, g_prim)| {
-                Primitive::from_gltf(&g_prim, i, g_mesh.index(), root, imp, base_path)
+                Primitive::from_gltf(&g_prim, i, g_mesh.index(), root, imp, base_path, renderer)
             })
             .collect();
 
@@ -46,9 +48,9 @@ impl Mesh {
         }
     }
 
-    pub fn draw(&self, model_matrix: &Matrix4, mvp_matrix: &Matrix4, camera_position: &Vector3) {
+    pub fn draw(&self, model_matrix: &Matrix4, mvp_matrix: &Matrix4, camera_position: &Vector3, renderer: &mut GltfViewerRenderer) {
         for primitive in &self.primitives {
-            unsafe { primitive.draw(model_matrix, mvp_matrix, camera_position) }
+            unsafe { primitive.draw(model_matrix, mvp_matrix, camera_position, renderer) }
         }
     }
 }

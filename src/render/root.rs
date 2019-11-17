@@ -7,6 +7,8 @@ use crate::render::{Mesh, Node, Material};
 use crate::render::texture::Texture;
 use crate::importdata::ImportData;
 
+use crate::platform::{GltfViewerRenderer};
+
 #[derive(Default)]
 pub struct Root {
     pub nodes: Vec<Node>,
@@ -20,10 +22,10 @@ pub struct Root {
 }
 
 impl Root {
-    pub fn from_gltf(imp: &ImportData, base_path: &Path) -> Self {
+    pub fn from_gltf(imp: &ImportData, base_path: &Path, renderer: &mut GltfViewerRenderer) -> Self {
         let mut root = Root::default();
         let nodes = imp.doc.nodes()
-            .map(|g_node| Node::from_gltf(&g_node, &mut root, imp, base_path))
+            .map(|g_node| Node::from_gltf(&g_node, &mut root, imp, base_path, renderer))
             .collect();
         root.nodes = nodes;
         root.camera_nodes = root.nodes.iter()

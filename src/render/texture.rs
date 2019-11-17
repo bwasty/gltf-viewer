@@ -10,7 +10,7 @@ use image::ImageFormat::{JPEG, PNG};
 
 use crate::importdata::ImportData;
 
-use crate::platform::{TextureHelpers};
+use crate::platform::{GltfViewerRenderer,TextureHelpers};
 
 pub struct Texture {
     pub index: usize, // glTF index
@@ -21,7 +21,7 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn from_gltf(g_texture: &gltf::Texture<'_>, tex_coord: u32, imp: &ImportData, base_path: &Path) -> Texture {
+    pub fn from_gltf(g_texture: &gltf::Texture<'_>, tex_coord: u32, imp: &ImportData, base_path: &Path, renderer: &mut GltfViewerRenderer) -> Texture {
         let buffers = &imp.buffers;
         let mut texture_id = 0;
 
@@ -94,7 +94,7 @@ impl Texture {
         
         // buffer texture data into graphics platform
         unsafe {
-            texture.setup_texture(g_texture, &dyn_img);
+            texture.setup_texture(g_texture, &dyn_img, renderer);
         }
         
         texture

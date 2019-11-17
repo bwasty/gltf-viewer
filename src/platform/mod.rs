@@ -3,7 +3,6 @@
 pub mod webgl;
 #[cfg(feature = "use_wasm_bindgen")]
 mod local {
-    #[macro_use]
     pub use crate::platform::webgl::*;
 }
 
@@ -16,5 +15,4 @@ mod local {
 }
 
 // export wrapped module
-#[macro_use]
 pub use crate::platform::local::*;

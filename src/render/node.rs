@@ -12,6 +12,8 @@ use crate::render::Root;
 use crate::render::camera::Camera;
 use crate::importdata::ImportData;
 
+use crate::platform::{GltfViewerRenderer};
+
 pub struct Node {
     pub index: usize, // glTF index
     pub children: Vec<usize>,
@@ -34,7 +36,8 @@ impl Node {
         g_node: &gltf::Node<'_>,
         root: &mut Root,
         imp: &ImportData,
-        base_path: &Path
+        base_path: &Path,
+        renderer: &mut GltfViewerRenderer,
     ) -> Node {
         let (trans, rot, scale) = g_node.transform().decomposed();
         let r = rot;
@@ -47,7 +50,7 @@ impl Node {
             }
 
             if mesh.is_none() { // not using else due to borrow-checking madness
-                mesh = Some(Rc::new(Mesh::from_gltf(&g_mesh, root, imp, base_path)));
+                mesh = Some(Rc::new(Mesh::from_gltf(&g_mesh, root, imp, base_path, renderer)));
                 root.meshes.push(mesh.clone().unwrap());
             }
         }
@@ -101,15 +104,15 @@ impl Node {
         }
     }
 
-    pub fn draw(&mut self, root: &mut Root, cam_params: &CameraParams) {
+    pub fn draw(&mut self, root: &mut Root, cam_params: &CameraParams, renderer: &mut GltfViewerRenderer) {
         if let Some(ref mesh) = self.mesh {
             let mvp_matrix = cam_params.projection_matrix * cam_params.view_matrix * self.final_transform;
 
-            (*mesh).draw(&self.final_transform, &mvp_matrix, &cam_params.position);
+            (*mesh).draw(&self.final_transform, &mvp_matrix, &cam_params.position, renderer);
         }
         for node_id in &self.children {
             let node = root.unsafe_get_node_mut(*node_id);
-            node.draw(root, cam_params);
+            node.draw(root, cam_params, renderer);
         }
     }
 }

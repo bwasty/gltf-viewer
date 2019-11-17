@@ -52,6 +52,9 @@ impl ScreenSize {
     pub fn new(width: f64, height: f64) -> Self {
         Self { width: width as f32, height: height as f32 }
     }
+    pub fn clone(a: &Self) -> Self {
+        Self { width: a.width, height: a.height }
+    }
 }
 
 pub struct ScreenPosition {

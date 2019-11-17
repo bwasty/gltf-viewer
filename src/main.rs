@@ -129,11 +129,11 @@ pub fn main() {
 
     let _ = TermLogger::init(log_level, LogConfig { time: None, target: None, ..LogConfig::default() });
 
-    let mut viewer = GltfViewer::new(source, width, height,
+    let mut viewer = GltfViewer::new(width, height,
         args.is_present("headless"),
         !args.is_present("screenshot"),
-        camera_options,
-        scene);
+        &camera_options);
+    viewer.load(source, scene, &camera_options);
 
     if args.is_present("screenshot") {
         let filename = args.value_of("screenshot").unwrap();

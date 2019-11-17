@@ -19,7 +19,7 @@ build = false # TODO: git-version doesn't work on Travis
 
 [features]
 default = ["clap","gl","glutin","simplelog"]
-use_wasm_bindgen = ["wasm-bindgen","web-sys","console_error_panic_hook"]
+use_wasm_bindgen = ["wasm-bindgen","js-sys","web-sys","console_error_panic_hook"]
 
 [badges]
 maintenance = { status = "passively-maintained" }
@@ -39,6 +39,7 @@ collision = "0.19.0"
 gl = { version = "0.11.0", optional = true }
 glutin = { version = "0.18.0", optional = true }
 image = { version = "0.21.0", default-features = false, features = ["jpeg", "png_codec"] }
+js-sys = { version = "0.3.28", optional = true }
 # reqwest = "0.7.3"
 log = "0.4.6"
 num-traits = "0.2.6"

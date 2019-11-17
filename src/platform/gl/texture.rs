@@ -10,13 +10,14 @@ use image::GenericImageView;
 use image::FilterType;
 
 use crate::render::texture::Texture;
+use crate::platform::{GltfViewerRenderer};
 
 pub trait TextureHelpers {
-    unsafe fn setup_texture(&mut self, g_texture: &gltf::Texture<'_>, dyn_img: &DynamicImage);
+    unsafe fn setup_texture(&mut self, g_texture: &gltf::Texture<'_>, dyn_img: &DynamicImage, renderer: &GltfViewerRenderer);
 }
 
 impl TextureHelpers for Texture {
-    unsafe fn setup_texture(&mut self, g_texture: &gltf::Texture<'_>, dyn_img: &DynamicImage) {
+    unsafe fn setup_texture(&mut self, g_texture: &gltf::Texture<'_>, dyn_img: &DynamicImage, renderer: &GltfViewerRenderer) {
         // get texture id from gl
         gl::GenTextures(1, &mut self.id);
         gl::BindTexture(gl::TEXTURE_2D, self.id);

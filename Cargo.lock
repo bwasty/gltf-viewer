@@ -330,6 +330,7 @@ dependencies = [
  "gltf 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "glutin 0.18.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.21.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "js-sys 0.3.31 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "simplelog 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
