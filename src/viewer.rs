@@ -16,7 +16,7 @@ use crate::{error, warn, info};
 use log::{error, warn, info};
 
 #[cfg(feature = "use_wasm_bindgen")]
-use web_sys::WebGl2RenderingContext;
+use web_sys::{HtmlCanvasElement,WebGl2RenderingContext};
 
 
 use crate::controls::{OrbitControls, ScreenSize};
@@ -81,6 +81,7 @@ impl GltfViewer {
     /// constructor for webgl contexts
     #[cfg(feature = "use_wasm_bindgen")]
     pub fn new_from_webgl(
+        canvas: Rc<HtmlCanvasElement>,
         gl: Rc<WebGl2RenderingContext>,
         width: u32,
         height: u32,
@@ -89,7 +90,7 @@ impl GltfViewer {
         camera_options: &CameraOptions,
     ) -> GltfViewer {
         // create renderer to wrap webgl
-        let renderer = GltfViewerRenderer::new(gl,width,height);
+        let mut renderer = GltfViewerRenderer::new(canvas,gl,width,height);
         GltfViewer::new_from_renderer(headless, visible, camera_options, renderer)
     }
 

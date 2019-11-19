@@ -1,15 +1,18 @@
 use std::collections::HashMap;
 use std::f32::consts::PI;
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use gltf;
 use gltf::json::texture::MinFilter;
 
-use web_sys::{WebGlBuffer,WebGlTexture,WebGlVertexArrayObject};
+use wasm_bindgen::JsCast;
+use wasm_bindgen::JsValue;
+use wasm_bindgen::prelude::*;
+use web_sys::*;
 use web_sys::WebGl2RenderingContext as GL;
 
-use log::{error, warn, info};
-
+use crate::{debug};
 use crate::controls::{OrbitControls, ScreenPosition, ScreenSize, NavState};
 use crate::controls::CameraMovement::*;
 use crate::render::{Root,Scene};
@@ -19,28 +22,41 @@ use crate::platform::{ShaderInfo};
 
 
 pub struct GltfViewerRenderer {
+    pub canvas: Rc<HtmlCanvasElement>,
     pub gl: Rc<GL>,
     pub size: ScreenSize,
     pub shaders: Vec<ShaderInfo>,
     pub buffers: Vec<Rc<WebGlBuffer>>,
     pub textures: Vec<Rc<WebGlTexture>>,
     pub vaos: Vec<Rc<WebGlVertexArrayObject>>,
+    pub messages: Rc<RefCell<Vec<GltfViewerRendererMsg>>>,
+}
+
+
+pub enum GltfViewerRendererMsg {
+    MouseState(NavState),
+    MouseMove(ScreenPosition),
+    // Resized(ScreenSize),
+    // Scrolled?
 }
 
 impl GltfViewerRenderer {
-    pub fn new(gl: Rc<GL>, width: u32, height: u32) -> Self {
+    pub fn new(canvas: Rc<HtmlCanvasElement>, gl: Rc<GL>, width: u32, height: u32) -> Self {
         Self {
+            canvas,
             gl,
             size: ScreenSize { width: width as f32, height: height as f32 },
             shaders: Vec::new(),
             buffers: Vec::new(),
             textures: Vec::new(),
             vaos: Vec::new(),
+            messages: Rc::new(RefCell::new(Vec::new())),
         }
     }
 
     // prepare gl context for loading
-    pub fn init_viewer_gl_context(&self, headless: bool, visible: bool)     {
+    pub fn init_viewer_gl_context(&self, headless: bool, visible: bool) {
+        // init gl
         if headless || !visible {
             // transparent background for screenshots
             self.gl.clear_color(0.0, 0.0, 0.0, 0.0);
@@ -54,13 +70,31 @@ impl GltfViewerRenderer {
 
         // TODO: draw in wireframe
         // gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+
+        // bind events
+        self.bind_mouse_down_event();
+        self.bind_mouse_up_event();
+        self.bind_mouse_move_event();
+        self.bind_prevent_context_menu();
     }
 
     // Returns whether to keep running
     pub fn process_events(&mut self, orbit_controls: &mut OrbitControls) -> bool {
-        process_events(
-            orbit_controls,
-            &mut self.size)
+        let mut keep_running = true;
+        let mut messages = self.messages.borrow_mut();
+
+        // check events
+        for msg in messages.iter() {
+            match msg {
+                GltfViewerRendererMsg::MouseState(nav_state) => orbit_controls.state = nav_state.clone(),
+                GltfViewerRendererMsg::MouseMove(pos) => orbit_controls.handle_mouse_move(pos.clone()),
+            }
+        }
+
+        // empty events
+        messages.clear();
+
+        keep_running
     }
     
 
@@ -92,18 +126,50 @@ impl GltfViewerRenderer {
             self.screenshot(scene, root, orbit_controls, &actual_name[..]);
         }
     }
-}
 
 
-// input / event loop
+    // event bindings
 
-fn process_events(
-    mut orbit_controls: &mut OrbitControls,
-    size: &mut ScreenSize) -> bool
-{
-    let mut keep_running = true;
+    fn bind_mouse_down_event(&self) {
+        let messages = self.messages.clone();
+        let handler = Closure::wrap(Box::new(move |event: web_sys::MouseEvent| {
+            let state = match event.which() {
+                1 => NavState::Rotating,
+                3 => NavState::Panning,
+                _ => NavState::None,
+            };
+            messages.borrow_mut().push(GltfViewerRendererMsg::MouseState(state));
+        }) as Box<dyn FnMut(_)>);
+        self.canvas.add_event_listener_with_callback("mousedown", handler.as_ref().unchecked_ref()).unwrap();
+        handler.forget();
+    }
 
-    // TODO events
+    fn bind_mouse_up_event(&self) {
+        let messages = self.messages.clone();
+        let handler = Closure::wrap(Box::new(move |event: web_sys::MouseEvent| {
+            messages.borrow_mut().push(GltfViewerRendererMsg::MouseState(NavState::None));
+        }) as Box<dyn FnMut(_)>);
+        self.canvas.add_event_listener_with_callback("mouseup", handler.as_ref().unchecked_ref()).unwrap();
+        handler.forget();
+    }
 
-    keep_running
+    fn bind_mouse_move_event(&self) {
+        let messages = self.messages.clone();
+        let handler = Closure::wrap(Box::new(move |event: web_sys::MouseEvent| {
+            let x = event.client_x();
+            let y = event.client_y();
+            messages.borrow_mut().push(GltfViewerRendererMsg::MouseMove(ScreenPosition::new(x as f64, y as f64)));
+        }) as Box<dyn FnMut(_)>);
+        self.canvas.add_event_listener_with_callback("mousemove", handler.as_ref().unchecked_ref()).unwrap();
+        handler.forget();
+    }
+
+    fn bind_prevent_context_menu(&self) {
+        let messages = self.messages.clone();
+        let handler = Closure::wrap(Box::new(move |event: web_sys::MouseEvent| {
+            event.prevent_default();
+        }) as Box<dyn FnMut(_)>);
+        self.canvas.add_event_listener_with_callback("contextmenu", handler.as_ref().unchecked_ref()).unwrap();
+        handler.forget();
+    }
 }

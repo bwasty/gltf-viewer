@@ -57,6 +57,7 @@ impl ScreenSize {
     }
 }
 
+#[derive(Clone)]
 pub struct ScreenPosition {
     pub x: f32,
     pub y: f32,

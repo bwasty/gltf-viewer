@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>gltf-viewer</title>
+        <style>
+            html, body, canvas {
+                margin: 0px;
+                padding: 0px;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+    <div id="app">
+        <canvas id="render_canvas" width="640" height="480"></canvas>
+    </div>
+    <script type="module">
+        import init, { GltfViewerApp } from './pkg/gltf_viewer.js';
+        async function run() {
+            // First up we need to actually load the wasm file, so we use the
+            // default export to inform it where the wasm file is located on the
+            // server, and then we wait on the returned promise to wait for the
+            // wasm to be loaded.
+            // It may look like this: `await init('./pkg/without_a_bundler_bg.wasm');`,
+            // but there is also a handy default inside `init` function, which uses
+            // `import.meta` to locate the wasm file relatively to js file
+            //
+            // Note that instead of a string here you can also pass in an instance
+            // of `WebAssembly.Module` which allows you to compile your own module.
+            // Also note that the promise, when resolved, yields the wasm module's
+            // exports which is the same as importing the `*_bg` module in other
+            // modes
+            await init();
+
+            // And afterwards we can use all the functionality defined in wasm.
+            let canvas = document.getElementById("render_canvas");
+            let app = new GltfViewerApp(canvas);
+
+            // create render loop
+            let last_time = 0;
+            function run_frame(et) {
+                let delta = et - last_time;
+                last_time = et;
+                app.run_frame(delta);
+
+                requestAnimationFrame(run_frame);
+            }
+
+            // start render loop
+            requestAnimationFrame(run_frame);
+        }
+
+        run();
+    </script>
+  </body>
+</html>
