@@ -1,14 +1,13 @@
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use cgmath::{Matrix, Matrix4, Vector3, Vector4};
-use cgmath::prelude::*;
+use cgmath::{Matrix4, Vector3, Vector4};
 use js_sys::WebAssembly;
 use wasm_bindgen::JsCast;
 use web_sys::{WebGlProgram,WebGlUniformLocation};
 use web_sys::WebGl2RenderingContext as GL;
 
-use crate::{debug,trace};
+use crate::{debug};
 use crate::platform::{GltfViewerRenderer};
 
 pub struct ShaderInfo {
@@ -55,7 +54,6 @@ pub unsafe fn compile_shader_and_get_id(v_shader_code: &str, f_shader_code: &str
         .as_bool()
         .unwrap_or(false)
     {
-        debug!("{}", v_shader_code);
         panic!("vertex shader failed to compile")
     }
     
@@ -184,7 +182,7 @@ impl UniformHelpers for crate::shader::Shader {
 
     /// get uniform location with caching
     unsafe fn uniform_location(&mut self, renderer: &mut GltfViewerRenderer, name: &'static str) -> i32 {
-        let mut shader_info = &mut renderer.shaders[self.id as usize];
+        let shader_info = &mut renderer.shaders[self.id as usize];
 
         if let Some(loc_id) = shader_info.uniform_location_map.get(name) {
             return *loc_id;

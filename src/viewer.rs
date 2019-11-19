@@ -1,5 +1,6 @@
-use std::path::Path;
+#[cfg(feature = "use_wasm_bindgen")]
 use std::rc::Rc;
+use std::path::Path;
 
 // TODO timing for wasm target
 #[cfg(not(feature = "use_wasm_bindgen"))]
@@ -24,7 +25,7 @@ use crate::importdata::ImportData;
 use crate::render::*;
 use crate::render::math::*;
 #[cfg(not(feature = "use_wasm_bindgen"))]
-use crate::utils::{print_elapsed, FrameTimer};
+use crate::utils::{FrameTimer};
 
 use crate::platform::*;
 
@@ -90,7 +91,7 @@ impl GltfViewer {
         camera_options: &CameraOptions,
     ) -> GltfViewer {
         // create renderer to wrap webgl
-        let mut renderer = GltfViewerRenderer::new(canvas,gl,width,height);
+        let renderer = GltfViewerRenderer::new(canvas,gl,width,height);
         GltfViewer::new_from_renderer(headless, visible, camera_options, renderer)
     }
 
@@ -129,9 +130,6 @@ impl GltfViewer {
     }
 
     pub fn load(&mut self, source: &str, scene_index: usize, camera_options: &CameraOptions) {
-        // TODO timing for wasm target
-        // let mut start_time = Instant::now();
-        
         // TODO!: http source
         // let gltf =
         if source.starts_with("http") {
@@ -158,6 +156,8 @@ impl GltfViewer {
         self.update_camera_from_scene(camera_options);
     }
 
+    // function for loading gltf data from loaded file bytes
+    #[cfg(feature = "use_wasm_bindgen")]
     pub fn load_from_bytes(&mut self, source_bytes: &[u8], source_name: &str, scene_index: usize, camera_options: &CameraOptions) {
         // TODO timing for wasm target
         // let mut start_time = Instant::now();
@@ -179,10 +179,6 @@ impl GltfViewer {
     }
 
     fn process_import_data(&mut self, source: &str, imp: ImportData, scene_index: usize) {
-        // TODO timing for wasm target
-        // print_elapsed("Imported glTF in ", start_time);
-        // start_time = Instant::now();
-
         // load first scene
         if scene_index >= imp.doc.scenes().len() {
             error!("Scene index too high - file has only {} scene(s)", imp.doc.scenes().len());
@@ -191,14 +187,9 @@ impl GltfViewer {
         let base_path = Path::new(source);
         let mut root = Root::from_gltf(&imp, base_path, &mut self.renderer);
         let scene = Scene::from_gltf(&imp.doc.scenes().nth(scene_index).unwrap(), &mut root);
-        
-        // TODO timing for wasm target
-        // print_elapsed(&format!("Loaded scene with {} nodes, {} meshes in ",
-        //         imp.doc.nodes().count(), imp.doc.meshes().len()), start_time);
 
         self.root = Some(root);
         self.scene = Some(scene);
-
 
         // check for gl errors
         #[cfg(not(feature = "use_wasm_bindgen"))]

@@ -4,18 +4,22 @@
         <meta charset="utf-8">
         <title>gltf-viewer</title>
         <style>
-            html, body, canvas {
+            html, body {
                 margin: 0px;
                 padding: 0px;
                 width: 100%;
                 height: 100%;
                 overflow: hidden;
+                text-align: center;
             }
         </style>
     </head>
     <body>
     <div id="app">
         <canvas id="render_canvas" width="640" height="480"></canvas>
+        <div id="controls">
+            <input type="file" id="file_select"/>
+        </div>
     </div>
     <script type="module">
         import init, { GltfViewerApp } from './pkg/gltf_viewer.js';
@@ -36,21 +40,48 @@
             await init();
 
             // And afterwards we can use all the functionality defined in wasm.
-            let canvas = document.getElementById("render_canvas");
-            let app = new GltfViewerApp(canvas);
 
-            // create render loop
-            let last_time = 0;
-            function run_frame(et) {
-                let delta = et - last_time;
-                last_time = et;
-                app.run_frame(delta);
+            // store animation frame request reference
+            let frame_request = null;
 
-                requestAnimationFrame(run_frame);
+
+            // load bytes into new app and run
+            function load_and_run(name, buf) {
+                let canvas = document.getElementById("render_canvas");
+                let app = new GltfViewerApp(canvas);
+
+                // load file into wasm
+                app.load_file(name, buf);
+
+                // create render loop
+                let last_time = 0;
+                function run_frame(et) {
+                    let delta = et - last_time;
+                    last_time = et;
+                    app.run_frame(delta);
+
+                    // cancel pending requests
+                    if (frame_request) {
+                        cancelAnimationFrame(frame_request);
+                    }
+
+                    frame_request = requestAnimationFrame(run_frame);
+                }
+                run_frame(0);
             }
 
-            // start render loop
-            requestAnimationFrame(run_frame);
+            document.getElementById("file_select").addEventListener("change", evt => {
+                let file0 = evt.target.files[0];
+                if (file0) {
+                    let reader = new FileReader();
+                    reader.addEventListener("load", (evt) => {
+                        let buf = evt.target.result;
+                        load_and_run(file0.name, buf);
+                    });
+
+                    reader.readAsArrayBuffer(file0);
+                }
+            });
         }
 
         run();

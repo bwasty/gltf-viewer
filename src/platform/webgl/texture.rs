@@ -8,10 +8,8 @@ use image::DynamicImage::*;
 use image::GenericImageView;
 use image::FilterType;
 
-use web_sys::{WebGlTexture};
 use web_sys::WebGl2RenderingContext as GL;
 
-use crate::{debug};
 use crate::render::texture::Texture;
 use crate::platform::{GltfViewerRenderer};
 
@@ -72,8 +70,7 @@ impl TextureHelpers for Texture {
             format,
             GL::UNSIGNED_BYTE,
             Some(&data)
-        );
-        debug!("texture bound {}", self.id);
+        ).expect("Failed to buffer texture");
 
         if generate_mip_maps {
             gl.generate_mipmap(GL::TEXTURE_2D);

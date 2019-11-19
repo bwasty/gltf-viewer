@@ -1,22 +1,14 @@
-use std::collections::HashMap;
 use std::f32::consts::PI;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use gltf;
-use gltf::json::texture::MinFilter;
-
 use wasm_bindgen::JsCast;
-use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::*;
 use web_sys::*;
 use web_sys::WebGl2RenderingContext as GL;
 
-use crate::{debug};
 use crate::controls::{OrbitControls, ScreenPosition, ScreenSize, NavState};
-use crate::controls::CameraMovement::*;
 use crate::render::{Root,Scene};
-use crate::viewer::{GltfViewer};
 
 use crate::platform::{ShaderInfo};
 
@@ -80,7 +72,6 @@ impl GltfViewerRenderer {
 
     // Returns whether to keep running
     pub fn process_events(&mut self, orbit_controls: &mut OrbitControls) -> bool {
-        let mut keep_running = true;
         let mut messages = self.messages.borrow_mut();
 
         // check events
@@ -94,23 +85,21 @@ impl GltfViewerRenderer {
         // empty events
         messages.clear();
 
-        keep_running
+        true
     }
     
 
     // draws next frame
     pub fn draw(&mut self, scene: &mut Scene, root: &mut Root, orbit_controls: &OrbitControls) {
         // render
-        unsafe {
-            self.gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
+        self.gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
 
-            let cam_params = orbit_controls.camera_params();
-            scene.draw(root, &cam_params, self);
-        }
+        let cam_params = orbit_controls.camera_params();
+        scene.draw(root, &cam_params, self);
     }
 
     // screenshot functions (only for gl platform atm)
-    pub fn screenshot(&mut self, scene: &mut Scene, root: &mut Root, orbit_controls: &OrbitControls, filename: &str) {
+    pub fn screenshot(&mut self, _scene: &mut Scene, _root: &mut Root, _orbit_controls: &OrbitControls, _filename: &str) {
         panic!("not implemented")
     }
     pub fn multiscreenshot(&mut self, scene: &mut Scene, root: &mut Root, orbit_controls: &mut OrbitControls, filename: &str, count: u32) {
@@ -146,7 +135,7 @@ impl GltfViewerRenderer {
 
     fn bind_mouse_up_event(&self) {
         let messages = self.messages.clone();
-        let handler = Closure::wrap(Box::new(move |event: web_sys::MouseEvent| {
+        let handler = Closure::wrap(Box::new(move |_event: web_sys::MouseEvent| {
             messages.borrow_mut().push(GltfViewerRendererMsg::MouseState(NavState::None));
         }) as Box<dyn FnMut(_)>);
         self.canvas.add_event_listener_with_callback("mouseup", handler.as_ref().unchecked_ref()).unwrap();
@@ -165,7 +154,6 @@ impl GltfViewerRenderer {
     }
 
     fn bind_prevent_context_menu(&self) {
-        let messages = self.messages.clone();
         let handler = Closure::wrap(Box::new(move |event: web_sys::MouseEvent| {
             event.prevent_default();
         }) as Box<dyn FnMut(_)>);

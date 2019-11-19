@@ -5,7 +5,7 @@ use web_sys::WebGl2RenderingContext as GL;
 use crate::{debug,warn};
 use crate::importdata::{ImportData};
 use crate::render::math::*;
-use crate::render::{Material,Primitive,Root,Vertex};
+use crate::render::{Material,Primitive,Root};
 use crate::shader::{PbrShader,ShaderFlags};
 
 
@@ -33,14 +33,13 @@ impl PrimitiveHelpers for Primitive {
                 .unwrap_or_else(||
                     panic!("primitives must have the POSITION attribute")
                 );
-           iter.flat_map(|a|a.into_iter().map(|i|*i).collect::<Vec<f32>>()).collect::<Vec<_>>()
+           iter.flat_map(|a|a.iter().map(|i|*i).collect::<Vec<f32>>()).collect::<Vec<_>>()
         };
-        debug!("pos! {}", positions.len() / 3);
 
         // normals
         let mut normals = None;
         if let Some(normals_reader) = reader.read_normals() {
-            normals = Some(normals_reader.flat_map(|a|a.into_iter().map(|i|*i).collect::<Vec<f32>>()).collect::<Vec<_>>());
+            normals = Some(normals_reader.flat_map(|a|a.iter().map(|i|*i).collect::<Vec<f32>>()).collect::<Vec<_>>());
             shader_flags |= ShaderFlags::HAS_NORMALS;
         }
         else {
@@ -51,7 +50,7 @@ impl PrimitiveHelpers for Primitive {
         // tangents
         let mut tangents = None;
         if let Some(tangents_reader) = reader.read_tangents() {
-            tangents = Some(tangents_reader.flat_map(|a|a.into_iter().map(|i|*i).collect::<Vec<f32>>()).collect::<Vec<_>>());
+            tangents = Some(tangents_reader.flat_map(|a|a.iter().map(|i|*i).collect::<Vec<f32>>()).collect::<Vec<_>>());
             shader_flags |= ShaderFlags::HAS_TANGENTS;
         }
         else {
@@ -72,8 +71,8 @@ impl PrimitiveHelpers for Primitive {
                 continue;
             }
             match tex_coord_set {
-                0 => tex_coord_0 = Some(tex_coords.into_f32().flat_map(|a|a.into_iter().map(|i|*i).collect::<Vec<f32>>()).collect::<Vec<_>>()),
-                1 => tex_coord_1 = Some(tex_coords.into_f32().flat_map(|a|a.into_iter().map(|i|*i).collect::<Vec<f32>>()).collect::<Vec<_>>()),
+                0 => tex_coord_0 = Some(tex_coords.into_f32().flat_map(|a|a.iter().map(|i|*i).collect::<Vec<f32>>()).collect::<Vec<_>>()),
+                1 => tex_coord_1 = Some(tex_coords.into_f32().flat_map(|a|a.iter().map(|i|*i).collect::<Vec<f32>>()).collect::<Vec<_>>()),
                 _ => unreachable!()
             }
             shader_flags |= ShaderFlags::HAS_UV;
@@ -83,7 +82,7 @@ impl PrimitiveHelpers for Primitive {
         // colors
         let mut colors = None;
         if let Some(colors_reader) = reader.read_colors(0) {
-            colors = Some(colors_reader.into_rgba_f32().flat_map(|a|a.into_iter().map(|i|*i).collect::<Vec<f32>>()).collect::<Vec<_>>());
+            colors = Some(colors_reader.into_rgba_f32().flat_map(|a|a.iter().map(|i|*i).collect::<Vec<f32>>()).collect::<Vec<_>>());
             shader_flags |= ShaderFlags::HAS_COLORS;
         }
         if reader.read_colors(1).is_some() {
@@ -91,22 +90,22 @@ impl PrimitiveHelpers for Primitive {
         }
 
         // joints
-        let mut joints = None;
-        if let Some(joints_reader) = reader.read_joints(0) {
-            joints = Some(joints_reader.into_u16().flat_map(|a|a.into_iter().map(|i|*i).collect::<Vec<u16>>()).collect::<Vec<_>>());
-        }
-        if reader.read_joints(1).is_some() {
-            warn!("Ignoring further joint attributes, only supporting JOINTS_0.");
-        }
+        // let mut joints = None;
+        // if let Some(joints_reader) = reader.read_joints(0) {
+        //     joints = Some(joints_reader.into_u16().flat_map(|a|a.iter().map(|i|*i).collect::<Vec<u16>>()).collect::<Vec<_>>());
+        // }
+        // if reader.read_joints(1).is_some() {
+        //     warn!("Ignoring further joint attributes, only supporting JOINTS_0.");
+        // }
 
         // weights
-        let mut weights = None;
-        if let Some(weights_reader) = reader.read_weights(0) {
-            weights = Some(weights_reader.into_f32().flat_map(|a|a.into_iter().map(|i|*i).collect::<Vec<f32>>()).collect::<Vec<_>>());
-        }
-        if reader.read_weights(1).is_some() {
-            warn!("Ignoring further weight attributes, only supporting WEIGHTS_0.");
-        }
+        // let mut weights = None;
+        // if let Some(weights_reader) = reader.read_weights(0) {
+        //     weights = Some(weights_reader.into_f32().flat_map(|a|a.iter().map(|i|*i).collect::<Vec<f32>>()).collect::<Vec<_>>());
+        // }
+        // if reader.read_weights(1).is_some() {
+        //     warn!("Ignoring further weight attributes, only supporting WEIGHTS_0.");
+        // }
 
         // indices
         let indices = reader

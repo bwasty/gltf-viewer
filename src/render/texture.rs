@@ -23,7 +23,6 @@ pub struct Texture {
 impl Texture {
     pub fn from_gltf(g_texture: &gltf::Texture<'_>, tex_coord: u32, imp: &ImportData, base_path: &Path, renderer: &mut GltfViewerRenderer) -> Texture {
         let buffers = &imp.buffers;
-        let mut texture_id = 0;
 
         // TODO!: share images via Rc? detect if occurs?
         // TODO!!: better I/O abstraction...
@@ -88,7 +87,7 @@ impl Texture {
         let mut texture = Texture {
             index: g_texture.index(),
             name: g_texture.name().map(|s| s.into()),
-            id: texture_id,
+            id: 0,
             tex_coord,
         };
         

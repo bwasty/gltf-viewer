@@ -4,11 +4,6 @@ use std::time::{Duration, Instant};
 
 use log::{info};
 
-pub fn elapsed(start_time: Instant) -> String {
-    let elapsed = start_time.elapsed();
-    format_duration(elapsed)
-}
-
 fn format_duration(duration: Duration) -> String {
     let secs = duration.as_secs();
     let nanos = duration.subsec_nanos();
@@ -28,10 +23,6 @@ fn format_duration(duration: Duration) -> String {
             };
         format!("{:>3.*} ms", places, ms)
     }
-}
-
-pub fn print_elapsed(message: &str, start_time: Instant) {
-    info!("{:<25}{}", message, elapsed(start_time));
 }
 
 pub struct FrameTimer {

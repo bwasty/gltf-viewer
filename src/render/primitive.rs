@@ -80,8 +80,8 @@ impl Primitive {
 
     pub fn from_gltf(
         g_primitive: &gltf::Primitive<'_>,
-        primitive_index: usize,
-        mesh_index: usize,
+        _primitive_index: usize,
+        _mesh_index: usize,
         root: &mut Root,
         imp: &ImportData,
         base_path: &Path,
@@ -106,7 +106,7 @@ impl Primitive {
 
         let mut prim = Primitive::new(bounds, mode);
 
-        let mut shader_flags = unsafe {
+        unsafe {
             prim.setup_primitive(g_primitive, imp, root, base_path, renderer)
         };
 

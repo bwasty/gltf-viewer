@@ -18,17 +18,13 @@ use glutin::{
 use glutin::dpi::PhysicalSize;
 use glutin::ElementState::*;
 
-use gltf;
-use gltf::json::texture::MinFilter;
-
 use image::{DynamicImage};
 
-use log::{error, warn, info};
+use log::{error};
 
 use crate::controls::{OrbitControls, ScreenPosition, ScreenSize, NavState};
 use crate::controls::CameraMovement::*;
 use crate::render::{Root,Scene};
-use crate::viewer::{GltfViewer};
 
 use crate::platform::{Framebuffer};
 
