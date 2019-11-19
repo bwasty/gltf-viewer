@@ -80,3 +80,11 @@ DOCKER_IMAGE=bwasty/gltf-viewer ./screenshot_docker.sh Box.glb
 ```
 
 Alternatively, you can also install `xvfb` and use `./run_xvfb.sh` directly (Linux only).
+
+### wasm/webgl target
+Build the wasm web target with this command. You may need to follow setup instructions from
+the [wasm-pack website](https://rustwasm.github.io/docs/wasm-pack/).
+```
+wasm-pack build --target web -- --no-default-features --features use_wasm_bindgen
+```
+This generates a pkg/ directory with js and wasm files. Use a simple http server (such as `python3 -m http.server`) to load the index.html demo page.
