@@ -6,6 +6,8 @@ use crate::controls::CameraParams;
 use crate::render::{Root};
 use crate::render::math::*;
 
+use crate::platform::{GltfViewerRenderer};
+
 pub struct Scene {
     pub name: Option<String>,
     pub nodes: Vec<usize>,
@@ -45,12 +47,12 @@ impl Scene {
     }
 
     // TODO: flatten draw call hierarchy (global Vec<Primitive>?)
-    pub fn draw(&mut self, root: &mut Root, cam_params: &CameraParams) {
+    pub fn draw(&mut self, root: &mut Root, cam_params: &CameraParams, renderer: &mut GltfViewerRenderer) {
         // TODO!: for correct alpha blending, sort by material alpha mode and
         // render opaque objects first.
         for node_id in &self.nodes {
             let node = root.unsafe_get_node_mut(*node_id);
-            node.draw(root, cam_params);
+            node.draw(root, cam_params, renderer);
         }
     }
 }

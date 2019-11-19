@@ -1,7 +1,7 @@
+#version 330 core
 // Originally taken from https://github.com/KhronosGroup/glTF-WebGL-PBR
 // Commit a94655275e5e4e8ae580b1d95ce678b74ab87426
 
-#version 330 core
 layout (location = 0) in vec4 a_Position;
 #ifdef HAS_NORMALS
 layout (location = 1) in vec4 a_Normal;

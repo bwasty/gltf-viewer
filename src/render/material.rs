@@ -9,6 +9,8 @@ use crate::render::texture::Texture;
 use crate::shader::*;
 use crate::importdata::ImportData;
 
+use crate::platform::{GltfViewerRenderer};
+
 pub struct Material {
     pub index: Option<usize>, /// glTF index
     pub name: Option<String>,
@@ -40,7 +42,8 @@ impl Material {
         g_material: &gltf::material::Material<'_>,
         root: &mut Root,
         imp: &ImportData,
-        base_path: &Path
+        base_path: &Path,
+        renderer: &mut GltfViewerRenderer,
     ) -> Material {
         let pbr = g_material.pbr_metallic_roughness();
 
@@ -71,25 +74,25 @@ impl Material {
 
         if let Some(color_info) = pbr.base_color_texture() {
             material.base_color_texture = Some(
-                load_texture(&color_info.texture(), color_info.tex_coord(), root, imp, base_path));
+                load_texture(&color_info.texture(), color_info.tex_coord(), root, imp, base_path, renderer));
         }
         if let Some(mr_info) = pbr.metallic_roughness_texture() {
             material.metallic_roughness_texture = Some(
-                load_texture(&mr_info.texture(), mr_info.tex_coord(), root, imp, base_path));
+                load_texture(&mr_info.texture(), mr_info.tex_coord(), root, imp, base_path, renderer));
         }
         if let Some(normal_texture) = g_material.normal_texture() {
             material.normal_texture = Some(
-                load_texture(&normal_texture.texture(), normal_texture.tex_coord(), root, imp, base_path));
+                load_texture(&normal_texture.texture(), normal_texture.tex_coord(), root, imp, base_path, renderer));
             material.normal_scale = Some(normal_texture.scale());
         }
         if let Some(occ_texture) = g_material.occlusion_texture() {
             material.occlusion_texture = Some(
-                load_texture(&occ_texture.texture(), occ_texture.tex_coord(), root, imp, base_path));
+                load_texture(&occ_texture.texture(), occ_texture.tex_coord(), root, imp, base_path, renderer));
             material.occlusion_strength = occ_texture.strength();
         }
         if let Some(em_info) = g_material.emissive_texture() {
             material.emissive_texture = Some(
-                load_texture(&em_info.texture(), em_info.tex_coord(), root, imp, base_path));
+                load_texture(&em_info.texture(), em_info.tex_coord(), root, imp, base_path, renderer));
         }
 
         material
@@ -122,13 +125,15 @@ fn load_texture(
     tex_coord: u32,
     root: &mut Root,
     imp: &ImportData,
-    base_path: &Path) -> Rc<Texture>
+    base_path: &Path,
+    renderer: &mut GltfViewerRenderer,
+) -> Rc<Texture>
 {
     if let Some(tex) = root.textures.iter().find(|tex| (***tex).index == g_texture.index()) {
         return Rc::clone(tex)
     }
 
-    let texture = Rc::new(Texture::from_gltf(g_texture, tex_coord, imp, base_path));
+    let texture = Rc::new(Texture::from_gltf(g_texture, tex_coord, imp, base_path, renderer));
     root.textures.push(Rc::clone(&texture));
     texture
 }
