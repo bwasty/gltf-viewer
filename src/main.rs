@@ -11,7 +11,7 @@ use clap::{Arg, App, AppSettings};
 
 use log::warn;
 
-use simplelog::{TermLogger, LevelFilter, Config as LogConfig};
+use simplelog::{TermLogger, LevelFilter, ConfigBuilder as LogConfigBuilder, TerminalMode};
 
 mod utils;
 mod viewer;
@@ -128,7 +128,14 @@ pub fn main() {
         _ => LevelFilter::Trace
     };
 
-    let _ = TermLogger::init(log_level, LogConfig { time: None, target: None, ..LogConfig::default() });
+    let _ = TermLogger::init(
+        log_level,
+        LogConfigBuilder::new()
+            .set_time_level(LevelFilter::Off)
+            .set_target_level(LevelFilter::Off)
+            .set_thread_level(LevelFilter::Off)
+            .build(),
+        TerminalMode::Stdout);
 
     let mut viewer = GltfViewer::new(source, width, height,
         args.is_present("headless"),
