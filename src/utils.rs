@@ -1,7 +1,6 @@
 #![macro_use]
 
 use std::ffi::CStr;
-use std::mem;
 use std::time::{Duration, Instant};
 
 use gl;
@@ -117,9 +116,9 @@ pub unsafe fn print_context_info() {
     debug!("Version      : {}", gl_string(gl::GetString(gl::VERSION)));
     debug!("GLSL         : {}", gl_string(gl::GetString(gl::SHADING_LANGUAGE_VERSION)));
 
-    let mut val = mem::MaybeUninit::uninit();
-    gl::GetIntegerv(gl::CONTEXT_PROFILE_MASK, val.as_mut_ptr());
-    let val = val.assume_init() as gl::types::GLenum;
+    let mut val = 0;
+    gl::GetIntegerv(gl::CONTEXT_PROFILE_MASK, &mut val);
+    let val = val as gl::types::GLenum;
     let profile = if (val & gl::CONTEXT_COMPATIBILITY_PROFILE_BIT) != 0 {
         "Compatibility"
     } else if (val & gl::CONTEXT_CORE_PROFILE_BIT) != 0 {
@@ -130,9 +129,9 @@ pub unsafe fn print_context_info() {
     debug!("Profile      : {}", profile);
 
     let (debug, forward_compatible) = {
-        let mut val = mem::MaybeUninit::uninit();
-        gl::GetIntegerv(gl::CONTEXT_FLAGS, val.as_mut_ptr());
-        let val = val.assume_init() as gl::types::GLenum;
+        let mut val = 0;
+        gl::GetIntegerv(gl::CONTEXT_FLAGS, &mut val);
+        let val = val as gl::types::GLenum;
         ((val & gl::CONTEXT_FLAG_DEBUG_BIT) != 0,
          (val & gl::CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT) != 0)
     };
