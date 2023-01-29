@@ -79,11 +79,11 @@ pub struct OrbitControls {
     pub moving_forward: bool,
     pub moving_backward: bool,
 
-    pub screen_size: PhysicalSize,
+    pub screen_size: PhysicalSize<f64>,
 }
 
 impl OrbitControls {
-    pub fn new(position: Point3, screen_size: PhysicalSize) -> Self {
+    pub fn new(position: Point3, screen_size: PhysicalSize<f64>) -> Self {
         OrbitControls {
             camera: Camera::default(),
 
@@ -129,7 +129,7 @@ impl OrbitControls {
         Matrix4::look_at(self.position, self.target, vec3(0.0, 1.0, 0.0))
     }
 
-    pub fn handle_mouse_move(&mut self, pos: PhysicalPosition) {
+    pub fn handle_mouse_move(&mut self, pos: PhysicalPosition<f64>) {
         match self.state {
             NavState::Rotating => self.handle_mouse_move_rotate(pos),
             NavState::Panning => self.handle_mouse_move_pan(pos),
@@ -137,7 +137,7 @@ impl OrbitControls {
         }
     }
 
-    fn handle_mouse_move_rotate(&mut self, pos: PhysicalPosition) {
+    fn handle_mouse_move_rotate(&mut self, pos: PhysicalPosition<f64>) {
         self.rotate_end.x = pos.x as f32;
         self.rotate_end.y = pos.y as f32;
         let rotate_delta = if let Some(rotate_start) = self.rotate_start {
@@ -177,7 +177,7 @@ impl OrbitControls {
         self.spherical_delta.phi -= angle;
     }
 
-    fn handle_mouse_move_pan(&mut self, pos: PhysicalPosition) {
+    fn handle_mouse_move_pan(&mut self, pos: PhysicalPosition<f64>) {
         self.pan_end.x = pos.x as f32;
         self.pan_end.y = pos.y as f32;
 

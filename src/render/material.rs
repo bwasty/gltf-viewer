@@ -28,7 +28,7 @@ pub struct Material {
     pub emissive_factor: Vector3,
     pub emissive_texture: Option<Rc<Texture>>,
 
-    pub alpha_cutoff: f32,
+    pub alpha_cutoff: Option<f32>,
     pub alpha_mode: gltf::material::AlphaMode,
 
     pub double_sided: bool,

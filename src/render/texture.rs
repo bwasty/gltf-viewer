@@ -9,10 +9,10 @@ use gltf::json::texture::MinFilter;
 use gltf::image::Source;
 
 use image;
-use image::ImageFormat::{JPEG, PNG};
+use image::ImageFormat::{Jpeg, Png};
 use image::DynamicImage::*;
 use image::GenericImageView;
-use image::FilterType;
+use image::imageops::FilterType;
 
 use crate::importdata::ImportData;
 
@@ -45,8 +45,8 @@ impl Texture {
                 let end = begin + view.length();
                 let data = &parent_buffer_data[begin..end];
                 match mime_type {
-                    "image/jpeg" => image::load_from_memory_with_format(data, JPEG),
-                    "image/png" => image::load_from_memory_with_format(data, PNG),
+                    "image/jpeg" => image::load_from_memory_with_format(data, Jpeg),
+                    "image/png" => image::load_from_memory_with_format(data, Png),
                     _ => panic!(format!("unsupported image type (image: {}, mime_type: {})",
                         g_img.index(), mime_type)),
                 }
@@ -67,8 +67,8 @@ impl Texture {
                     };
 
                     match mime_type {
-                        "image/jpeg" => image::load_from_memory_with_format(&data, JPEG),
-                        "image/png" => image::load_from_memory_with_format(&data, PNG),
+                        "image/jpeg" => image::load_from_memory_with_format(&data, Jpeg),
+                        "image/png" => image::load_from_memory_with_format(&data, Png),
                         _ => panic!(format!("unsupported image type (image: {}, mime_type: {})",
                             g_img.index(), mime_type)),
                     }
@@ -78,8 +78,8 @@ impl Texture {
                     let file = fs::File::open(path).unwrap();
                     let reader = io::BufReader::new(file);
                     match mime_type {
-                        "image/jpeg" => image::load(reader, JPEG),
-                        "image/png" => image::load(reader, PNG),
+                        "image/jpeg" => image::load(reader, Jpeg),
+                        "image/png" => image::load(reader, Png),
                         _ => panic!(format!("unsupported image type (image: {}, mime_type: {})",
                             g_img.index(), mime_type)),
                     }
@@ -95,12 +95,11 @@ impl Texture {
         let dyn_img = img.expect("Image loading failed.");
 
         let format = match dyn_img {
-            ImageLuma8(_) => gl::RED,
-            ImageLumaA8(_) => gl::RG,
-            ImageRgb8(_) => gl::RGB,
-            ImageRgba8(_) => gl::RGBA,
-            ImageBgr8(_) => gl::BGR,
-            ImageBgra8(_) => gl::BGRA,
+            ImageLuma8(_) | ImageLuma16(_) => gl::RED,
+            ImageLumaA8(_) | ImageLumaA16(_) => gl::RG,
+            ImageRgb8(_) | ImageRgb16(_) | ImageRgb32F(_) => gl::RGB,
+            ImageRgba8(_) | ImageRgba16(_) | ImageRgba32F(_) => gl::RGBA,
+            _ => unimplemented!("non exhaustive")
         };
 
         // **Non-Power-Of-Two Texture Implementation Note**: glTF does not guarantee that a texture's
@@ -116,10 +115,14 @@ impl Texture {
                 let nwidth = width.next_power_of_two();
                 let nheight = height.next_power_of_two();
                 let resized = dyn_img.resize(nwidth, nheight, FilterType::Lanczos3);
-                (resized.raw_pixels(), resized.width(), resized.height())
+                let width = resized.width();
+                let height = resized.height();
+                (resized.into_bytes(), width, height)
             }
             else {
-                (dyn_img.raw_pixels(), dyn_img.width(), dyn_img.height())
+                let width = dyn_img.width();
+                let height = dyn_img.height();
+                (dyn_img.into_bytes(), width, height)
             };
 
         unsafe {
