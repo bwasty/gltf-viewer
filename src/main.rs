@@ -11,7 +11,8 @@ use clap::{Arg, App, AppSettings};
 
 use log::warn;
 
-use simplelog::{TermLogger, LevelFilter, ConfigBuilder as LogConfigBuilder, TerminalMode};
+use simplelog::{ColorChoice, TermLogger, LevelFilter, ConfigBuilder as
+  LogConfigBuilder, TerminalMode};
 
 mod utils;
 mod viewer;
@@ -135,7 +136,8 @@ pub fn main() {
             .set_target_level(LevelFilter::Off)
             .set_thread_level(LevelFilter::Off)
             .build(),
-        TerminalMode::Stdout);
+        TerminalMode::Stdout,
+        ColorChoice::Auto);
 
     let mut viewer = GltfViewer::new(source, width, height,
         args.is_present("headless"),
