@@ -1,4 +1,6 @@
+use core::num::NonZeroU32;
 use std::f32::consts::PI;
+use std::ffi::CString;
 use std::os::raw::c_void;
 use std::path::Path;
 use std::process;
@@ -9,25 +11,22 @@ use collision::Aabb;
 use gl;
 use gltf;
 use glutin;
-use glutin::{
-    Api,
-    MouseScrollDelta,
-    MouseButton,
-    GlContext,
-    GlRequest,
-    GlProfile,
-    VirtualKeyCode,
-    WindowEvent,
+use glutin::context::{GlProfile, ContextApi, ContextAttributesBuilder, Version, NotCurrentGlContext};
+use glutin::display::{DisplayApiPreference, GlDisplay};
+use glutin::surface::GlSurface;
+use winit::{
+    event::{MouseScrollDelta, MouseButton, WindowEvent, ElementState::*},
+    keyboard::{PhysicalKey, KeyCode},
+    dpi::{PhysicalSize, LogicalSize},
+    event_loop::{ActiveEventLoop, EventLoop},
 };
-use glutin::dpi::PhysicalSize;
-use glutin::ElementState::*;
+use raw_window_handle::{HasRawWindowHandle, HasRawDisplayHandle};
 
-use image::{DynamicImage};
+use image::DynamicImage;
 use log::{error, warn, info};
 
 use crate::controls::{OrbitControls, NavState};
 use crate::controls::CameraMovement::*;
-use crate::framebuffer::Framebuffer;
 use crate::importdata::ImportData;
 use crate::render::*;
 use crate::render::math::*;
@@ -50,12 +49,12 @@ pub struct CameraOptions {
 }
 
 pub struct GltfViewer {
-    size: PhysicalSize,
-    dpi_factor: f64,
+    size: PhysicalSize<f64>,
 
     orbit_controls: OrbitControls,
-    events_loop: Option<glutin::EventsLoop>,
-    gl_window: Option<glutin::GlWindow>,
+    window: Option<winit::window::Window>,
+    gl_context: Option<glutin::context::PossiblyCurrentContext>,
+    gl_surface: Option<glutin::surface::Surface<glutin::surface::WindowSurface>>,
 
     // TODO!: get rid of scene?
     root: Root,
@@ -71,6 +70,7 @@ pub struct GltfViewer {
 /// all operating systems, but an invisible window usually works
 impl GltfViewer {
     pub fn new(
+        event_loop: &mut EventLoop<()>,
         source: &str,
         width: u32,
         height: u32,
@@ -79,52 +79,51 @@ impl GltfViewer {
         camera_options: CameraOptions,
         scene_index: usize,
     ) -> GltfViewer {
-        let gl_request = GlRequest::Specific(Api::OpenGl, (3, 3));
-        let gl_profile = GlProfile::Core;
-        let (events_loop, gl_window, dpi_factor, inner_size) =
-            if headless {
-                let headless_context = glutin::HeadlessRendererBuilder::new(width, height)
-                    // .with_gl(gl_request)
-                    // .with_gl_profile(gl_profile)
-                    .build()
-                    .unwrap();
-                unsafe { headless_context.make_current().unwrap() }
-                gl::load_with(|symbol| headless_context.get_proc_address(symbol) as *const _);
-                let framebuffer = Framebuffer::new(width, height);
-                framebuffer.bind();
-                unsafe { gl::Viewport(0, 0, width as i32, height as i32); }
+        assert!(!headless, "Headless support is currently disabled");
 
-                (None, None, 1.0, PhysicalSize::new(width as f64, height as f64)) // TODO: real height (retina? (should be the same as PhysicalSize when headless?))
-            }
-            else {
-                // glutin: initialize and configure
-                let events_loop = glutin::EventsLoop::new();
-                let window_size = glutin::dpi::LogicalSize::new(width as f64, height as f64);
+        // glutin: initialize and configure
+        let window_size = LogicalSize::new(width as f64, height as f64);
 
-                // TODO?: hints for 4.1, core profile, forward compat
-                let window = glutin::WindowBuilder::new()
-                        .with_title("gltf-viewer")
-                        .with_dimensions(window_size)
-                        .with_visibility(visible);
+        // TODO?: hints for 4.1, core profile, forward compat
+        let window_attributes = winit::window::Window::default_attributes()
+            .with_title("gltf-viewer")
+            .with_inner_size(window_size)
+            .with_visible(visible);
+        let window = event_loop.create_window(window_attributes).unwrap();
 
-                let context = glutin::ContextBuilder::new()
-                    .with_gl(gl_request)
-                    .with_gl_profile(gl_profile)
-                    .with_vsync(true);
-                let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
+        let raw_window_handle = window.raw_window_handle();
+        let inner_size = window.inner_size();
 
-                // Real dimensions might be much higher on High-DPI displays
-                let dpi_factor = gl_window.get_hidpi_factor();
-                let inner_size = gl_window.get_inner_size().unwrap().to_physical(dpi_factor);
+        let gl_display = unsafe { glutin::display::Display::new(window.raw_display_handle(), DisplayApiPreference::Egl) }.unwrap();
 
-                unsafe { gl_window.make_current().unwrap(); }
+        let config_template = glutin::config::ConfigTemplateBuilder::new()
+            .with_api(glutin::config::Api::OPENGL)
+            .compatible_with_native_window(raw_window_handle)
+            .build();
+        let gl_config = unsafe { gl_display.find_configs(config_template) }.unwrap().next().unwrap();
 
-                // gl: load all OpenGL function pointers
-                gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
+        let surface_attributes = glutin::surface::SurfaceAttributesBuilder::<glutin::surface::WindowSurface>::new()
+            .build(raw_window_handle, NonZeroU32::new(inner_size.width).unwrap(), NonZeroU32::new(inner_size.height).unwrap());
+        let gl_surface = unsafe { gl_display.create_window_surface(&gl_config, &surface_attributes) }.unwrap();
 
-                (Some(events_loop), Some(gl_window), dpi_factor, inner_size)
-            };
-        
+        let context_attributes = ContextAttributesBuilder::new()
+            .with_context_api(ContextApi::OpenGl(Some(Version::new(3, 3))))
+            .with_profile(GlProfile::Core)
+            .build(Some(raw_window_handle));
+        let gl_context = unsafe { gl_display.create_context(&gl_config, &context_attributes) }.unwrap();
+        let gl_context = gl_context.make_current(&gl_surface).unwrap();
+
+        // gl: load all OpenGL function pointers
+        gl::load_with(|symbol| {
+            let symbol = CString::new(symbol).unwrap();
+            gl_display.get_proc_address(&symbol) as *const _
+        });
+
+        let window = Some(window);
+        let gl_context = Some(gl_context);
+        let gl_surface = Some(gl_surface);
+        let inner_size = PhysicalSize::new(inner_size.width as f64, inner_size.height as f64);
+
         let mut orbit_controls = OrbitControls::new(
             Point3::new(0.0, 0.0, 2.0),
             inner_size);
@@ -156,12 +155,12 @@ impl GltfViewer {
         let (root, scene) = Self::load(source, scene_index);
         let mut viewer = GltfViewer {
             size: inner_size,
-            dpi_factor,
 
             orbit_controls,
 
-            events_loop,
-            gl_window,
+            window,
+            gl_context,
+            gl_surface,
 
             root,
             scene,
@@ -273,31 +272,17 @@ impl GltfViewer {
         self.orbit_controls.camera.update_projection_matrix();
     }
 
-    pub fn start_render_loop(&mut self) {
-        loop {
-            // per-frame time logic
-            // NOTE: Deliberately ignoring the seconds of `elapsed()`
-            self.delta_time = f64::from(self.last_frame.elapsed().subsec_nanos()) / 1_000_000_000.0;
-            self.last_frame = Instant::now();
+    fn run_render_loop(&mut self) {
+        // per-frame time logic
+        // NOTE: Deliberately ignoring the seconds of `elapsed()`
+        self.delta_time = f64::from(self.last_frame.elapsed().subsec_nanos()) / 1_000_000_000.0;
+        self.last_frame = Instant::now();
 
-            // events
-            let keep_running = process_events(
-                &mut self.events_loop.as_mut().unwrap(),
-                self.gl_window.as_mut().unwrap(),
-                &mut self.orbit_controls,
-                &mut self.dpi_factor,
-                &mut self.size);
-            if !keep_running {
-                unsafe { gl_check_error!(); } // final error check so errors don't go unnoticed
-                break
-            }
+        self.orbit_controls.frame_update(self.delta_time); // keyboard navigation
 
-            self.orbit_controls.frame_update(self.delta_time); // keyboard navigation
+        self.draw();
 
-            self.draw();
-
-            self.gl_window.as_ref().unwrap().swap_buffers().unwrap();
-        }
+        self.gl_surface.as_ref().unwrap().swap_buffers(self.gl_context.as_ref().unwrap()).unwrap();
     }
 
     // Returns whether to keep running
@@ -350,101 +335,104 @@ impl GltfViewer {
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-fn process_events(
-    events_loop: &mut glutin::EventsLoop,
-    gl_window: &glutin::GlWindow,
-    mut orbit_controls: &mut OrbitControls,
-    dpi_factor: &mut f64,
-    size: &mut PhysicalSize) -> bool
-{
-    let mut keep_running = true;
-    #[allow(clippy::single_match)]
-    events_loop.poll_events(|event| {
+impl winit::application::ApplicationHandler<()> for GltfViewer {
+    fn resumed(&mut self, _event_loop: &ActiveEventLoop) {
+    }
+
+    fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: winit::window::WindowId, event: WindowEvent) {
         match event {
-            glutin::Event::WindowEvent{ event, .. } => match event {
-                WindowEvent::CloseRequested => {
-                    keep_running = false;
-                },
-                WindowEvent::Destroyed => {
-                    // Log and exit?
-                    panic!("WindowEvent::Destroyed, unimplemented.");
-                },
-                WindowEvent::Resized(logical) => {
-                    let ph = logical.to_physical(*dpi_factor);
-                    gl_window.resize(ph);
-
-                    // This doesn't seem to be needed on macOS but linux X11, Wayland and Windows
-                    // do need it.
-                    unsafe { gl::Viewport(0, 0, ph.width as i32, ph.height as i32); }
-
-                    *size = ph;
-                    orbit_controls.camera.update_aspect_ratio((ph.width / ph.height) as f32);
-                    orbit_controls.screen_size = ph;
-                },
-                WindowEvent::HiDpiFactorChanged(f) => {
-                    *dpi_factor = f;
-                },
-                WindowEvent::DroppedFile(_path_buf) => {
-                    // TODO: drag file in
-                }
-                WindowEvent::MouseInput { button, state: Pressed, ..} => {
-                    match button {
-                        MouseButton::Left => {
-                            orbit_controls.state = NavState::Rotating;
-                        },
-                        MouseButton::Right => {
-                            orbit_controls.state = NavState::Panning;
-                        },
-                        _ => ()
-                    }
-                },
-                WindowEvent::MouseInput { button, state: Released, ..} => {
-                    match (button, orbit_controls.state.clone()) {
-                        (MouseButton::Left, NavState::Rotating) | (MouseButton::Right, NavState::Panning) => {
-                            orbit_controls.state = NavState::None;
-                            orbit_controls.handle_mouse_up();
-                        },
-                        _ => ()
-                    }
-                }
-                WindowEvent::CursorMoved { position, .. } => {
-                    let ph = position.to_physical(*dpi_factor);
-                    orbit_controls.handle_mouse_move(ph)
-                },
-                WindowEvent::MouseWheel { delta: MouseScrollDelta::PixelDelta(logical), .. } => {
-                    let ph = logical.to_physical(*dpi_factor);
-                    orbit_controls.process_mouse_scroll(ph.y as f32);
-                }
-                WindowEvent::MouseWheel { delta: MouseScrollDelta::LineDelta(_rows, lines), .. } => {
-                    orbit_controls.process_mouse_scroll(lines * 3.0);
-                }
-                WindowEvent::KeyboardInput { input, .. } => {
-                    keep_running = process_input(input, &mut orbit_controls);
-                }
-                _ => ()
+            WindowEvent::RedrawRequested => {
+                self.run_render_loop();
             },
-            _ => ()
-        }
-    });
+            WindowEvent::CloseRequested => {
+                event_loop.exit();
+            },
+            WindowEvent::Destroyed => {
+                // Log and exit?
+                panic!("WindowEvent::Destroyed, unimplemented.");
+            },
+            WindowEvent::Resized(ph) => {
 
-    keep_running
-}
+                // This doesn't seem to be needed on macOS but linux X11, Wayland and Windows
+                // do need it.
+                unsafe { gl::Viewport(0, 0, ph.width as i32, ph.height as i32); }
 
-fn process_input(input: glutin::KeyboardInput, controls: &mut OrbitControls) -> bool {
-    let pressed = match input.state {
-        Pressed => true,
-        Released => false
-    };
-    if let Some(code) = input.virtual_keycode {
-        match code {
-            VirtualKeyCode::Escape if pressed => return false,
-            VirtualKeyCode::W | VirtualKeyCode::Up    => controls.process_keyboard(FORWARD, pressed),
-            VirtualKeyCode::S | VirtualKeyCode::Down  => controls.process_keyboard(BACKWARD, pressed),
-            VirtualKeyCode::A | VirtualKeyCode::Left  => controls.process_keyboard(LEFT, pressed),
-            VirtualKeyCode::D | VirtualKeyCode::Right => controls.process_keyboard(RIGHT, pressed),
+                self.size = PhysicalSize::new(ph.width as f64, ph.height as f64);
+                self.orbit_controls.camera.update_aspect_ratio((self.size.width / self.size.height) as f32);
+                self.orbit_controls.screen_size = self.size;
+                self.window.as_ref().unwrap().request_redraw();
+            },
+            WindowEvent::DroppedFile(_path_buf) => {
+                // TODO: drag file in
+            }
+            WindowEvent::MouseInput { button, state: Pressed, ..} => {
+                match button {
+                    MouseButton::Left => {
+                        self.orbit_controls.state = NavState::Rotating;
+                        self.window.as_ref().unwrap().request_redraw();
+                    },
+                    MouseButton::Right => {
+                        self.orbit_controls.state = NavState::Panning;
+                        self.window.as_ref().unwrap().request_redraw();
+                    },
+                    _ => ()
+                }
+            },
+            WindowEvent::MouseInput { button, state: Released, ..} => {
+                match (button, self.orbit_controls.state.clone()) {
+                    (MouseButton::Left, NavState::Rotating) | (MouseButton::Right, NavState::Panning) => {
+                        self.orbit_controls.state = NavState::None;
+                        self.orbit_controls.handle_mouse_up();
+                        self.window.as_ref().unwrap().request_redraw();
+                    },
+                    _ => ()
+                }
+            }
+            WindowEvent::CursorMoved { position, .. } => {
+                self.orbit_controls.handle_mouse_move(position);
+                self.window.as_ref().unwrap().request_redraw();
+            },
+            WindowEvent::MouseWheel { delta: MouseScrollDelta::PixelDelta(ph), .. } => {
+                self.orbit_controls.process_mouse_scroll(ph.y as f32);
+                self.window.as_ref().unwrap().request_redraw();
+            }
+            WindowEvent::MouseWheel { delta: MouseScrollDelta::LineDelta(_rows, lines), .. } => {
+                self.orbit_controls.process_mouse_scroll(lines * 3.0);
+                self.window.as_ref().unwrap().request_redraw();
+            }
+            WindowEvent::PanGesture { delta, .. } => {
+                let mut delta = delta;
+                delta.x /= 1024.;
+                delta.y /= 1024.;
+                self.orbit_controls.pan_both(delta);
+                self.window.as_ref().unwrap().request_redraw();
+            }
+            WindowEvent::PinchGesture { delta, .. } => {
+                self.orbit_controls.process_mouse_scroll(1024. * delta as f32);
+                self.window.as_ref().unwrap().request_redraw();
+            }
+            WindowEvent::RotationGesture { delta, .. } => {
+                self.orbit_controls.rotate_object(-delta * std::f32::consts::PI / 180.);
+                self.window.as_ref().unwrap().request_redraw();
+            }
+            WindowEvent::KeyboardInput { event, .. } => {
+                let pressed = match event.state {
+                    Pressed => true,
+                    Released => false
+                };
+                if let PhysicalKey::Code(code) = event.physical_key {
+                    match code {
+                        KeyCode::Escape if pressed => event_loop.exit(),
+                        KeyCode::KeyW | KeyCode::ArrowUp    => self.orbit_controls.process_keyboard(FORWARD, pressed),
+                        KeyCode::KeyS | KeyCode::ArrowDown  => self.orbit_controls.process_keyboard(BACKWARD, pressed),
+                        KeyCode::KeyA | KeyCode::ArrowLeft  => self.orbit_controls.process_keyboard(LEFT, pressed),
+                        KeyCode::KeyD | KeyCode::ArrowRight => self.orbit_controls.process_keyboard(RIGHT, pressed),
+                        _ => return
+                    }
+                }
+                self.window.as_ref().unwrap().request_redraw();
+            }
             _ => ()
         }
     }
-    true
 }

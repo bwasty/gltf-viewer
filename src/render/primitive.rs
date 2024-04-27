@@ -315,7 +315,9 @@ impl Primitive {
             shader.set_float(uniforms.u_AlphaBlend, 1.0);
 
             if mat.alpha_mode == gltf::material::AlphaMode::Mask {
-                shader.set_float(uniforms.u_AlphaCutoff, mat.alpha_cutoff);
+                if let Some(alpha_cutoff) = mat.alpha_cutoff.as_ref() {
+                    shader.set_float(uniforms.u_AlphaCutoff, *alpha_cutoff);
+                }
             }
         }
 
