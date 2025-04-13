@@ -8,15 +8,15 @@ use std::str;
 use gl;
 use gl::types::*;
 
-use cgmath::{Matrix, Matrix4, Vector3, Vector4};
 use cgmath::prelude::*;
+use cgmath::{Matrix, Matrix4, Vector3, Vector4};
 
 use bitflags::bitflags;
-use log::{warn, trace};
+use log::{trace, warn};
 
 pub struct Shader {
     pub id: u32,
-    uniform_location_cache: HashMap<&'static str, i32>
+    uniform_location_cache: HashMap<&'static str, i32>,
 }
 
 impl Shader {
@@ -24,7 +24,8 @@ impl Shader {
     pub fn new(vertex_path: &str, fragment_path: &str, defines: &[String]) -> Shader {
         // 1. retrieve the vertex/fragment source code from filesystem
         let mut v_shader_file = File::open(vertex_path).unwrap_or_else(|_| panic!("Failed to open {}", vertex_path));
-        let mut f_shader_file = File::open(fragment_path).unwrap_or_else(|_| panic!("Failed to open {}", fragment_path));
+        let mut f_shader_file =
+            File::open(fragment_path).unwrap_or_else(|_| panic!("Failed to open {}", fragment_path));
         let mut vertex_code = String::new();
         let mut fragment_code = String::new();
         v_shader_file
@@ -40,7 +41,7 @@ impl Shader {
     pub fn from_source(vertex_code: &str, fragment_code: &str, defines: &[String]) -> Shader {
         let mut shader = Shader {
             id: 0,
-            uniform_location_cache: HashMap::new()
+            uniform_location_cache: HashMap::new(),
         };
 
         let vertex_code = Self::add_defines(vertex_code, defines);
@@ -78,15 +79,15 @@ impl Shader {
     fn add_defines(source: &str, defines: &[String]) -> String {
         // insert preprocessor defines after #version if exists
         // (#version must occur before any other statement in the program)
-        let defines = defines.iter()
+        let defines = defines
+            .iter()
             .map(|define| format!("#define {}", define))
             .collect::<Vec<_>>()
             .join("\n");
         let mut lines: Vec<_> = source.lines().collect();
         if let Some(version_line) = lines.iter().position(|l| l.starts_with("#version")) {
-            lines.insert(version_line+1, &defines);
-        }
-        else {
+            lines.insert(version_line + 1, &defines);
+        } else {
             lines.insert(0, &defines);
         }
         lines.join("\n")
@@ -156,27 +157,53 @@ impl Shader {
         info_log.set_len(1024 - 1); // subtract 1 to skip the trailing null character
         if type_ != "PROGRAM" {
             gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut success);
-            let log_type = if success == i32::from(gl::TRUE) { "WARNING" } else { "ERROR" };
+            let log_type = if success == i32::from(gl::TRUE) {
+                "WARNING"
+            } else {
+                "ERROR"
+            };
             let mut length = 0;
-            gl::GetShaderInfoLog(shader, 1024, &mut length, info_log.as_mut_ptr() as *mut GLchar);
-            if length == 0 { return }
-            panic!("{}::SHADER_COMPILATION_{} of type: {}\n{}",
-                      log_type, log_type,
-                      type_,
-                      str::from_utf8(&info_log[0..length as usize]).unwrap());
-
+            gl::GetShaderInfoLog(
+                shader,
+                1024,
+                &mut length,
+                info_log.as_mut_ptr() as *mut GLchar,
+            );
+            if length == 0 {
+                return;
+            }
+            panic!(
+                "{}::SHADER_COMPILATION_{} of type: {}\n{}",
+                log_type,
+                log_type,
+                type_,
+                str::from_utf8(&info_log[0..length as usize]).unwrap()
+            );
         } else {
             gl::GetProgramiv(shader, gl::LINK_STATUS, &mut success);
-            let log_type = if success == i32::from(gl::TRUE) { "WARNING" } else { "ERROR" };
+            let log_type = if success == i32::from(gl::TRUE) {
+                "WARNING"
+            } else {
+                "ERROR"
+            };
             let mut length = 0;
-            gl::GetProgramInfoLog(shader, 1024, &mut length, info_log.as_mut_ptr() as *mut GLchar);
-            if length == 0 { return }
-            warn!("{}::PROGRAM_LINKING_{} of type: {}\n{}",
-                      log_type, log_type,
-                      type_,
-                      str::from_utf8(&info_log[0..length as usize]).unwrap());
+            gl::GetProgramInfoLog(
+                shader,
+                1024,
+                &mut length,
+                info_log.as_mut_ptr() as *mut GLchar,
+            );
+            if length == 0 {
+                return;
+            }
+            warn!(
+                "{}::PROGRAM_LINKING_{} of type: {}\n{}",
+                log_type,
+                log_type,
+                type_,
+                str::from_utf8(&info_log[0..length as usize]).unwrap()
+            );
         }
-
     }
 }
 
@@ -225,12 +252,10 @@ pub struct PbrUniformLocations {
     pub u_AmbientLightIntensity: i32,
 
     // TODO!: set when integrating IBL (unused now)
-    pub u_DiffuseEnvSampler: i32,
-    pub u_SpecularEnvSampler: i32,
-    pub u_brdfLUT: i32,
-
+    // pub u_DiffuseEnvSampler: i32,
+    // pub u_SpecularEnvSampler: i32,
+    // pub u_brdfLUT: i32,
     ///
-
     pub u_BaseColorSampler: i32,
     pub u_BaseColorTexCoord: i32,
     pub u_BaseColorFactor: i32,
@@ -253,16 +278,16 @@ pub struct PbrUniformLocations {
 
     pub u_AlphaBlend: i32,
     pub u_AlphaCutoff: i32,
-
     // TODO!: use/remove debugging uniforms
     // debugging flags used for shader output of intermediate PBR variables
-    pub u_ScaleDiffBaseMR: i32,
-    pub u_ScaleFGDSpec: i32,
-    pub u_ScaleIBLAmbient: i32,
+    // pub u_ScaleDiffBaseMR: i32,
+    // pub u_ScaleFGDSpec: i32,
+    // pub u_ScaleIBLAmbient: i32,
 }
 
 pub struct PbrShader {
     pub shader: Shader,
+    #[allow(dead_code)]
     pub flags: ShaderFlags,
     pub uniforms: PbrUniformLocations,
 }
@@ -272,7 +297,8 @@ impl PbrShader {
         let mut shader = Shader::from_source(
             include_str!("shaders/pbr-vert.glsl"),
             include_str!("shaders/pbr-frag.glsl"),
-            &flags.as_strings());
+            &flags.as_strings(),
+        );
 
         // NOTE: shader debug version
         // let mut shader = Shader::new(
@@ -292,10 +318,9 @@ impl PbrShader {
                 u_AmbientLightColor: shader.uniform_location("u_AmbientLightColor"),
                 u_AmbientLightIntensity: shader.uniform_location("u_AmbientLightIntensity"),
 
-                u_DiffuseEnvSampler: shader.uniform_location("u_DiffuseEnvSampler"),
-                u_SpecularEnvSampler: shader.uniform_location("u_SpecularEnvSampler"),
-                u_brdfLUT: shader.uniform_location("u_brdfLUT"),
-
+                // u_DiffuseEnvSampler: shader.uniform_location("u_DiffuseEnvSampler"),
+                // u_SpecularEnvSampler: shader.uniform_location("u_SpecularEnvSampler"),
+                // u_brdfLUT: shader.uniform_location("u_brdfLUT"),
                 u_BaseColorSampler: shader.uniform_location("u_BaseColorSampler"),
                 u_BaseColorTexCoord: shader.uniform_location("u_BaseColorTexCoord"),
                 u_BaseColorFactor: shader.uniform_location("u_BaseColorFactor"),
@@ -318,10 +343,9 @@ impl PbrShader {
 
                 u_AlphaBlend: shader.uniform_location("u_AlphaBlend"),
                 u_AlphaCutoff: shader.uniform_location("u_AlphaCutoff"),
-
-                u_ScaleDiffBaseMR: shader.uniform_location("u_ScaleDiffBaseMR"),
-                u_ScaleFGDSpec: shader.uniform_location("u_ScaleFGDSpec"),
-                u_ScaleIBLAmbient: shader.uniform_location("u_ScaleIBLAmbient"),
+                // u_ScaleDiffBaseMR: shader.uniform_location("u_ScaleDiffBaseMR"),
+                // u_ScaleFGDSpec: shader.uniform_location("u_ScaleFGDSpec"),
+                // u_ScaleIBLAmbient: shader.uniform_location("u_ScaleIBLAmbient"),
             };
 
             shader.use_program();
@@ -344,7 +368,7 @@ impl PbrShader {
         Self {
             shader,
             flags,
-            uniforms
+            uniforms,
         }
     }
 }

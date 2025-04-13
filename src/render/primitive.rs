@@ -41,12 +41,12 @@ impl Default for Vertex {
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct Texture {
-    pub id: u32,
-    pub type_: String,
-    pub path: String,
-}
+// #[derive(Clone, Debug)]
+// pub struct Texture {
+//     pub id: u32,
+//     pub type_: String,
+//     pub path: String,
+// }
 
 pub struct Primitive {
     pub bounds: Aabb3,

@@ -5,22 +5,23 @@ use std::{fs, io};
 use base64;
 use gl;
 use gltf;
-use gltf::json::texture::MinFilter;
 use gltf::image::Source;
+use gltf::json::texture::MinFilter;
 
 use image;
-use image::ImageFormat::{JPEG, PNG};
 use image::DynamicImage::*;
-use image::GenericImageView;
 use image::FilterType;
+use image::GenericImageView;
+use image::ImageFormat::{JPEG, PNG};
 
 use crate::importdata::ImportData;
 
 pub struct Texture {
     pub index: usize, // glTF index
+    #[allow(dead_code)]
     pub name: Option<String>,
 
-    pub id: u32, // OpenGL id
+    pub id: u32,        // OpenGL id
     pub tex_coord: u32, // the tex coord set to use
 }
 
@@ -32,8 +33,7 @@ impl Texture {
             gl::GenTextures(1, &mut texture_id);
             gl::BindTexture(gl::TEXTURE_2D, texture_id);
         }
-        let (needs_power_of_two, generate_mip_maps) =
-            unsafe { Self::set_sampler_params(&g_texture.sampler()) };
+        let (needs_power_of_two, generate_mip_maps) = unsafe { Self::set_sampler_params(&g_texture.sampler()) };
 
         // TODO!: share images via Rc? detect if occurs?
         // TODO!!: better I/O abstraction...
@@ -47,10 +47,13 @@ impl Texture {
                 match mime_type {
                     "image/jpeg" => image::load_from_memory_with_format(data, JPEG),
                     "image/png" => image::load_from_memory_with_format(data, PNG),
-                    _ => panic!("unsupported image type (image: {}, mime_type: {})",
-                        g_img.index(), mime_type),
+                    _ => panic!(
+                        "unsupported image type (image: {}, mime_type: {})",
+                        g_img.index(),
+                        mime_type
+                    ),
                 }
-            },
+            }
             Source::Uri { uri, mime_type } => {
                 if uri.starts_with("data:") {
                     let encoded = uri.split(',').nth(1).unwrap();
@@ -59,33 +62,46 @@ impl Texture {
                         ty
                     } else {
                         uri.split(',')
-                            .nth(0).unwrap()
+                            .nth(0)
+                            .unwrap()
                             .split(':')
-                            .nth(1).unwrap()
+                            .nth(1)
+                            .unwrap()
                             .split(';')
-                            .nth(0).unwrap()
+                            .nth(0)
+                            .unwrap()
                     };
 
                     match mime_type {
                         "image/jpeg" => image::load_from_memory_with_format(&data, JPEG),
                         "image/png" => image::load_from_memory_with_format(&data, PNG),
-                        _ => panic!("unsupported image type (image: {}, mime_type: {})",
-                            g_img.index(), mime_type),
+                        _ => panic!(
+                            "unsupported image type (image: {}, mime_type: {})",
+                            g_img.index(),
+                            mime_type
+                        ),
                     }
-                }
-                else if let Some(mime_type) = mime_type {
-                    let path = base_path.parent().unwrap_or_else(|| Path::new("./")).join(uri);
+                } else if let Some(mime_type) = mime_type {
+                    let path = base_path
+                        .parent()
+                        .unwrap_or_else(|| Path::new("./"))
+                        .join(uri);
                     let file = fs::File::open(path).unwrap();
                     let reader = io::BufReader::new(file);
                     match mime_type {
                         "image/jpeg" => image::load(reader, JPEG),
                         "image/png" => image::load(reader, PNG),
-                        _ => panic!("unsupported image type (image: {}, mime_type: {})",
-                            g_img.index(), mime_type),
+                        _ => panic!(
+                            "unsupported image type (image: {}, mime_type: {})",
+                            g_img.index(),
+                            mime_type
+                        ),
                     }
-                }
-                else {
-                    let path = base_path.parent().unwrap_or_else(||Path::new("./")).join(uri);
+                } else {
+                    let path = base_path
+                        .parent()
+                        .unwrap_or_else(|| Path::new("./"))
+                        .join(uri);
                     image::open(path)
                 }
             }
@@ -111,20 +127,27 @@ impl Texture {
         // * Has a minification filter (`minFilter`) that uses mipmapping (`NEAREST_MIPMAP_NEAREST`, \\
         //   `NEAREST_MIPMAP_LINEAR`, `LINEAR_MIPMAP_NEAREST`, or `LINEAR_MIPMAP_LINEAR`).
         let (width, height) = dyn_img.dimensions();
-        let (data, width, height) =
-            if needs_power_of_two && (!width.is_power_of_two() || !height.is_power_of_two()) {
-                let nwidth = width.next_power_of_two();
-                let nheight = height.next_power_of_two();
-                let resized = dyn_img.resize(nwidth, nheight, FilterType::Lanczos3);
-                (resized.raw_pixels(), resized.width(), resized.height())
-            }
-            else {
-                (dyn_img.raw_pixels(), dyn_img.width(), dyn_img.height())
-            };
+        let (data, width, height) = if needs_power_of_two && (!width.is_power_of_two() || !height.is_power_of_two()) {
+            let nwidth = width.next_power_of_two();
+            let nheight = height.next_power_of_two();
+            let resized = dyn_img.resize(nwidth, nheight, FilterType::Lanczos3);
+            (resized.raw_pixels(), resized.width(), resized.height())
+        } else {
+            (dyn_img.raw_pixels(), dyn_img.width(), dyn_img.height())
+        };
 
         unsafe {
-            gl::TexImage2D(gl::TEXTURE_2D, 0, format as i32, width as i32, height as i32,
-                0, format, gl::UNSIGNED_BYTE, &data[0] as *const u8 as *const c_void);
+            gl::TexImage2D(
+                gl::TEXTURE_2D,
+                0,
+                format as i32,
+                width as i32,
+                height as i32,
+                0,
+                format,
+                gl::UNSIGNED_BYTE,
+                &data[0] as *const u8 as *const c_void,
+            );
 
             if generate_mip_maps {
                 gl::GenerateMipmap(gl::TEXTURE_2D);
@@ -146,26 +169,36 @@ impl Texture {
         // or `LINEAR_MIPMAP_LINEAR`), any texture referencing the sampler needs to have mipmaps,
         // e.g., by calling GL's `generateMipmap()` function.
         let mip_maps = match sampler.min_filter() {
-            Some(MinFilter::NearestMipmapNearest) |
-            Some(MinFilter::LinearMipmapNearest) |
-            Some(MinFilter::NearestMipmapLinear) |
-            Some(MinFilter::LinearMipmapLinear) |
-            None => true, // see below
-            _ => false
+            Some(MinFilter::NearestMipmapNearest)
+            | Some(MinFilter::LinearMipmapNearest)
+            | Some(MinFilter::NearestMipmapLinear)
+            | Some(MinFilter::LinearMipmapLinear)
+            | None => true, // see below
+            _ => false,
         };
 
         // **Default Filtering Implementation Note:** When filtering options are defined,
         // runtime must use them. Otherwise, it is free to adapt filtering to performance or quality goals.
         if let Some(min_filter) = sampler.min_filter() {
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, min_filter.as_gl_enum() as i32);
-        }
-        else {
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MIN_FILTER,
+                min_filter.as_gl_enum() as i32,
+            );
+        } else {
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MIN_FILTER,
+                gl::LINEAR_MIPMAP_LINEAR as i32,
+            );
         }
         if let Some(mag_filter) = sampler.mag_filter() {
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, mag_filter.as_gl_enum() as i32);
-        }
-        else {
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MAG_FILTER,
+                mag_filter.as_gl_enum() as i32,
+            );
+        } else {
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
         }
 
@@ -174,10 +207,7 @@ impl Texture {
         let wrap_t = sampler.wrap_t().as_gl_enum();
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, wrap_t as i32);
 
-        let needs_power_of_two =
-            wrap_s != gl::CLAMP_TO_EDGE ||
-            wrap_t != gl::CLAMP_TO_EDGE ||
-            mip_maps;
+        let needs_power_of_two = wrap_s != gl::CLAMP_TO_EDGE || wrap_t != gl::CLAMP_TO_EDGE || mip_maps;
         (needs_power_of_two, mip_maps)
     }
 }

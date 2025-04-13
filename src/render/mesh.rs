@@ -5,35 +5,31 @@ use collision::{Aabb, Aabb3, Union};
 
 use gltf;
 
+use crate::importdata::ImportData;
 use crate::render::math::*;
 use crate::render::{Primitive, Root};
-use crate::importdata::ImportData;
 
 pub struct Mesh {
     pub index: usize, // glTF index
     pub primitives: Vec<Primitive>,
     // TODO: weights
     // pub weights: Vec<Rc<?>>
+    #[allow(dead_code)]
     pub name: Option<String>,
 
     pub bounds: Aabb3<f32>,
 }
 
 impl Mesh {
-    pub fn from_gltf(
-        g_mesh: &gltf::Mesh<'_>,
-        root: &mut Root,
-        imp: &ImportData,
-        base_path: &Path,
-    ) -> Mesh {
-        let primitives: Vec<Primitive> = g_mesh.primitives()
+    pub fn from_gltf(g_mesh: &gltf::Mesh<'_>, root: &mut Root, imp: &ImportData, base_path: &Path) -> Mesh {
+        let primitives: Vec<Primitive> = g_mesh
+            .primitives()
             .enumerate()
-            .map(|(i, g_prim)| {
-                Primitive::from_gltf(&g_prim, i, g_mesh.index(), root, imp, base_path)
-            })
+            .map(|(i, g_prim)| Primitive::from_gltf(&g_prim, i, g_mesh.index(), root, imp, base_path))
             .collect();
 
-        let bounds = primitives.iter()
+        let bounds = primitives
+            .iter()
             .fold(Aabb3::zero(), |bounds, prim| prim.bounds.union(&bounds));
 
         Mesh {

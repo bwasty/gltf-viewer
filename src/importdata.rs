@@ -4,6 +4,6 @@ use gltf;
 pub struct ImportData {
     pub doc: gltf::Document,
     pub buffers: Vec<gltf::buffer::Data>,
+    #[allow(dead_code)]
     pub images: Vec<gltf::image::Data>,
 }
-

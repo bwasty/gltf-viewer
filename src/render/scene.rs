@@ -3,10 +3,11 @@ use gltf;
 use collision::{Aabb, Union};
 
 use crate::controls::CameraParams;
-use crate::render::{Root};
 use crate::render::math::*;
+use crate::render::Root;
 
 pub struct Scene {
+    #[allow(dead_code)]
     pub name: Option<String>,
     pub nodes: Vec<usize>,
     pub bounds: Aabb3,
@@ -17,7 +18,7 @@ impl Default for Scene {
         Self {
             name: None,
             nodes: vec![],
-            bounds: Aabb3::zero()
+            bounds: Aabb3::zero(),
         }
     }
 }
@@ -28,9 +29,7 @@ impl Scene {
             name: g_scene.name().map(|s| s.to_owned()),
             ..Default::default()
         };
-        scene.nodes = g_scene.nodes()
-            .map(|g_node| g_node.index())
-            .collect();
+        scene.nodes = g_scene.nodes().map(|g_node| g_node.index()).collect();
 
         // propagate transforms
         let root_transform = Matrix4::identity();
