@@ -7,7 +7,7 @@ categories = ["rendering"]
 description = "Simple glTF 2.0 viewer"
 include = [
     "Cargo.toml",
-    "Cargo.lock", # Note: currently ignored by `cargo package`, see rust-lang/cargo#2263
+    "Cargo.lock",      # Note: currently ignored by `cargo package`, see rust-lang/cargo#2263
     "**/*.rs",
     "src/shaders/*.*",
 ]
@@ -37,6 +37,7 @@ glutin = "0.18.0"
 image = "0.21.0"
 # reqwest = "0.7.3"
 log = "0.4.8"
+memoffset = "0.9.0"
 num-traits = "0.2.11"
 simplelog = "0.7.4"
 # itertools = "0.6.3"
