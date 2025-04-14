@@ -1,0 +1,23 @@
+[package]
+name = "gltf-viewer"
+version = "0.5.0-alpha.0"
+authors = ["Benjamin Wasty <benny.wasty@gmail.com>"]
+edition = "2024"
+categories = ["rendering"]
+description = "Simple glTF 2.0 viewer"
+include = [
+  "Cargo.toml",
+  "Cargo.lock", # Note: currently ignored by `cargo package`, see rust-lang/cargo#2263
+  "**/*.rs",
+]
+keywords = ["glTF", "3D", "model", "scene", "viewer"]
+license = "Unlicense"
+readme = "README.md"
+repository = "https://github.com/bwasty/gltf-viewer"
+# TODO: re-check when fixing ci...
+#build = false # TODO: git-version doesn't work on Travis
+
+[badges]
+maintenance = { status = "experimental" }
+
+[dependencies]

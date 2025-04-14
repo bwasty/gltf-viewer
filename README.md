@@ -9,6 +9,8 @@
 
 Rust [glTF 2.0](https://github.com/KhronosGroup/glTF) viewer, written using the [gltf](https://github.com/gltf-rs/gltf) crate and plain OpenGL.
 
+TODO: note about bevy...
+
 **Current state**: All [official sample models](https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0) can be loaded and are rendered with the [reference PBR shader](https://github.com/KhronosGroup/glTF-WebGL-PBR). Example: <br>
 <img width="412" alt="SciFiHelmet" title="SciFiHelmet" src="https://user-images.githubusercontent.com/1647415/30771307-d70dbd26-a044-11e7-9ed1-b0e2ba80198c.png"><br>
 Gallery with all sample models: https://bwasty.github.io/gltf-viewer/0.3.0/

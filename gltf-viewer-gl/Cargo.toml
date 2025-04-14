@@ -18,11 +18,7 @@ repository = "https://github.com/bwasty/gltf-viewer"
 build = false # TODO: git-version doesn't work on Travis
 
 [badges]
-maintenance = { status = "passively-maintained" }
-
-[badges.travis-ci]
-branch = "master"
-repository = "bwasty/gltf-viewer"
+maintenance = { status = "deprecated" }
 
 [dependencies]
 base64 = "0.12.0"
