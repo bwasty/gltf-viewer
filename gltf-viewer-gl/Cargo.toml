@@ -1,5 +1,5 @@
 [package]
-name = "gltf-viewer"
+name = "gltf-viewer-gl"
 version = "0.4.2-alpha.0"
 authors = ["Benjamin Wasty <benny.wasty@gmail.com>"]
 edition = "2018"

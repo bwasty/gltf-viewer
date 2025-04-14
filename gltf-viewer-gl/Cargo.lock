@@ -493,7 +493,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "gltf-viewer"
+name = "gltf-viewer-gl"
 version = "0.4.2-alpha.0"
 dependencies = [
  "base64 0.12.3",
