@@ -21,3 +21,51 @@ repository = "https://github.com/bwasty/gltf-viewer"
 maintenance = { status = "experimental" }
 
 [dependencies]
+# dynamic linking not recommended for shipping -> https://bevyengine.org/learn/quick-start/getting-started/setup/#dynamic-linking
+bevy = { version = "0.15.3", features = ["dynamic_linking"] }
+#bevy = { version = "0.15.3" }
+# https://bevyengine.org/learn/quick-start/getting-started/setup/#improve-runtime-performance-optional
+log = { version = "*", features = [
+  "max_level_debug",
+  "release_max_level_warn",
+] }
+
+# Enable a small amount of optimization in the dev profile.
+[profile.dev]
+opt-level = 1
+
+# Enable a large amount of optimization in the dev profile for dependencies.
+# https://bevy-cheatbook.github.io/pitfalls/performance.html :
+#  If your own code does CPU-intensive work, you might want to also enable some optimization for it. (=1)
+# Warning! If you are using a debugger (like gdb or lldb) to step through your code, any amount of compiler optimization can mess with the experience. Your breakpoints might be skipped, and the code flow might jump around in unexpected ways. If you want to debug / step through your code, you might want opt-level = 0
+[profile.dev.package."*"]
+opt-level = 3
+
+# # Enable more optimization in the release profile at the cost of compile time.
+# [profile.release]
+# # Compile the entire crate as one unit.
+# # Slows compile times, marginal improvements.
+# codegen-units = 1
+# # Do a second optimization pass over the entire program, including dependencies.
+# # Slows compile times, marginal improvements.
+# lto = "thin"
+
+# # Optimize for size in the wasm-release profile to reduce load times and bandwidth usage on web.
+# [profile.wasm-release]
+# # Default to release profile values.
+# inherits = "release"
+# # Optimize with size in mind (also try "z", sometimes it is better).
+# # Slightly slows compile times, great improvements to file size and runtime performance.
+# opt-level = "s"
+# # Strip all debugging information from the binary to slightly reduce file size.
+# strip = "debuginfo"
+
+# Hint: https://bevyengine.org/learn/quick-start/getting-started/setup/#advanced-wasm-optimizations-optional
+
+# LTO: https://bevy-cheatbook.github.io/pitfalls/performance.html
+# [profile.release]
+# lto = true
+# opt-level = 3
+# codegen-units = 1
+# incremental = false
+# debug = false

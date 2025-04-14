@@ -1,0 +1,10 @@
+[target.x86_64-pc-windows-msvc]
+linker = "rust-lld.exe"
+rustdocflags = ["-Clinker=rust-lld.exe"]
+rustflags = [
+  # Nightly
+  # NOTE: the comment seems to be wrong? .-> try again...
+  #"-Zshare-generics=n", # This needs to be off if you use dynamic linking on Windows.
+  # Note: problematic for full buid, perhaps try on incremental?
+  #"-Zthreads=0",
+]
