@@ -1,3 +1,7 @@
+// TODO!: remove when done adapting
+#![allow(unused_variables)]
+#![allow(dead_code)]
+
 use std::f32::consts::PI;
 
 #[derive(Copy, Clone)]
@@ -23,7 +27,7 @@ impl GltfViewer {
         scene_index: usize,
     ) -> GltfViewer {
         // TODO!!: check whole old implementation thoroughly for param handling...
-        let mut viewer = GltfViewer {};
+        let /*mut*/ viewer = GltfViewer {};
         viewer
     }
 

@@ -2,117 +2,109 @@
 // #![allow(unused_features)]
 // #![feature(test)]
 
-use clap::crate_version;
-
-use clap::{App, AppSettings, Arg};
+use clap::{crate_version, value_parser, Arg, ArgAction, Command};
 
 use log::warn;
 
-use simplelog::{ConfigBuilder as LogConfigBuilder, LevelFilter, TermLogger, TerminalMode};
+use simplelog::{ColorChoice, ConfigBuilder as LogConfigBuilder, LevelFilter, TermLogger, TerminalMode};
 
 mod viewer;
 use crate::viewer::{CameraOptions, GltfViewer};
 
 pub fn main() {
-    let args = App::new("gltf-viewer")
+    let args = Command::new("gltf-viewer")
         .version(option_env!("VERSION").unwrap_or(crate_version!()))
-        .setting(AppSettings::UnifiedHelpMessage)
-        .setting(AppSettings::DeriveDisplayOrder)
-        .before_help("glTF 2.0 viewer\n\nNavigate with the mouse (left/right click + drag, mouse wheel) \
-                    or WASD/cursor keys.")
-        .arg(Arg::with_name("FILE") // TODO!: URL support?
+        .about("glTF 2.0 viewer\n\nNavigate with the mouse (left/right click + drag, mouse wheel) or WASD/cursor keys.")
+         // TODO!: AppSettings::UnifiedHelpMessage, AppSettings::DeriveDisplayOrder?
+        .arg(Arg::new("FILE") // TODO!: URL support?
             .required(true)
-            .takes_value(true)
             .help("glTF file name"))
-        .arg(Arg::with_name("verbose")
+        .arg(Arg::new("verbose")
             .long("verbose")
-            .short("v")
-            .multiple(true)
+            .short('v')
+            .action(ArgAction::Count)
             .help("Enable verbose logging (log level INFO). Can be repeated up to 3 times to increase log level to DEBUG/TRACE)"))
-        .arg(Arg::with_name("screenshot")
+        .arg(Arg::new("screenshot")
             .long("screenshot")
-            .short("s")
+            .short('s')
             .value_name("FILE")
             .help("Create screenshot (PNG)"))
-        .arg(Arg::with_name("WIDTH")
+        .arg(Arg::new("WIDTH")
             .long("width")
-            .short("w")
+            .short('W')
             .default_value("800")
             .help("Width in pixels")
-            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
-        .arg(Arg::with_name("HEIGHT")
+            .value_parser(value_parser!(u32)))
+        .arg(Arg::new("HEIGHT")
             .long("height")
-            .short("h")
+            .short('H')
             .default_value("600")
             .help("Height in pixels")
-            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
-        .arg(Arg::with_name("COUNT")
+            .value_parser(value_parser!(u32)))
+        .arg(Arg::new("COUNT")
             .long("count")
-            .short("c")
+            .short('c')
             .default_value("1")
             .help("Saves N screenshots of size WxH, rotating evenly spaced around the object")
-            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
-        .arg(Arg::with_name("headless")
+            .value_parser(value_parser!(u32)))
+        .arg(Arg::new("headless")
             .long("headless")
+            .action(ArgAction::SetTrue)
             .help("Use real headless rendering for screenshots (default is a hidden window) [EXPERIMENTAL - see README for details]"))
-        .arg(Arg::with_name("straight")
+        .arg(Arg::new("straight")
             .long("straight")
+            .action(ArgAction::SetTrue)
             .help("Position camera in front of model if using default camera (i.e. glTF doesn't contain a camera or `--cam-index -1` is passed)"))
-        .arg(Arg::with_name("scene")
+        .arg(Arg::new("scene")
             .long("scene")
             .default_value("0")
             .help("Index of the scene to load")
-            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
-        .arg(Arg::with_name("CAM-INDEX")
+            .value_parser(value_parser!(u32)))
+        .arg(Arg::new("CAM-INDEX")
             .long("cam-index")
-            .takes_value(true)
             .default_value("0")
-            .allow_hyphen_values(true)
+            .allow_negative_numbers(true)
             .help("Use the glTF camera with the given index (starting at 0). \n\
                 Fallback if there is none: determine 'nice' camera position based on the scene's bounding box. \
                 Can be forced by passing -1. \n\
                 Note: All other camera options are ignored if this one is given.")
-            .validator(|value| value.parse::<i32>().map(|_| ()).map_err(|err| err.to_string())))
-        .arg(Arg::with_name("CAM-POS")
+            .value_parser(value_parser!(i32)))
+        .arg(Arg::new("CAM-POS")
             .long("cam-pos")
-            .takes_value(true)
-            .allow_hyphen_values(true)
+            .allow_negative_numbers(true)
             .help("Camera (aka eye) position override as comma-separated Vector3. Example: 1.2,3.4,5.6"))
-        .arg(Arg::with_name("CAM-TARGET")
+        .arg(Arg::new("CAM-TARGET")
             .long("cam-target")
-            .takes_value(true)
-            .allow_hyphen_values(true)
+            .allow_negative_numbers(true)
             .help("Camera target (aka center) override as comma-separated Vector3. Example: 1.2,3.4,5.6"))
-        .arg(Arg::with_name("CAM-FOVY")
+        .arg(Arg::new("CAM-FOVY")
             .long("cam-fovy")
-            .takes_value(true)
             .default_value("75")
             .help("Vertical field of view ('zoom') in degrees.")
-            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
+            .value_parser(value_parser!(u32)))
         .get_matches();
-    let source = args.value_of("FILE").unwrap();
 
-    let width: u32 = args.value_of("WIDTH").unwrap().parse().unwrap();
-    let height: u32 = args.value_of("HEIGHT").unwrap().parse().unwrap();
-    let count: u32 = args.value_of("COUNT").unwrap().parse().unwrap();
+    let source = args.get_one::<String>("FILE").unwrap();
 
-    let scene: usize = args.value_of("scene").unwrap().parse().unwrap();
+    let width = *args.get_one::<u32>("WIDTH").unwrap();
+    let height = *args.get_one::<u32>("HEIGHT").unwrap();
+    let count = *args.get_one::<u32>("COUNT").unwrap();
+
+    let scene = *args.get_one::<u32>("scene").unwrap() as usize;
 
     let camera_options = CameraOptions {
-        index: args
-            .value_of("CAM-INDEX")
-            .map(|n| n.parse().unwrap())
-            .unwrap(),
-        position: args.value_of("CAM-POS").map(|v| parse_vec3(v).unwrap()),
-        target: args.value_of("CAM-TARGET").map(|v| parse_vec3(v).unwrap()),
-        fovy: args
-            .value_of("CAM-FOVY")
-            .map(|n| Deg(n.parse().unwrap()))
-            .unwrap(),
-        straight: args.is_present("straight"),
+        index: *args.get_one::<i32>("CAM-INDEX").unwrap(),
+        // TODO!!: math types
+        // position: args.value_of("CAM-POS").map(|v| parse_vec3(v).unwrap()),
+        // target: args.value_of("CAM-TARGET").map(|v| parse_vec3(v).unwrap()),
+        // fovy: args
+        //     .value_of("CAM-FOVY")
+        //     .map(|n| Deg(n.parse().unwrap()))
+        //     .unwrap(),
+        straight: args.get_flag("straight"),
     };
 
-    let log_level = match args.occurrences_of("verbose") {
+    let log_level = match args.get_count("verbose") {
         0 => LevelFilter::Warn,
         1 => LevelFilter::Info,
         2 => LevelFilter::Debug,
@@ -127,20 +119,21 @@ pub fn main() {
             .set_thread_level(LevelFilter::Off)
             .build(),
         TerminalMode::Stdout,
+        ColorChoice::Auto,
     );
 
     let mut viewer = GltfViewer::new(
         source,
         width,
         height,
-        args.is_present("headless"),
-        !args.is_present("screenshot"),
+        args.get_flag("headless"),
+        !args.contains_id("screenshot"),
         camera_options,
         scene,
     );
 
-    if args.is_present("screenshot") {
-        let filename = args.value_of("screenshot").unwrap();
+    if args.contains_id("screenshot") {
+        let filename = args.get_one::<String>("screenshot").unwrap();
 
         if !filename.to_lowercase().ends_with(".png") {
             warn!("filename should end with .png");
