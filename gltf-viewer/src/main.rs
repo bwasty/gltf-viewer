@@ -1,65 +1,176 @@
-//! Loads and renders a glTF file as a scene.
+// #![allow(dead_code)]
+// #![allow(unused_features)]
+// #![feature(test)]
 
-use bevy::{
-    pbr::{CascadeShadowConfigBuilder, DirectionalLightShadowMap},
-    prelude::*,
-};
-use std::f32::consts::*;
+use clap::crate_version;
 
-fn main() {
-    App::new()
-        .insert_resource(DirectionalLightShadowMap { size: 4096 })
-        .add_plugins(DefaultPlugins)
-        .add_systems(Startup, setup)
-        .add_systems(Update, animate_light_direction)
-        .run();
-}
+use clap::{App, AppSettings, Arg};
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    // commands.spawn((
-    //     Camera3d::default(),
-    //     Transform::from_xyz(0.7, 0.7, 1.0).looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
-    //     EnvironmentMapLight {
-    //         diffuse_map: asset_server.load("environment_maps/pisa_diffuse_rgb9e5_zstd.ktx2"),
-    //         specular_map: asset_server.load("environment_maps/pisa_specular_rgb9e5_zstd.ktx2"),
-    //         intensity: 250.0,
-    //         ..default()
-    //     },
-    // ));
+use log::warn;
 
-    commands.spawn((
-        Camera3d::default(),
-        Transform::from_xyz(2.0, 2.0, 2.0).looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
-    ));
+use simplelog::{ConfigBuilder as LogConfigBuilder, LevelFilter, TermLogger, TerminalMode};
 
-    commands.spawn((
-        DirectionalLight {
-            shadows_enabled: true,
-            ..default()
-        },
-        // This is a relatively small scene, so use tighter shadow
-        // cascade bounds than the default for better quality.
-        // We also adjusted the shadow map to be larger since we're
-        // only using a single cascade.
-        CascadeShadowConfigBuilder {
-            num_cascades: 1,
-            maximum_distance: 1.6,
-            ..default()
+mod viewer;
+use crate::viewer::{CameraOptions, GltfViewer};
+
+pub fn main() {
+    let args = App::new("gltf-viewer")
+        .version(option_env!("VERSION").unwrap_or(crate_version!()))
+        .setting(AppSettings::UnifiedHelpMessage)
+        .setting(AppSettings::DeriveDisplayOrder)
+        .before_help("glTF 2.0 viewer\n\nNavigate with the mouse (left/right click + drag, mouse wheel) \
+                    or WASD/cursor keys.")
+        .arg(Arg::with_name("FILE") // TODO!: URL support?
+            .required(true)
+            .takes_value(true)
+            .help("glTF file name"))
+        .arg(Arg::with_name("verbose")
+            .long("verbose")
+            .short("v")
+            .multiple(true)
+            .help("Enable verbose logging (log level INFO). Can be repeated up to 3 times to increase log level to DEBUG/TRACE)"))
+        .arg(Arg::with_name("screenshot")
+            .long("screenshot")
+            .short("s")
+            .value_name("FILE")
+            .help("Create screenshot (PNG)"))
+        .arg(Arg::with_name("WIDTH")
+            .long("width")
+            .short("w")
+            .default_value("800")
+            .help("Width in pixels")
+            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
+        .arg(Arg::with_name("HEIGHT")
+            .long("height")
+            .short("h")
+            .default_value("600")
+            .help("Height in pixels")
+            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
+        .arg(Arg::with_name("COUNT")
+            .long("count")
+            .short("c")
+            .default_value("1")
+            .help("Saves N screenshots of size WxH, rotating evenly spaced around the object")
+            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
+        .arg(Arg::with_name("headless")
+            .long("headless")
+            .help("Use real headless rendering for screenshots (default is a hidden window) [EXPERIMENTAL - see README for details]"))
+        .arg(Arg::with_name("straight")
+            .long("straight")
+            .help("Position camera in front of model if using default camera (i.e. glTF doesn't contain a camera or `--cam-index -1` is passed)"))
+        .arg(Arg::with_name("scene")
+            .long("scene")
+            .default_value("0")
+            .help("Index of the scene to load")
+            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
+        .arg(Arg::with_name("CAM-INDEX")
+            .long("cam-index")
+            .takes_value(true)
+            .default_value("0")
+            .allow_hyphen_values(true)
+            .help("Use the glTF camera with the given index (starting at 0). \n\
+                Fallback if there is none: determine 'nice' camera position based on the scene's bounding box. \
+                Can be forced by passing -1. \n\
+                Note: All other camera options are ignored if this one is given.")
+            .validator(|value| value.parse::<i32>().map(|_| ()).map_err(|err| err.to_string())))
+        .arg(Arg::with_name("CAM-POS")
+            .long("cam-pos")
+            .takes_value(true)
+            .allow_hyphen_values(true)
+            .help("Camera (aka eye) position override as comma-separated Vector3. Example: 1.2,3.4,5.6"))
+        .arg(Arg::with_name("CAM-TARGET")
+            .long("cam-target")
+            .takes_value(true)
+            .allow_hyphen_values(true)
+            .help("Camera target (aka center) override as comma-separated Vector3. Example: 1.2,3.4,5.6"))
+        .arg(Arg::with_name("CAM-FOVY")
+            .long("cam-fovy")
+            .takes_value(true)
+            .default_value("75")
+            .help("Vertical field of view ('zoom') in degrees.")
+            .validator(|value| value.parse::<u32>().map(|_| ()).map_err(|err| err.to_string())))
+        .get_matches();
+    let source = args.value_of("FILE").unwrap();
+
+    let width: u32 = args.value_of("WIDTH").unwrap().parse().unwrap();
+    let height: u32 = args.value_of("HEIGHT").unwrap().parse().unwrap();
+    let count: u32 = args.value_of("COUNT").unwrap().parse().unwrap();
+
+    let scene: usize = args.value_of("scene").unwrap().parse().unwrap();
+
+    let camera_options = CameraOptions {
+        index: args
+            .value_of("CAM-INDEX")
+            .map(|n| n.parse().unwrap())
+            .unwrap(),
+        position: args.value_of("CAM-POS").map(|v| parse_vec3(v).unwrap()),
+        target: args.value_of("CAM-TARGET").map(|v| parse_vec3(v).unwrap()),
+        fovy: args
+            .value_of("CAM-FOVY")
+            .map(|n| Deg(n.parse().unwrap()))
+            .unwrap(),
+        straight: args.is_present("straight"),
+    };
+
+    let log_level = match args.occurrences_of("verbose") {
+        0 => LevelFilter::Warn,
+        1 => LevelFilter::Info,
+        2 => LevelFilter::Debug,
+        _ => LevelFilter::Trace,
+    };
+
+    let _ = TermLogger::init(
+        log_level,
+        LogConfigBuilder::new()
+            .set_time_level(LevelFilter::Off)
+            .set_target_level(LevelFilter::Off)
+            .set_thread_level(LevelFilter::Off)
+            .build(),
+        TerminalMode::Stdout,
+    );
+
+    let mut viewer = GltfViewer::new(
+        source,
+        width,
+        height,
+        args.is_present("headless"),
+        !args.is_present("screenshot"),
+        camera_options,
+        scene,
+    );
+
+    if args.is_present("screenshot") {
+        let filename = args.value_of("screenshot").unwrap();
+
+        if !filename.to_lowercase().ends_with(".png") {
+            warn!("filename should end with .png");
         }
-        .build(),
-    ));
-    commands.spawn(SceneRoot(
-        asset_server.load(GltfAssetLabel::Scene(0).from_asset("../../tests/Box.gltf")),
-    ));
+        if count > 1 {
+            viewer.multiscreenshot(filename, count)
+        } else {
+            viewer.screenshot(filename)
+        }
+        return;
+    }
+
+    // TODO!: start render loop
+    // viewer.start_render_loop();
 }
 
-fn animate_light_direction(time: Res<Time>, mut query: Query<&mut Transform, With<DirectionalLight>>) {
-    for mut transform in &mut query {
-        transform.rotation = Quat::from_euler(
-            EulerRot::ZYX,
-            0.0,
-            time.elapsed_secs() * PI / 5.0,
-            -FRAC_PI_4,
-        );
-    }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    //     extern crate test;
+    //     use self::test::Bencher;
+    //     #[bench]
+    //     fn bench_frame_timer(b: &mut Bencher) {
+    //         let mut timer = FrameTimer::new("Foobar", 60);
+    //         b.iter(|| {
+    //             for _ in 0..60 {
+    //                 timer.start();
+    //                 timer.end();
+    //             }
+    //         })
+    //     }
 }

@@ -23,12 +23,14 @@ maintenance = { status = "experimental" }
 [dependencies]
 # dynamic linking not recommended for shipping -> https://bevyengine.org/learn/quick-start/getting-started/setup/#dynamic-linking
 bevy = { version = "0.15.3", features = ["dynamic_linking"] }
+clap = "4.5.36"
 #bevy = { version = "0.15.3" }
 # https://bevyengine.org/learn/quick-start/getting-started/setup/#improve-runtime-performance-optional
 log = { version = "*", features = [
   "max_level_debug",
   "release_max_level_warn",
 ] }
+simplelog = "0.12.2"
 
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]
