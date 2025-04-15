@@ -11,18 +11,16 @@ use simplelog::{ColorChoice, ConfigBuilder as LogConfigBuilder, LevelFilter, Ter
 mod viewer;
 use crate::viewer::{CameraOptions, GltfViewer};
 
-// TODO!!: math types..
-pub use cgmath::{vec3, vec4};
-pub type Vector3 = cgmath::Vector3<f32>;
+use bevy::prelude::Vec3;
 use std::num::ParseFloatError;
-pub fn parse_vec3(s: &str) -> Result<Vector3, ParseFloatError> {
+pub fn parse_vec3(s: &str) -> Result<Vec3, ParseFloatError> {
     let coords: Vec<&str> = s.split(',').collect();
-    assert!(coords.len() == 3, "Failed to parse Vector3 ({})", s);
+    assert!(coords.len() == 3, "Failed to parse Vec3 ({})", s);
     let x = coords[0].parse::<f32>()?;
     let y = coords[1].parse::<f32>()?;
     let z = coords[2].parse::<f32>()?;
 
-    Ok(vec3(x, y, z))
+    Ok(Vec3::new(x, y, z))
 }
 
 pub fn main() {
@@ -86,10 +84,12 @@ pub fn main() {
         .arg(Arg::new("CAM-POS")
             .long("cam-pos")
             .allow_negative_numbers(true)
+            .value_name("X,Y,Z")
             .help("Camera (aka eye) position override as comma-separated Vector3. Example: 1.2,3.4,5.6"))
         .arg(Arg::new("CAM-TARGET")
             .long("cam-target")
             .allow_negative_numbers(true)
+            .value_name("X,Y,Z")
             .help("Camera target (aka center) override as comma-separated Vector3. Example: 1.2,3.4,5.6"))
         .arg(Arg::new("CAM-FOVY")
             .long("cam-fovy")
@@ -108,13 +108,13 @@ pub fn main() {
 
     let camera_options = CameraOptions {
         index: *args.get_one::<i32>("CAM-INDEX").unwrap(),
-        // TODO!!: math types
-        position: args.value_of("CAM-POS").map(|v| parse_vec3(v).unwrap()),
-        target: args.value_of("CAM-TARGET").map(|v| parse_vec3(v).unwrap()),
-        fovy: args
-            .value_of("CAM-FOVY")
-            .map(|n| Deg(n.parse().unwrap()))
-            .unwrap(),
+        position: args
+            .get_one::<String>("CAM-POS")
+            .map(|v| parse_vec3(v).unwrap()),
+        target: args
+            .get_one::<String>("CAM-TARGET")
+            .map(|v| parse_vec3(v).unwrap()),
+        fovy: *args.get_one::<u32>("CAM-FOVY").unwrap(),
         straight: args.get_flag("straight"),
     };
 
