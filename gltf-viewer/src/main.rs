@@ -11,11 +11,25 @@ use simplelog::{ColorChoice, ConfigBuilder as LogConfigBuilder, LevelFilter, Ter
 mod viewer;
 use crate::viewer::{CameraOptions, GltfViewer};
 
+// TODO!!: math types..
+pub use cgmath::{vec3, vec4};
+pub type Vector3 = cgmath::Vector3<f32>;
+use std::num::ParseFloatError;
+pub fn parse_vec3(s: &str) -> Result<Vector3, ParseFloatError> {
+    let coords: Vec<&str> = s.split(',').collect();
+    assert!(coords.len() == 3, "Failed to parse Vector3 ({})", s);
+    let x = coords[0].parse::<f32>()?;
+    let y = coords[1].parse::<f32>()?;
+    let z = coords[2].parse::<f32>()?;
+
+    Ok(vec3(x, y, z))
+}
+
 pub fn main() {
     let args = Command::new("gltf-viewer")
+        // TODO: version not display in --help anymore
         .version(option_env!("VERSION").unwrap_or(crate_version!()))
         .about("glTF 2.0 viewer\n\nNavigate with the mouse (left/right click + drag, mouse wheel) or WASD/cursor keys.")
-         // TODO!: AppSettings::UnifiedHelpMessage, AppSettings::DeriveDisplayOrder?
         .arg(Arg::new("FILE") // TODO!: URL support?
             .required(true)
             .help("glTF file name"))
@@ -95,12 +109,12 @@ pub fn main() {
     let camera_options = CameraOptions {
         index: *args.get_one::<i32>("CAM-INDEX").unwrap(),
         // TODO!!: math types
-        // position: args.value_of("CAM-POS").map(|v| parse_vec3(v).unwrap()),
-        // target: args.value_of("CAM-TARGET").map(|v| parse_vec3(v).unwrap()),
-        // fovy: args
-        //     .value_of("CAM-FOVY")
-        //     .map(|n| Deg(n.parse().unwrap()))
-        //     .unwrap(),
+        position: args.value_of("CAM-POS").map(|v| parse_vec3(v).unwrap()),
+        target: args.value_of("CAM-TARGET").map(|v| parse_vec3(v).unwrap()),
+        fovy: args
+            .value_of("CAM-FOVY")
+            .map(|n| Deg(n.parse().unwrap()))
+            .unwrap(),
         straight: args.get_flag("straight"),
     };
 

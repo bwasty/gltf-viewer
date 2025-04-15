@@ -2,15 +2,17 @@
 #![allow(unused_variables)]
 #![allow(dead_code)]
 
+use cgmath::Deg;
 use std::f32::consts::PI;
 
+pub type Vector3 = cgmath::Vector3<f32>;
 #[derive(Copy, Clone)]
 pub struct CameraOptions {
     pub index: i32,
     // TODO!: math types
-    // pub position: Option<Vector3>,
-    // pub target: Option<Vector3>,
-    // pub fovy: Deg<f32>,
+    pub position: Option<Vector3>,
+    pub target: Option<Vector3>,
+    pub fovy: Deg<f32>,
     pub straight: bool,
 }
 
